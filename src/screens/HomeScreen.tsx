@@ -182,7 +182,7 @@ export const HomeScreen: React.FC = () => {
       >
         {/* Header */}
         <StyledView className="px-6 pt-6 pb-4">
-          <StyledText className="text-2xl font-bold text-slate-900 mb-2">
+          <StyledText className="text-2xl font-bold text-slate-900 mb-2 text-center">
             RuneKey
           </StyledText>
           
@@ -216,7 +216,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-up" size={24} color="#ef4444" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-white text-sm mt-2 font-medium">Send</StyledText>
+                <StyledText className="text-black text-sm mt-2 font-medium">Send</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
@@ -229,7 +229,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-down" size={24} color="#22c55e" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-white text-sm mt-2 font-medium">Receive</StyledText>
+                <StyledText className="text-black text-sm mt-2 font-medium">Receive</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
@@ -242,7 +242,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-white text-sm mt-2 font-medium">Swap</StyledText>
+                <StyledText className="text-black text-sm mt-2 font-medium">Swap</StyledText>
               </StyledView>
             </StyledView>
           </Card>
