@@ -1,6 +1,8 @@
 // Import polyfills first
 import './src/utils/polyfills';
 
+// Reanimated removed - using pure React animations
+
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -10,16 +12,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme, AppRegistry, TouchableOpacity } from 'react-native';
+import { useColorScheme, AppRegistry, TouchableOpacity, Image } from 'react-native';
 import { logger } from './src/utils/logger';
 
 // Screens
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SwapScreen } from './src/screens/SwapScreen';
-import { RecentActivityScreen } from './src/screens/RecentActivityScreen';
+import { RunekeyScreen } from './src/screens/RunekeyScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { WalletScreen } from './src/screens/WalletScreen';
+import { TokenDetailsScreen } from './src/screens/TokenDetailsScreen';
+import { SendScreen } from './src/screens/SendScreen';
 import { OnboardingNavigator } from './src/screens/onboarding/OnboardingNavigator';
 
 // Hooks
@@ -56,8 +59,18 @@ const TabNavigator = () => {
             iconName = focused ? 'wallet' : 'wallet-outline';
           } else if (route.name === 'Swap') {
             iconName = focused ? 'swap-horizontal' : 'swap-horizontal-outline';
-          } else if (route.name === 'Recent Activity') {
-            iconName = focused ? 'time' : 'time-outline';
+          } else if (route.name === 'Runekey') {
+            // Use custom icon for Runekey tab
+            return (
+              <Image 
+                source={require('./assets/icon.png')}
+                style={{ 
+                  width: size, 
+                  height: size,
+                  opacity: focused ? 1 : 0.6
+                }}
+              />
+            );
           } else if (route.name === 'Search') {
             iconName = focused ? 'search' : 'search-outline';
           } else if (route.name === 'Settings') {
@@ -120,8 +133,8 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Recent Activity" 
-        component={RecentActivityScreen}
+        name="Runekey" 
+        component={RunekeyScreen}
         options={{
           title: '',
           headerShown: false,
@@ -163,7 +176,23 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
         },
       }}
     >
-      <TabNavigator />
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="MainTabs" 
+          component={TabNavigator}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="TokenDetails" 
+          component={TokenDetailsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Send" 
+          component={SendScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };
@@ -174,7 +203,7 @@ function App() {
   const systemColorScheme = useColorScheme();
   
   // Determine the actual theme to use
-  const actualTheme = theme === 'system' ? systemColorScheme : theme;
+  const actualTheme = theme === 'system' ? (systemColorScheme || 'light') : theme;
 
   // Determine if we should show onboarding
   const shouldShowOnboarding = isFirstLaunch || !isConnected;
@@ -186,8 +215,9 @@ function App() {
   }, []);
 
   const handleOnboardingComplete = () => {
-    // Onboarding completion is handled by the stores themselves
-    // This component will automatically re-render when the state changes
+    console.log('Onboarding completed, wallet connected:', isConnected);
+    // Force a re-render to ensure the app navigates to main screen
+    // The stores should have updated the state by now
   };
 
   return (

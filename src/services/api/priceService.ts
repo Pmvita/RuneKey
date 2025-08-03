@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../constants';
 import { PriceData, ApiResponse } from '../../types';
+import cryptoPricesData from '../../mockData/api/crypto-prices.json';
+import chartData from '../../mockData/api/chart-data.json';
 
 // Enhanced types for coin data
 export interface CoinInfo {
@@ -43,6 +45,7 @@ export interface ChartData {
 
 class PriceService {
   private baseURL = API_ENDPOINTS.COINGECKO;
+  private useMockData = false; // Flag to use mock data when API fails
 
   /**
    * Fetch token prices from CoinGecko
@@ -130,6 +133,17 @@ class PriceService {
       };
     } catch (error) {
       console.error('Failed to fetch coin info:', error);
+      
+      // Fallback to mock data
+      const mockCoinId = this.getMockCoinId(coinId);
+      if (mockCoinId && cryptoPricesData[mockCoinId]) {
+        console.log('Using mock data for coin info:', coinId);
+        return {
+          data: cryptoPricesData[mockCoinId] as CoinInfo,
+          success: true,
+        };
+      }
+      
       return {
         data: {} as CoinInfo,
         success: false,
@@ -165,6 +179,17 @@ class PriceService {
       };
     } catch (error) {
       console.error('Failed to fetch chart data:', error);
+      
+      // Fallback to mock data
+      const mockCoinId = this.getMockCoinId(coinId);
+      if (mockCoinId && chartData[mockCoinId]) {
+        console.log('Using mock data for chart:', coinId);
+        return {
+          data: chartData[mockCoinId] as ChartData,
+          success: true,
+        };
+      }
+      
       return {
         data: { prices: [], market_caps: [], total_volumes: [] },
         success: false,
@@ -346,6 +371,27 @@ class PriceService {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  /**
+   * Get mock coin ID from real coin ID
+   */
+  private getMockCoinId(coinId: string): string | null {
+    // Map common coin IDs to mock data keys
+    const coinIdMap: Record<string, string> = {
+      'bitcoin': 'bitcoin',
+      'btc': 'bitcoin',
+      'ethereum': 'ethereum',
+      'eth': 'ethereum',
+      'usd-coin': 'usd-coin',
+      'usdc': 'usd-coin',
+      'tether': 'tether',
+      'usdt': 'tether',
+      'binancecoin': 'binancecoin',
+      'bnb': 'binancecoin',
+    };
+
+    return coinIdMap[coinId.toLowerCase()] || null;
   }
 }
 

@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
+import { useNavigation } from '@react-navigation/native';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -40,6 +41,7 @@ export const SearchScreen: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [showTrendingModal, setShowTrendingModal] = useState(false);
+  const navigation = useNavigation<any>();
 
   // Log screen focus
   useFocusEffect(
@@ -503,6 +505,22 @@ export const SearchScreen: React.FC = () => {
             renderItem={({ item }: { item: TrendingToken }) => (
               <StyledTouchableOpacity
                 className="flex-row items-center p-4 border-b border-gray-100"
+                onPress={() => {
+                  setShowTrendingModal(false);
+                  navigation.navigate('TokenDetails', { 
+                    token: {
+                      id: item.id,
+                      symbol: item.symbol,
+                      name: item.name,
+                      image: item.image,
+                      current_price: item.current_price,
+                      price_change_percentage_24h: item.price_change_percentage_24h,
+                      balance: '0', // No balance for trending tokens
+                      decimals: 18,
+                      usdValue: 0
+                    }
+                  });
+                }}
               >
                 {item.image ? (
                   <Image 

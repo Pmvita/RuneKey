@@ -120,15 +120,21 @@ export interface ApiResponse<T> {
 
 // Navigation Types
 export type RootStackParamList = {
+  MainTabs: undefined;
+  TokenDetails: {
+    token: Token;
+  };
+  Swap: {
+    selectedToken?: Token;
+  };
+  Send: {
+    selectedToken?: Token;
+  };
   Home: undefined;
   Wallet: undefined;
-  Swap: undefined;
   Settings: undefined;
   QRScanner: {
     onScan: (data: string) => void;
-  };
-  TokenDetails: {
-    token: Token;
   };
   TransactionHistory: undefined;
   WalletConnect: undefined;

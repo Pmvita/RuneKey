@@ -53,8 +53,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   const handleDeveloperLogin = () => {
+    console.log('Developer mode button pressed');
     logger.logButtonPress('Developer Mode Enter', 'connect developer wallet');
     connectDeveloperWallet();
+    console.log('Developer wallet connected, calling onLoginSuccess');
     onLoginSuccess();
   };
 

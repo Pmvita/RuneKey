@@ -151,6 +151,7 @@ export const useWalletStore = create<WalletState & WalletActions>()(
       },
 
       connectDeveloperWallet: () => {
+        console.log('Connecting developer wallet...');
         const mockWallet: Wallet = {
           id: 'developer-wallet',
           name: 'Developer Wallet',
@@ -207,12 +208,75 @@ export const useWalletStore = create<WalletState & WalletActions>()(
           ]
         };
 
+        // Mock transactions from dev wallet data
+        const mockTransactions = [
+          {
+            hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+            from: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
+            to: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef1',
+            amount: '100.0',
+            token: {
+              address: '0x0000000000000000000000000000000000000000',
+              symbol: 'ETH',
+              name: 'Ethereum',
+              decimals: 18,
+              logoURI: 'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+              coinId: 'ethereum',
+            },
+            timestamp: 1707350400000,
+            status: 'confirmed' as const,
+            type: 'send' as const,
+            gasPrice: '20000000000',
+            gasUsed: '21000'
+          },
+          {
+            hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+            from: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef2',
+            to: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
+            amount: '50.0',
+            token: {
+              address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+              symbol: 'BTC',
+              name: 'Wrapped Bitcoin',
+              decimals: 8,
+              logoURI: 'https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png',
+              coinId: 'bitcoin',
+            },
+            timestamp: 1707264000000,
+            status: 'confirmed' as const,
+            type: 'receive' as const,
+            gasPrice: '25000000000',
+            gasUsed: '65000'
+          },
+          {
+            hash: '0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
+            from: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
+            to: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef3',
+            amount: '1000000.0',
+            token: {
+              address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
+              symbol: 'USDC',
+              name: 'USD Coin',
+              decimals: 6,
+              logoURI: 'https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png',
+              coinId: 'usd-coin',
+            },
+            timestamp: 1707177600000,
+            status: 'confirmed' as const,
+            type: 'send' as const,
+            gasPrice: '22000000000',
+            gasUsed: '45000'
+          }
+        ];
+
         set({
           isConnected: true,
           currentWallet: mockWallet,
           activeNetwork: 'ethereum',
+          transactions: mockTransactions,
           error: null,
         });
+        console.log('Developer wallet connected successfully');
       },
 
       reset: () => {

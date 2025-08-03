@@ -6,11 +6,21 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../components/common/Card';
 import { TokenListItem } from '../components/token/TokenListItem';
+import { 
+  AnimatedNumber, 
+  AnimatedPriceChange, 
+  PortfolioSkeleton, 
+  TokenSkeleton,
+  AnimatedButton,
+  ParticleEffect,
+  AnimatedProgressBar,
+} from '../components';
 import { useWallet } from '../hooks/wallet/useWallet';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { usePrices } from '../hooks/token/usePrices';
 import { Token } from '../types';
 import { NETWORK_CONFIGS } from '../constants';
+import { useNavigation } from '@react-navigation/native';
 
 import { logger } from '../utils/logger';
 
@@ -34,6 +44,9 @@ export const HomeScreen: React.FC = () => {
   } = usePrices();
   const [walletData, setWalletData] = useState<any>(null);
   const [loadingData, setLoadingData] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const navigation = useNavigation<any>();
 
   // Load mock data for development
   const loadWalletData = async () => {
@@ -41,7 +54,7 @@ export const HomeScreen: React.FC = () => {
     try {
       // Import the mock data directly
       const mockData = require('../../mockData/api/dev-wallet.json');
-      console.log('📊 HomeScreen: Loading mock data...', mockData.wallet);
+      console.log('📊 HomeScreen: Loading Dev Mode Wallet mockData...');
       setWalletData(mockData.wallet);
       logger.logButtonPress('HomeScreen', 'load mock wallet data');
     } catch (error) {
@@ -166,6 +179,13 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      {/* Particle Effects */}
+      <ParticleEffect 
+        type="confetti" 
+        active={showParticles} 
+        onComplete={() => setShowParticles(false)}
+      />
+      
       {/* Light background overlay */}
       <StyledView 
         className="absolute inset-0"
@@ -187,25 +207,28 @@ export const HomeScreen: React.FC = () => {
           </StyledText>
           
           {/* Total Portfolio Value */}
-          {walletData && (
+          {walletData ? (
             <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
               <StyledView className="flex-row justify-between items-center mb-2">
                 <StyledText className="text-sm text-slate-600">
                   Total Portfolio Value
                 </StyledText>
                 <StyledView className="flex-row items-center">
-                  <StyledText className={`text-sm font-medium ${calculateTotalValue() > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {calculateTotalValue() > 0 ? '+' : ''}{((calculateTotalValue() - 15000000) / 15000000 * 100).toFixed(2)}%
-                  </StyledText>
-                  <StyledText className={`ml-1 ${calculateTotalValue() > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {calculateTotalValue() > 0 ? '↗' : '↘'}
-                  </StyledText>
+                  <AnimatedPriceChange 
+                    value={((calculateTotalValue() - 15000000) / 15000000 * 100)}
+                    className="mr-1"
+                  />
                 </StyledView>
               </StyledView>
-              <StyledText className="text-3xl font-bold text-black">
-                {formatUSD(calculateTotalValue())}
-              </StyledText>
+              <AnimatedNumber
+                value={calculateTotalValue()}
+                format="currency"
+                className="text-3xl font-bold text-black"
+                duration={1500}
+              />
             </StyledView>
+          ) : (
+            <PortfolioSkeleton />
           )}
         </StyledView>
 
@@ -220,8 +243,15 @@ export const HomeScreen: React.FC = () => {
                 <StyledTouchableOpacity
                   className="w-16 h-16 bg-red-50 border border-red-200 rounded-full items-center justify-center shadow-sm"
                   onPress={() => {
+                    console.log('🎯 ANIMATION: Send button pressed - triggering particle effect');
                     logger.logButtonPress('Send', 'navigate to send screen');
-                    /* Navigate to send */
+                    setShowParticles(true);
+                    setTimeout(() => {
+                      console.log('🎯 ANIMATION: Particle effect completed for Send button');
+                      setShowParticles(false);
+                    }, 2000);
+                    // Navigate to Send screen
+                    navigation.navigate('Send' as never);
                   }}
                 >
                   <Ionicons name="arrow-up" size={24} color="#ef4444" />
@@ -233,8 +263,13 @@ export const HomeScreen: React.FC = () => {
                 <StyledTouchableOpacity
                   className="w-16 h-16 bg-green-50 border border-green-200 rounded-full items-center justify-center shadow-sm"
                   onPress={() => {
+                    console.log('🎯 ANIMATION: Receive button pressed - triggering particle effect');
                     logger.logButtonPress('Receive', 'navigate to receive screen');
-                    /* Navigate to receive */
+                    setShowParticles(true);
+                    setTimeout(() => {
+                      console.log('🎯 ANIMATION: Particle effect completed for Receive button');
+                      setShowParticles(false);
+                    }, 2000);
                   }}
                 >
                   <Ionicons name="arrow-down" size={24} color="#22c55e" />
@@ -246,8 +281,13 @@ export const HomeScreen: React.FC = () => {
                 <StyledTouchableOpacity
                   className="w-16 h-16 bg-blue-50 border border-blue-200 rounded-full items-center justify-center shadow-sm"
                   onPress={() => {
-                    logger.logButtonPress('Swap', 'navigate to receive screen');
-                    /* Navigate to swap */
+                    console.log('🎯 ANIMATION: Swap button pressed - triggering particle effect');
+                    logger.logButtonPress('Swap', 'navigate to swap screen');
+                    setShowParticles(true);
+                    setTimeout(() => {
+                      console.log('🎯 ANIMATION: Particle effect completed for Swap button');
+                      setShowParticles(false);
+                    }, 2000);
                   }}
                 >
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
@@ -259,8 +299,13 @@ export const HomeScreen: React.FC = () => {
                 <StyledTouchableOpacity
                   className="w-16 h-16 bg-yellow-50 border border-yellow-200 rounded-full items-center justify-center shadow-sm"
                   onPress={() => {
+                    console.log('🎯 ANIMATION: Buy button pressed - triggering particle effect');
                     logger.logButtonPress('Buy', 'navigate to buy screen');
-                    /* Navigate to buy */
+                    setShowParticles(true);
+                    setTimeout(() => {
+                      console.log('🎯 ANIMATION: Particle effect completed for Buy button');
+                      setShowParticles(false);
+                    }, 2000);
                   }}
                 >
                   <Ionicons name="card" size={24} color="#eab308" />
@@ -279,10 +324,10 @@ export const HomeScreen: React.FC = () => {
           
           {/* Loading Indicator */}
           {loadingData && (
-            <StyledView className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <StyledText className="text-blue-700 text-center font-medium">
-                Loading assets...
-              </StyledText>
+            <StyledView className="mb-4">
+              {[1, 2, 3].map((index) => (
+                <TokenSkeleton key={index} />
+              ))}
             </StyledView>
           )}
 
@@ -329,7 +374,20 @@ export const HomeScreen: React.FC = () => {
                   }}
                   onPress={() => {
                     logger.logButtonPress(`${token.symbol} Token`, 'view token details');
-                    Alert.alert('Token Details', `${token.name} (${token.symbol})`);
+                    navigation.navigate('TokenDetails', { 
+                      token: {
+                        id: token.coinId || token.symbol?.toLowerCase() || 'bitcoin',
+                        symbol: token.symbol || 'BTC',
+                        name: token.name,
+                        image: token.logoURI,
+                        current_price: token.livePrice || token.currentPrice,
+                        price_change_percentage_24h: token.livePriceChange || token.priceChange24h,
+                        balance: token.balance,
+                        decimals: token.decimals,
+                        usdValue: token.liveUSDValue || token.usdValue,
+                        address: token.address
+                      }
+                    });
                   }}
                   showPrice={true}
                   showPriceChange={true}

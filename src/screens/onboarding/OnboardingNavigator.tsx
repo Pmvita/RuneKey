@@ -55,6 +55,7 @@ export const OnboardingNavigator: React.FC<OnboardingNavigatorProps> = ({ onComp
   };
 
   const handleLoginSuccess = () => {
+    console.log('Login success callback triggered');
     logger.logNavigation('LoginScreen', { action: 'login_success' });
     onComplete();
   };

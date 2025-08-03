@@ -1,13 +1,11 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, RefreshControl, ScrollView, Image } from 'react-native';
 import { styled } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { CoinInfo } from '../../services/api/priceService';
-import { PriceChart } from '../charts/PriceChart';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
-const StyledImage = styled(Image);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface CoinDetailsCardProps {
@@ -124,9 +122,9 @@ export const CoinDetailsCard: React.FC<CoinDetailsCardProps> = ({
     <StyledView className="p-6 bg-glass-white dark:bg-glass-dark rounded-xl border border-glass-frost dark:border-ice-700/30">
       {/* Header */}
       <StyledView className="flex-row items-center mb-6">
-        <StyledImage
+        <Image
           source={{ uri: coinInfo.image }}
-          className="w-12 h-12 rounded-full mr-4"
+          style={{ width: 48, height: 48, borderRadius: 24, marginRight: 16 }}
         />
         <StyledView className="flex-1">
           <StyledText className="text-xl font-bold text-ice-900 dark:text-ice-100">
@@ -166,12 +164,11 @@ export const CoinDetailsCard: React.FC<CoinDetailsCardProps> = ({
           <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 mb-4">
             Price Chart (30 Days)
           </StyledText>
-          <PriceChart 
-            data={chartData}
-            height={200}
-            showGrid={true}
-            showLabels={true}
-          />
+          <StyledView className="h-48 bg-gray-100 rounded-lg items-center justify-center">
+            <StyledText className="text-slate-500">
+              Chart data unavailable
+            </StyledText>
+          </StyledView>
         </StyledView>
       )}
 
