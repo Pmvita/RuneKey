@@ -1,30 +1,61 @@
-import React, { useState } from 'react';
-import { View, Text, Modal, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Modal, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { SwapForm } from '../components/swap/SwapForm';
-import { TokenListItem } from '../components/token/TokenListItem';
 import { Input } from '../components/common/Input';
 import { useWallet } from '../hooks/wallet/useWallet';
+import { useSwap } from '../hooks/swap/useSwap';
+import { usePrices } from '../hooks/token/usePrices';
 import { walletService } from '../services/blockchain/walletService';
-import { Token } from '../types';
+import { Token, SwapParams } from '../types';
 import { logger } from '../utils/logger';
+import { useDevWallet } from '../hooks/wallet/useDevWallet';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledFlatList = styled(FlatList);
+const StyledScrollView = styled(ScrollView);
 
 export const SwapScreen: React.FC = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<'input' | 'output'>('input');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedInputToken, setSelectedInputToken] = useState<Token | null>(null);
-  const [selectedOutputToken, setSelectedOutputToken] = useState<Token | null>(null);
+  const [inputAmount, setInputAmount] = useState('');
+  const [outputAmount, setOutputAmount] = useState('');
+  const [slippage, setSlippage] = useState(0.5);
+  const [showSlippageSettings, setShowSlippageSettings] = useState(false);
 
-  const { currentWallet, activeNetwork } = useWallet();
+  const { currentWallet, activeNetwork, isConnected } = useWallet();
+  const { connectDevWallet } = useDevWallet();
+  const { calculateUSDValue } = usePrices();
+  const {
+    isLoading,
+    currentQuote,
+    error,
+    getQuote,
+    executeSwap,
+    validateSwap,
+    getPriceImpactLevel,
+    clearError,
+  } = useSwap();
+
+  // Auto-connect developer wallet in development mode
+  useEffect(() => {
+    console.log('🔄 SwapScreen: Checking wallet connection...', { isConnected, currentWallet });
+    if (!isConnected && !currentWallet) {
+      console.log('🔗 SwapScreen: Connecting developer wallet...');
+      connectDevWallet();
+    }
+  }, [isConnected, currentWallet, connectDevWallet]);
+
+  // Force connect wallet for development
+  useEffect(() => {
+    console.log('🚀 SwapScreen: Force connecting wallet for development...');
+    connectDevWallet();
+  }, []);
 
   // Log screen focus
   useFocusEffect(
@@ -65,9 +96,35 @@ export const SwapScreen: React.FC = () => {
   // Filter tokens based on search query
   const filteredTokens = availableTokens.filter(token =>
     token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.address.toLowerCase().includes(searchQuery.toLowerCase())
+    token.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Mock selected tokens for development
+  const [selectedInputToken, setSelectedInputToken] = useState<Token | null>({
+    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    symbol: 'ETH',
+    name: 'Ethereum',
+    decimals: 18,
+    balance: '1250.875',
+  });
+  const [selectedOutputToken, setSelectedOutputToken] = useState<Token | null>({
+    address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
+    symbol: 'USDC',
+    name: 'USD Coin',
+    decimals: 6,
+    balance: '5000000.00',
+  });
+
+  // Mock quote for development
+  const mockQuote = {
+    inputAmount: '1.0',
+    outputAmount: '2650.45',
+    exchangeRate: '2650.45',
+    priceImpact: 0.12,
+    gasEstimate: '0.005',
+    gasPrice: '20',
+    feeUSD: '0.10',
+  };
 
   const handleTokenSelect = (type: 'input' | 'output') => {
     logger.logButtonPress(`${type} Token Select`, 'open token selection modal');
@@ -94,61 +151,326 @@ export const SwapScreen: React.FC = () => {
     setShowTokenModal(false);
   };
 
+  const handleSwapTokens = () => {
+    const tempToken = selectedInputToken;
+    const tempAmount = inputAmount;
+    setSelectedInputToken(selectedOutputToken);
+    setSelectedOutputToken(tempToken);
+    setInputAmount(outputAmount);
+    setOutputAmount(tempAmount);
+    clearError();
+  };
+
+  const handleMaxAmount = () => {
+    if (!selectedInputToken || !currentWallet) return;
+
+    let maxAmount = '0';
+    
+    // Check if it's native token
+    if (selectedInputToken.address === '0x0000000000000000000000000000000000000000' || 
+        selectedInputToken.address === 'So11111111111111111111111111111111111111112') {
+      maxAmount = currentWallet.balance;
+    } else {
+      const tokenBalance = currentWallet.tokens.find(t => t.address === selectedInputToken.address);
+      maxAmount = tokenBalance?.balance || '0';
+    }
+
+    setInputAmount(maxAmount);
+  };
+
+  const handleExecuteSwap = async () => {
+    if (!selectedInputToken || !selectedOutputToken || !inputAmount) return;
+
+    try {
+      // Show confirmation alert
+      Alert.alert(
+        'Confirm Swap',
+        `Swap ${inputAmount} ${selectedInputToken.symbol} for approximately ${outputAmount} ${selectedOutputToken.symbol}?\n\nSlippage: ${slippage}%\nPrice Impact: ${mockQuote.priceImpact}%`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Confirm', 
+            onPress: async () => {
+              try {
+                // Mock swap execution
+                Alert.alert('Success', 'Swap completed successfully!');
+                setInputAmount('');
+                setOutputAmount('');
+              } catch (err) {
+                Alert.alert('Swap Failed', err instanceof Error ? err.message : 'Unknown error');
+              }
+            }
+          },
+        ]
+      );
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Unknown error');
+    }
+  };
+
   const renderTokenItem = ({ item }: { item: Token }) => (
-    <TokenListItem
-      token={item}
+    <StyledTouchableOpacity
       onPress={() => handleTokenSelection(item)}
-      showBalance={tokenSelectionType === 'input'}
-    />
+      className="flex-row items-center p-4 border-b border-gray-100"
+    >
+      <StyledView className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
+      <StyledView className="flex-1">
+        <StyledText className="font-medium text-slate-900">{item.symbol}</StyledText>
+        <StyledText className="text-sm text-slate-500">{item.name}</StyledText>
+      </StyledView>
+      {tokenSelectionType === 'input' && (
+        <StyledText className="text-sm text-slate-600">
+          {parseFloat(item.balance || '0').toFixed(4)}
+        </StyledText>
+      )}
+    </StyledTouchableOpacity>
   );
 
-  if (!currentWallet) {
-    return (
-      <SafeAreaView className="flex-1 bg-ice-200 dark:bg-ice-950">
-      {/* Icy blue background overlay */}
-      <StyledView 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: 'rgba(56, 189, 248, 0.03)',
-        }}
-      />
-        <StyledView className="flex-1 justify-center items-center p-6">
-          <StyledText className="text-lg text-gray-600 dark:text-gray-400 text-center">
-            Please connect your wallet to use the swap feature
-          </StyledText>
-        </StyledView>
-      </SafeAreaView>
-    );
-  }
+  const inputUSDValue = selectedInputToken && inputAmount 
+    ? calculateUSDValue(selectedInputToken.address, inputAmount) 
+    : null;
+
+  const outputUSDValue = selectedOutputToken && outputAmount 
+    ? calculateUSDValue(selectedOutputToken.address, outputAmount) 
+    : null;
+
+  // For development mode, always show the swap interface
+  // In production, you would check: if (!currentWallet && !isConnected) { ... }
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0f9ff' }}>
-      {/* Icy blue background overlay */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      {/* Background overlay */}
       <StyledView 
         className="absolute inset-0"
         style={{
-          backgroundColor: 'rgba(14, 165, 233, 0.05)',
+          backgroundColor: 'rgb(93,138,168)',
         }}
       />
-      {/* Header */}
-      <StyledView className="px-6 py-4 border-b border-glass-frost dark:border-ice-700/50 bg-glass-white dark:bg-glass-dark">
-        <StyledText className="text-2xl font-bold text-ice-900 dark:text-ice-100">
-          Swap Tokens
-        </StyledText>
-        <StyledText className="text-sm text-ice-600 dark:text-ice-400 mt-1">
-          Exchange tokens at the best rates
-        </StyledText>
-      </StyledView>
 
-      {/* Swap Form */}
-      <SwapForm
-        availableTokens={availableTokens}
-        onTokenSelect={handleTokenSelect}
-        selectedInputToken={selectedInputToken}
-        selectedOutputToken={selectedOutputToken}
-        onInputTokenChange={setSelectedInputToken}
-        onOutputTokenChange={setSelectedOutputToken}
-      />
+      <StyledScrollView className="flex-1">
+        {/* Header */}
+        <StyledView className="px-6 pt-6 pb-4">
+          <StyledText className="text-2xl font-bold text-slate-900 mb-2 text-center">
+            Swap Tokens
+          </StyledText>
+          <StyledText className="text-sm text-slate-600 text-center">
+            Exchange tokens at the best rates
+          </StyledText>
+        </StyledView>
+
+        {/* Swap Form */}
+        <StyledView className="px-6 mb-6">
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            {/* Input Token */}
+            <StyledView className="mb-4">
+              <StyledView className="flex-row items-center justify-between mb-2">
+                <StyledText className="text-sm text-slate-600">
+                  From
+                </StyledText>
+                {selectedInputToken && (
+                  <StyledTouchableOpacity onPress={handleMaxAmount}>
+                    <StyledText className="text-sm text-blue-600 font-medium">
+                      MAX
+                    </StyledText>
+                  </StyledTouchableOpacity>
+                )}
+              </StyledView>
+
+              <StyledView className="flex-row items-center space-x-3">
+                <StyledView className="flex-1">
+                  <Input
+                    placeholder="0.0"
+                    value={inputAmount}
+                    onChangeText={setInputAmount}
+                    keyboardType="numeric"
+                    className="text-xl"
+                  />
+                  {inputUSDValue && (
+                    <StyledText className="text-sm text-slate-500 mt-1">
+                      ~${inputUSDValue.toFixed(2)}
+                    </StyledText>
+                  )}
+                </StyledView>
+
+                <StyledTouchableOpacity
+                  onPress={() => handleTokenSelect('input')}
+                  className="flex-row items-center bg-white px-3 py-2 rounded-lg border border-gray-200"
+                >
+                  {selectedInputToken ? (
+                    <>
+                      <StyledText className="font-medium text-slate-900 mr-1">
+                        {selectedInputToken.symbol}
+                      </StyledText>
+                      <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                    </>
+                  ) : (
+                    <StyledText className="text-slate-500">
+                      Select Token
+                    </StyledText>
+                  )}
+                </StyledTouchableOpacity>
+              </StyledView>
+            </StyledView>
+
+            {/* Swap Button */}
+            <StyledView className="items-center my-2">
+              <StyledTouchableOpacity
+                onPress={handleSwapTokens}
+                className="bg-white p-2 rounded-full border border-gray-200"
+                disabled={!selectedInputToken || !selectedOutputToken}
+              >
+                <Ionicons 
+                  name="swap-vertical" 
+                  size={20} 
+                  color={selectedInputToken && selectedOutputToken ? "#3B82F6" : "#9CA3AF"} 
+                />
+              </StyledTouchableOpacity>
+            </StyledView>
+
+            {/* Output Token */}
+            <StyledView className="mb-4">
+              <StyledText className="text-sm text-slate-600 mb-2">
+                To
+              </StyledText>
+
+              <StyledView className="flex-row items-center space-x-3">
+                <StyledView className="flex-1">
+                  <Input
+                    placeholder="0.0"
+                    value={outputAmount}
+                    onChangeText={() => {}} // Read-only
+                    className="text-xl"
+                  />
+                  {outputUSDValue && (
+                    <StyledText className="text-sm text-slate-500 mt-1">
+                      ~${outputUSDValue.toFixed(2)}
+                    </StyledText>
+                  )}
+                </StyledView>
+
+                <StyledTouchableOpacity
+                  onPress={() => handleTokenSelect('output')}
+                  className="flex-row items-center bg-white px-3 py-2 rounded-lg border border-gray-200"
+                >
+                  {selectedOutputToken ? (
+                    <>
+                      <StyledText className="font-medium text-slate-900 mr-1">
+                        {selectedOutputToken.symbol}
+                      </StyledText>
+                      <Ionicons name="chevron-down" size={16} color="#6B7280" />
+                    </>
+                  ) : (
+                    <StyledText className="text-slate-500">
+                      Select Token
+                    </StyledText>
+                  )}
+                </StyledTouchableOpacity>
+              </StyledView>
+            </StyledView>
+
+            {/* Quote Info */}
+            {inputAmount && selectedInputToken && selectedOutputToken && (
+              <StyledView className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                <StyledView className="flex-row justify-between items-center mb-2">
+                  <StyledText className="text-sm text-slate-600">
+                    Exchange Rate
+                  </StyledText>
+                  <StyledText className="text-sm font-medium text-slate-900">
+                    1 {selectedInputToken.symbol} = {parseFloat(mockQuote.exchangeRate).toFixed(6)} {selectedOutputToken.symbol}
+                  </StyledText>
+                </StyledView>
+
+                <StyledView className="flex-row justify-between items-center mb-2">
+                  <StyledText className="text-sm text-slate-600">
+                    Price Impact
+                  </StyledText>
+                  <StyledText className="text-sm font-medium text-green-600">
+                    {mockQuote.priceImpact.toFixed(2)}%
+                  </StyledText>
+                </StyledView>
+
+                <StyledView className="flex-row justify-between items-center mb-2">
+                  <StyledText className="text-sm text-slate-600">
+                    Network Fee
+                  </StyledText>
+                  <StyledText className="text-sm font-medium text-slate-900">
+                    ~${mockQuote.feeUSD}
+                  </StyledText>
+                </StyledView>
+
+                <StyledView className="flex-row justify-between items-center">
+                  <StyledText className="text-sm text-slate-600">
+                    Slippage Tolerance
+                  </StyledText>
+                  <StyledTouchableOpacity onPress={() => setShowSlippageSettings(true)}>
+                    <StyledText className="text-sm font-medium text-blue-600">
+                      {slippage}%
+                    </StyledText>
+                  </StyledTouchableOpacity>
+                </StyledView>
+              </StyledView>
+            )}
+
+            {/* Swap Button */}
+            <StyledTouchableOpacity
+              onPress={handleExecuteSwap}
+              disabled={!selectedInputToken || !selectedOutputToken || !inputAmount}
+              className={`w-full py-3 px-4 rounded-lg ${
+                selectedInputToken && selectedOutputToken && inputAmount
+                  ? 'bg-blue-600'
+                  : 'bg-gray-300'
+              }`}
+            >
+              <StyledText className={`text-center font-semibold ${
+                selectedInputToken && selectedOutputToken && inputAmount
+                  ? 'text-white'
+                  : 'text-gray-500'
+              }`}>
+                {isLoading ? 'Getting Quote...' : 'Swap'}
+              </StyledText>
+            </StyledTouchableOpacity>
+          </StyledView>
+        </StyledView>
+
+        {/* Recent Swaps */}
+        <StyledView className="px-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Recent Swaps
+          </StyledText>
+          
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <StyledView className="space-y-3">
+              <StyledView className="flex-row justify-between items-center p-3 bg-white rounded-lg">
+                <StyledView className="flex-row items-center">
+                  <StyledView className="w-8 h-8 bg-blue-100 rounded-full mr-3" />
+                  <StyledView>
+                    <StyledText className="font-medium text-slate-900">ETH → USDC</StyledText>
+                    <StyledText className="text-sm text-slate-500">2 hours ago</StyledText>
+                  </StyledView>
+                </StyledView>
+                <StyledView className="items-end">
+                  <StyledText className="font-medium text-slate-900">+2,650.45 USDC</StyledText>
+                  <StyledText className="text-sm text-green-600">+$2,650.45</StyledText>
+                </StyledView>
+              </StyledView>
+
+              <StyledView className="flex-row justify-between items-center p-3 bg-white rounded-lg">
+                <StyledView className="flex-row items-center">
+                  <StyledView className="w-8 h-8 bg-green-100 rounded-full mr-3" />
+                  <StyledView>
+                    <StyledText className="font-medium text-slate-900">USDC → ETH</StyledText>
+                    <StyledText className="text-sm text-slate-500">1 day ago</StyledText>
+                  </StyledView>
+                </StyledView>
+                <StyledView className="items-end">
+                  <StyledText className="font-medium text-slate-900">+0.95 ETH</StyledText>
+                  <StyledText className="text-sm text-red-600">-$2,517.93</StyledText>
+                </StyledView>
+              </StyledView>
+            </StyledView>
+          </StyledView>
+        </StyledView>
+      </StyledScrollView>
 
       {/* Token Selection Modal */}
       <Modal
@@ -156,10 +478,10 @@ export const SwapScreen: React.FC = () => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
           {/* Modal Header */}
-          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <StyledText className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200">
+            <StyledText className="text-lg font-semibold text-slate-900">
               Select Token
             </StyledText>
             <StyledTouchableOpacity
@@ -183,15 +505,15 @@ export const SwapScreen: React.FC = () => {
           </StyledView>
 
           {/* Token List */}
-          <StyledFlatList
+          <FlatList
             data={filteredTokens}
-            keyExtractor={(item) => item.address}
-            renderItem={renderTokenItem}
-            className="flex-1"
+            keyExtractor={(item: Token) => item.address}
+            renderItem={({ item }: { item: Token }) => renderTokenItem({ item })}
+            style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <StyledView className="p-8 items-center">
-                <StyledText className="text-gray-500 dark:text-gray-400 text-center">
+                <StyledText className="text-slate-500 text-center">
                   No tokens found
                 </StyledText>
               </StyledView>
@@ -200,8 +522,8 @@ export const SwapScreen: React.FC = () => {
 
           {/* Popular Tokens */}
           {searchQuery === '' && (
-            <StyledView className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <StyledText className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
+            <StyledView className="p-4 border-t border-gray-200">
+              <StyledText className="text-sm font-medium text-slate-600 mb-3">
                 Popular Tokens
               </StyledText>
               <StyledView className="flex-row flex-wrap">
@@ -209,9 +531,9 @@ export const SwapScreen: React.FC = () => {
                   <StyledTouchableOpacity
                     key={token.address}
                     onPress={() => handleTokenSelection(token)}
-                    className="bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg mr-2 mb-2"
+                    className="bg-gray-100 px-3 py-2 rounded-lg mr-2 mb-2"
                   >
-                    <StyledText className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <StyledText className="text-sm font-medium text-slate-900">
                       {token.symbol}
                     </StyledText>
                   </StyledTouchableOpacity>
@@ -219,6 +541,73 @@ export const SwapScreen: React.FC = () => {
               </StyledView>
             </StyledView>
           )}
+        </SafeAreaView>
+      </Modal>
+
+      {/* Slippage Settings Modal */}
+      <Modal
+        visible={showSlippageSettings}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200">
+            <StyledText className="text-lg font-semibold text-slate-900">
+              Slippage Tolerance
+            </StyledText>
+            <StyledTouchableOpacity
+              onPress={() => setShowSlippageSettings(false)}
+              className="p-2"
+            >
+              <Ionicons name="close" size={24} color="#6B7280" />
+            </StyledTouchableOpacity>
+          </StyledView>
+
+          <StyledView className="p-4">
+            <StyledText className="text-sm text-slate-600 mb-4">
+              Your transaction will revert if the price changes unfavorably by more than this percentage.
+            </StyledText>
+
+            <StyledView className="flex-row space-x-2 mb-4">
+              {[0.1, 0.5, 1.0].map((value) => (
+                <StyledTouchableOpacity
+                  key={value}
+                  onPress={() => setSlippage(value)}
+                  className={`flex-1 py-2 px-4 rounded-lg border ${
+                    slippage === value
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <StyledText className={`text-center font-medium ${
+                    slippage === value ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    {value}%
+                  </StyledText>
+                </StyledTouchableOpacity>
+              ))}
+            </StyledView>
+
+            <StyledView className="mb-4">
+              <StyledText className="text-sm text-slate-600 mb-2">Custom</StyledText>
+              <Input
+                placeholder="0.5"
+                value={slippage.toString()}
+                onChangeText={(text) => setSlippage(parseFloat(text) || 0.5)}
+                keyboardType="numeric"
+                rightElement={<StyledText className="text-slate-500">%</StyledText>}
+              />
+            </StyledView>
+
+            <StyledTouchableOpacity
+              onPress={() => setShowSlippageSettings(false)}
+              className="w-full py-3 px-4 bg-blue-600 rounded-lg"
+            >
+              <StyledText className="text-center font-semibold text-white">
+                Confirm
+              </StyledText>
+            </StyledTouchableOpacity>
+          </StyledView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
