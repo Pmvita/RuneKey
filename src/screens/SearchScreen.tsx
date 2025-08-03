@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList } from 'react-native';
 import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../components/common/Card';
-import { Input } from '../components/common/Input';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 
@@ -13,6 +11,7 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledScrollView = styled(ScrollView);
 const StyledTouchableOpacity = styled(TouchableOpacity);
+const StyledFlatList = styled(FlatList);
 
 interface SearchResult {
   id: string;
@@ -40,6 +39,7 @@ export const SearchScreen: React.FC = () => {
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [showTrendingModal, setShowTrendingModal] = useState(false);
 
   // Log screen focus
   useFocusEffect(
@@ -207,14 +207,16 @@ export const SearchScreen: React.FC = () => {
           
           {/* Search Input */}
           <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <Input
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search tokens, DApps, NFTs..."
-              leftElement={
-                <Ionicons name="search-outline" size={20} color="#6B7280" />
-              }
-            />
+            <StyledView className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
+              <Ionicons name="search-outline" size={20} color="#6B7280" />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search tokens, DApps, NFTs..."
+                placeholderTextColor="#6B7280"
+                style={{ flex: 1, marginLeft: 12, color: '#374151' }}
+              />
+            </StyledView>
           </StyledView>
         </StyledView>
 
@@ -354,53 +356,69 @@ export const SearchScreen: React.FC = () => {
                       <StyledText className="text-slate-600">Loading trending tokens...</StyledText>
                     </StyledView>
                   ) : apiTrendingTokens.length > 0 ? (
-                    apiTrendingTokens.slice(0, 5).map((token, index) => (
-                      <StyledTouchableOpacity
-                        key={`${token.symbol}-${index}`}
-                        className={`p-4 flex-row items-center ${
-                          index !== Math.min(apiTrendingTokens.length, 5) - 1 ? 'border-b border-gray-200' : ''
-                        }`}
-                      >
-                        {token.image ? (
-                          <Image 
-                            source={{ uri: token.image }} 
-                            style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
-                            onError={() => {
-                              console.log('Failed to load image for trending token:', token.symbol);
-                            }}
-                          />
-                        ) : (
-                          <StyledView className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="cash" size={20} color="#6b7280" />
-                          </StyledView>
-                        )}
-                        <StyledView className="flex-1">
-                          <StyledView className="flex-row items-center justify-between">
-                            <StyledText className="text-base font-semibold text-slate-900">
-                              {token.name}
-                            </StyledText>
-                            <StyledText className="text-sm text-slate-600">
-                              {token.symbol?.toUpperCase()}
-                            </StyledText>
-                          </StyledView>
-                          {token.price_change_percentage_24h && (
-                            <StyledView className="flex-row items-center mt-1">
-                              <StyledText className={`text-xs font-medium ${
-                                token.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
-                              }`}>
-                                {token.price_change_percentage_24h > 0 ? '+' : ''}{token.price_change_percentage_24h.toFixed(2)}%
-                              </StyledText>
-                              <Ionicons 
-                                name={token.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
-                                size={12} 
-                                color={token.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
-                                style={{ marginLeft: 4 }}
-                              />
+                    <>
+                      {apiTrendingTokens.slice(0, 3).map((token, index) => (
+                        <StyledTouchableOpacity
+                          key={`${token.symbol}-${index}`}
+                          className={`p-4 flex-row items-center ${
+                            index !== Math.min(apiTrendingTokens.length, 3) - 1 ? 'border-b border-gray-200' : ''
+                          }`}
+                        >
+                          {token.image ? (
+                            <Image 
+                              source={{ uri: token.image }} 
+                              style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                              onError={() => {
+                                console.log('Failed to load image for trending token:', token.symbol);
+                              }}
+                            />
+                          ) : (
+                            <StyledView className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
+                              <Ionicons name="cash" size={20} color="#6b7280" />
                             </StyledView>
                           )}
-                        </StyledView>
-                      </StyledTouchableOpacity>
-                    ))
+                          <StyledView className="flex-1">
+                            <StyledView className="flex-row items-center justify-between">
+                              <StyledText className="text-base font-semibold text-slate-900">
+                                {token.name}
+                              </StyledText>
+                              <StyledText className="text-sm text-slate-600">
+                                {token.symbol?.toUpperCase()}
+                              </StyledText>
+                            </StyledView>
+                            {token.price_change_percentage_24h && (
+                              <StyledView className="flex-row items-center mt-1">
+                                <StyledText className={`text-xs font-medium ${
+                                  token.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {token.price_change_percentage_24h > 0 ? '+' : ''}{token.price_change_percentage_24h.toFixed(2)}%
+                                </StyledText>
+                                <Ionicons 
+                                  name={token.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
+                                  size={12} 
+                                  color={token.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
+                                  style={{ marginLeft: 4 }}
+                                />
+                              </StyledView>
+                            )}
+                          </StyledView>
+                        </StyledTouchableOpacity>
+                      ))}
+                      
+                      {apiTrendingTokens.length > 3 && (
+                        <StyledTouchableOpacity
+                          onPress={() => setShowTrendingModal(true)}
+                          className="p-4 border-t border-gray-200"
+                        >
+                          <StyledView className="flex-row items-center justify-center">
+                            <StyledText className="text-blue-600 font-medium mr-2">
+                              See More ({apiTrendingTokens.length - 3} more)
+                            </StyledText>
+                            <Ionicons name="chevron-forward" size={16} color="#2563eb" />
+                          </StyledView>
+                        </StyledTouchableOpacity>
+                      )}
+                    </>
                   ) : (
                     <StyledView className="items-center py-8">
                       <StyledText className="text-slate-600">No trending tokens available</StyledText>
@@ -457,6 +475,90 @@ export const SearchScreen: React.FC = () => {
         {/* Additional Space */}
         <StyledView className="h-6" />
       </StyledScrollView>
+
+      {/* Trending Tokens Modal */}
+      <Modal
+        visible={showTrendingModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+          {/* Modal Header */}
+          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200">
+            <StyledText className="text-lg font-semibold text-slate-900">
+              All Trending Tokens
+            </StyledText>
+            <StyledTouchableOpacity
+              onPress={() => setShowTrendingModal(false)}
+              className="p-2"
+            >
+              <Ionicons name="close" size={24} color="#6B7280" />
+            </StyledTouchableOpacity>
+          </StyledView>
+
+          {/* Token List */}
+          <FlatList
+            data={apiTrendingTokens}
+            keyExtractor={(item) => `${item.symbol}-${item.id}`}
+            renderItem={({ item }: { item: TrendingToken }) => (
+              <StyledTouchableOpacity
+                className="flex-row items-center p-4 border-b border-gray-100"
+              >
+                {item.image ? (
+                  <Image 
+                    source={{ uri: item.image }} 
+                    style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12 }}
+                    onError={() => {
+                      console.log('Failed to load image for trending token:', item.symbol);
+                    }}
+                  />
+                ) : (
+                  <StyledView className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
+                )}
+                <StyledView className="flex-1">
+                  <StyledText className="font-medium text-slate-900">{item.symbol?.toUpperCase()}</StyledText>
+                  <StyledText className="text-sm text-slate-500">{item.name}</StyledText>
+                  {item.current_price && (
+                    <StyledText className="text-xs text-slate-400">
+                      ${item.current_price.toFixed(2)}
+                    </StyledText>
+                  )}
+                </StyledView>
+                {item.price_change_percentage_24h && (
+                  <StyledView className="items-end">
+                    <StyledText className={`text-sm font-medium ${
+                      item.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {item.price_change_percentage_24h > 0 ? '+' : ''}{item.price_change_percentage_24h.toFixed(2)}%
+                    </StyledText>
+                    <Ionicons 
+                      name={item.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
+                      size={12} 
+                      color={item.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
+                      style={{ marginTop: 2 }}
+                    />
+                  </StyledView>
+                )}
+              </StyledTouchableOpacity>
+            )}
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <StyledView className="p-8 items-center">
+                {isLoadingTrending ? (
+                  <StyledText className="text-slate-500 text-center">
+                    Loading trending tokens...
+                  </StyledText>
+                ) : (
+                  <StyledText className="text-slate-500 text-center">
+                    No trending tokens available
+                  </StyledText>
+                )}
+              </StyledView>
+            }
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
