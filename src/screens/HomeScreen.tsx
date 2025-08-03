@@ -8,6 +8,7 @@ import { Card } from '../components/common/Card';
 import { TokenListItem } from '../components/token/TokenListItem';
 import { useWallet } from '../hooks/wallet/useWallet';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
+import { usePrices } from '../hooks/token/usePrices';
 import { Token } from '../types';
 import { NETWORK_CONFIGS } from '../constants';
 
@@ -22,6 +23,15 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 export const HomeScreen: React.FC = () => {
   const { isConnected, currentWallet, activeNetwork } = useWallet();
   const { connectDevWallet } = useDevWallet();
+  const { 
+    fetchPrices, 
+    startPriceRefresh, 
+    stopPriceRefresh, 
+    isLoading: isLoadingPrices,
+    getTokenPrice,
+    getTokenPriceChange,
+    calculateUSDValue
+  } = usePrices();
   const [walletData, setWalletData] = useState<any>(null);
   const [loadingData, setLoadingData] = useState(false);
 
@@ -50,12 +60,12 @@ export const HomeScreen: React.FC = () => {
             logoURI: 'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png'
           },
           {
-            symbol: 'WBTC',
-            name: 'Wrapped Bitcoin',
+            symbol: 'BTC',
+            name: 'Bitcoin',
             balance: '35.5',
             usdValue: 1535379.26,
             priceChange24h: 2.98,
-            logoURI: 'https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png'
+            logoURI: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png'
           }
         ]
       });
@@ -68,6 +78,31 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
     loadWalletData();
   }, []);
+
+  // Start live price updates when wallet data is loaded
+  useEffect(() => {
+    if (walletData && walletData.tokens) {
+      // Get addresses for live price fetching
+      const tokenAddresses = walletData.tokens
+        .map((token: any) => token.address)
+        .filter(Boolean);
+      
+      if (tokenAddresses.length > 0) {
+        // Fetch live prices for all tokens
+        fetchPrices(tokenAddresses);
+        
+        // Set up interval for price updates
+        const interval = setInterval(() => {
+          fetchPrices(tokenAddresses);
+        }, 30000); // Update every 30 seconds
+        
+        return () => {
+          clearInterval(interval);
+          stopPriceRefresh();
+        };
+      }
+    }
+  }, [walletData, fetchPrices, stopPriceRefresh]);
 
   // Log screen focus
   useFocusEffect(
@@ -118,7 +153,8 @@ export const HomeScreen: React.FC = () => {
   const calculateTotalValue = () => {
     if (!walletData || !walletData.tokens) return 0;
     return walletData.tokens.reduce((total: number, token: any) => {
-      return total + (token.usdValue || 0);
+      const liveUSDValue = calculateUSDValue(token.address, token.balance);
+      return total + (liveUSDValue || token.usdValue || 0);
     }, 0);
   };
 
@@ -149,18 +185,15 @@ export const HomeScreen: React.FC = () => {
           <StyledText className="text-2xl font-bold text-slate-900 mb-2">
             RuneKey
           </StyledText>
-          <StyledText className="text-slate-600 mb-4">
-            Manage your digital assets
-          </StyledText>
           
           {/* Total Portfolio Value */}
           {walletData && (
-            <Card variant="frost" className="p-6 bg-white/90 border border-gray-300 shadow-lg backdrop-blur-sm">
-              <StyledText className="text-sm text-slate-600 mb-1">
+            <Card variant="frost" className="p-6 bg-gray-800/90 border border-gray-600 shadow-lg backdrop-blur-sm">
+              <StyledText className="text-sm text-slate-400 mb-1">
                 Total Portfolio Value
               </StyledText>
-              <StyledText className="text-3xl font-bold text-slate-900">
-                {formatUSD(walletData.totalValue)}
+              <StyledText className="text-3xl font-bold text-black">
+                {formatUSD(calculateTotalValue())}
               </StyledText>
             </Card>
           )}
@@ -171,7 +204,7 @@ export const HomeScreen: React.FC = () => {
 
         {/* Quick Actions */}
         <StyledView className="px-6 mb-6">
-          <Card variant="frost" className="p-6 bg-white/90 border border-gray-300 shadow-lg backdrop-blur-sm">
+          <Card variant="frost" className="p-6 bg-gray-800/90 border border-gray-600 shadow-lg backdrop-blur-sm">
             <StyledView className="flex-row justify-around">
               <StyledView className="items-center">
                 <StyledTouchableOpacity
@@ -183,7 +216,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-up" size={24} color="#ef4444" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-slate-700 text-sm mt-2 font-medium">Send</StyledText>
+                <StyledText className="text-white text-sm mt-2 font-medium">Send</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
@@ -196,20 +229,20 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-down" size={24} color="#22c55e" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-slate-700 text-sm mt-2 font-medium">Receive</StyledText>
+                <StyledText className="text-white text-sm mt-2 font-medium">Receive</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
                 <StyledTouchableOpacity
                   className="w-16 h-16 bg-blue-50 border border-blue-200 rounded-full items-center justify-center shadow-sm"
                   onPress={() => {
-                    logger.logButtonPress('Swap', 'navigate to swap screen');
+                    logger.logButtonPress('Swap', 'navigate to receive screen');
                     /* Navigate to swap */
                   }}
                 >
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-slate-700 text-sm mt-2 font-medium">Swap</StyledText>
+                <StyledText className="text-white text-sm mt-2 font-medium">Swap</StyledText>
               </StyledView>
             </StyledView>
           </Card>
@@ -229,29 +262,56 @@ export const HomeScreen: React.FC = () => {
               </StyledText>
             </StyledView>
           )}
+
+          {/* Live Price Indicator */}
+          {isLoadingPrices && !loadingData && (
+            <StyledView className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <StyledText className="text-green-700 text-center font-medium">
+                🔄 Updating live prices...
+              </StyledText>
+            </StyledView>
+          )}
           
-          <Card variant="frost" className="overflow-hidden bg-white/90 border border-gray-300 shadow-lg backdrop-blur-sm">
-            {/* Mock Data Tokens */}
-            {walletData && walletData.tokens && walletData.tokens.map((token: any, index: number) => (
-              <TokenListItem
-                key={token.address}
-                token={{
-                  address: token.address,
-                  symbol: token.symbol,
-                  name: token.name,
-                  decimals: token.decimals,
-                  balance: token.balance,
-                  usdValue: token.usdValue,
-                  priceChange24h: token.priceChange24h,
-                  logoURI: token.logoURI,
-                  coinId: token.coinId
-                }}
-                onPress={() => {
-                  logger.logButtonPress(`${token.symbol} Token`, 'view token details');
-                  Alert.alert('Token Details', `${token.name} (${token.symbol})`);
-                }}
-              />
-            ))}
+          <Card variant="frost" className="overflow-hidden bg-gray-800/90 border border-gray-600 shadow-lg backdrop-blur-sm">
+            {/* Tokens with Live Price Data - Sorted by Value */}
+            {walletData && walletData.tokens && walletData.tokens
+              .map((token: any, index: number) => {
+                // Get live price data
+                const livePrice = getTokenPrice(token.address);
+                const livePriceChange = getTokenPriceChange(token.address);
+                const liveUSDValue = calculateUSDValue(token.address, token.balance);
+                
+                return {
+                  ...token,
+                  liveUSDValue: liveUSDValue || token.usdValue,
+                  livePrice: livePrice || token.currentPrice,
+                  livePriceChange: livePriceChange || token.priceChange24h
+                };
+              })
+              .sort((a: any, b: any) => (b.liveUSDValue || 0) - (a.liveUSDValue || 0))
+              .map((token: any, index: number) => (
+                <TokenListItem
+                  key={token.address}
+                  token={{
+                    address: token.address,
+                    symbol: token.symbol,
+                    name: token.name,
+                    decimals: token.decimals,
+                    balance: token.balance,
+                    usdValue: token.liveUSDValue,
+                    priceChange24h: token.livePriceChange,
+                    logoURI: token.logoURI,
+                    coinId: token.coinId,
+                    currentPrice: token.livePrice
+                  }}
+                  onPress={() => {
+                    logger.logButtonPress(`${token.symbol} Token`, 'view token details');
+                    Alert.alert('Token Details', `${token.name} (${token.symbol})`);
+                  }}
+                  showPrice={true}
+                  showPriceChange={true}
+                />
+              ))}
             
             {/* Fallback for no tokens */}
             {(!walletData || !walletData.tokens || walletData.tokens.length === 0) && (

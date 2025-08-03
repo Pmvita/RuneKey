@@ -161,7 +161,7 @@ export const useWalletStore = create<WalletState & WalletActions>()(
           tokens: [
             {
               address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-              symbol: 'WBTC',
+              symbol: 'BTC',
               name: 'Wrapped Bitcoin',
               decimals: 8,
               balance: '35.5', // ~$2.3M in BTC

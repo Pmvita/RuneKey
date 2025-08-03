@@ -10,20 +10,20 @@
     "tokens": [
       {
         "coinId": "bitcoin",
-        "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-        "symbol": "WBTC",
-        "name": "Wrapped Bitcoin",
+        "address": "0x0000000000000000000000000000000000000000",
+        "symbol": "BTC",
+        "name": "Bitcoin",
         "decimals": 8,
         "balance": "35.5",
         "currentPrice": 43250.12,
         "priceChange24h": 2.98,
         "marketCap": 847123456789,
         "usdValue": 1535379.26,
-        "logoURI": "https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+        "logoURI": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
       },
       {
         "coinId": "ethereum",
-        "address": "0x0000000000000000000000000000000000000000",
+        "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
@@ -32,7 +32,7 @@
         "priceChange24h": 1.94,
         "marketCap": 318765432109,
         "usdValue": 3316250.94,
-        "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
+        "logoURI": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"
       },
       {
         "coinId": "usd-coin",
@@ -45,7 +45,7 @@
         "priceChange24h": 0.00,
         "marketCap": 45678901234,
         "usdValue": 5000000.00,
-        "logoURI": "https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png"
+        "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png"
       },
       {
         "coinId": "tether",
@@ -58,7 +58,7 @@
         "priceChange24h": 0.00,
         "marketCap": 98765432109,
         "usdValue": 3000000.00,
-        "logoURI": "https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+        "logoURI": "https://assets.coingecko.com/coins/images/325/large/Tether.png"
       },
       {
         "coinId": "binancecoin",
@@ -71,7 +71,7 @@
         "priceChange24h": 0.79,
         "marketCap": 48123456789,
         "usdValue": 4686750.00,
-        "logoURI": "https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png"
+        "logoURI": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png"
       }
     ],
     "transactions": [
@@ -97,8 +97,8 @@
         "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
         "amount": "50.0",
         "token": {
-          "symbol": "WBTC",
-          "name": "Wrapped Bitcoin",
+          "symbol": "BTC",
+          "name": "Bitcoin",
           "decimals": 8
         },
         "timestamp": 1707264000000,

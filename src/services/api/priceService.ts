@@ -272,7 +272,8 @@ class PriceService {
   private formatAddressForCoingecko(address: string): string {
     // Handle native tokens
     const nativeTokenMap: Record<string, string> = {
-      '0x0000000000000000000000000000000000000000': 'ethereum',
+      '0x0000000000000000000000000000000000000000': 'bitcoin',
+      '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': 'ethereum',
       'So11111111111111111111111111111111111111112': 'solana',
       // Add more native token mappings as needed
     };
@@ -301,7 +302,8 @@ class PriceService {
 
     // Handle native tokens
     const nativeTokenMap: Record<string, string> = {
-      'ethereum': '0x0000000000000000000000000000000000000000',
+      'bitcoin': '0x0000000000000000000000000000000000000000',
+      'ethereum': '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       'solana': 'So11111111111111111111111111111111111111112',
     };
 

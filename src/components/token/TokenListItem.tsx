@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { styled } from 'nativewind';
 import { Token } from '../../types';
@@ -24,10 +24,28 @@ export const TokenListItem: React.FC<TokenListItemProps> = ({
   showPrice = true,
   showPriceChange = true,
 }) => {
+  const [imageError, setImageError] = useState(false);
   const { getFormattedPrice, getFormattedPriceChange, calculateUSDValue } = usePrices();
 
-  const formattedPrice = getFormattedPrice(token.address);
-  const priceChange = getFormattedPriceChange(token.address);
+  // Get fallback image URL for common tokens
+  const getFallbackImageUrl = (symbol: string) => {
+    const fallbackUrls: { [key: string]: string } = {
+      'ETH': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
+      'USDC': 'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png',
+      'USDT': 'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+      'BNB': 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
+      'BTC': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
+    };
+    return fallbackUrls[symbol] || null;
+  };
+
+  // Try to get live price data, fallback to mock data
+  const formattedPrice = getFormattedPrice(token.address) || (token.currentPrice ? `$${token.currentPrice.toLocaleString()}` : null);
+  const priceChange = getFormattedPriceChange(token.address) || (token.priceChange24h ? {
+    value: token.priceChange24h,
+    isPositive: token.priceChange24h >= 0,
+    formatted: `${token.priceChange24h >= 0 ? '+' : ''}${token.priceChange24h.toFixed(2)}%`
+  } : null);
   
   // For dev wallet tokens, use pre-calculated USD value
   const usdValue = token.usdValue || (token.balance ? calculateUSDValue(token.address, token.balance) : null);
@@ -59,12 +77,17 @@ export const TokenListItem: React.FC<TokenListItemProps> = ({
     >
       {/* Token Icon */}
       <StyledView className="mr-3">
-        {token.logoURI ? (
+        {(token.logoURI || getFallbackImageUrl(token.symbol)) && !imageError ? (
           <StyledImage
-            source={{ uri: token.logoURI }}
+            source={{ uri: token.logoURI || getFallbackImageUrl(token.symbol) }}
             className="w-10 h-10 rounded-full"
             onError={() => {
-              // Fallback to text if image fails to load
+              console.log(`Failed to load image for ${token.symbol}: ${token.logoURI}`);
+              setImageError(true);
+            }}
+            onLoad={() => {
+              console.log(`Successfully loaded image for ${token.symbol}`);
+              setImageError(false);
             }}
           />
         ) : (
