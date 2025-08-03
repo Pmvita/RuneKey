@@ -68,8 +68,8 @@
     </tr>
     <tr>
       <td align="center">
-        <strong>Home Dashboard</strong><br/>
-        <img src="assets/screenshots/home-screen.png" width="200" alt="Home Dashboard"/>
+        <strong>Home Screen</strong><br/>
+        <img src="assets/screenshots/home-screen.png" width="200" alt="Home Screen"/>
       </td>
       <td align="center">
         <strong>Wallet Management</strong><br/>

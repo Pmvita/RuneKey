@@ -197,7 +197,7 @@ export const useWallet = () => {
 
   // Auto-refresh balances when wallet connects or network changes
   useEffect(() => {
-    if (currentWallet && isConnected) {
+    if (currentWallet && isConnected && currentWallet.id !== 'developer-wallet') {
       refreshBalances();
     }
   }, [currentWallet, isConnected, activeNetwork, refreshBalances]);

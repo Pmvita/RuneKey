@@ -76,19 +76,20 @@ class EvmWalletService {
   }
 
   /**
-   * Get native token balance (ETH, MATIC, BNB, etc.)
+   * Get wallet balance
    */
   async getBalance(address: string, network: SupportedNetwork): Promise<string> {
     try {
-      // Validate address format
-      if (!address || !address.startsWith('0x') || address.length !== 42) {
+      // Validate address format - trim whitespace and check format
+      const cleanAddress = address?.trim();
+      if (!cleanAddress || !cleanAddress.startsWith('0x') || cleanAddress.length !== 42 || !/^0x[a-fA-F0-9]{40}$/.test(cleanAddress)) {
         console.warn('Invalid address format:', address);
         return '0';
       }
 
       const client = this.getPublicClient(network);
       const balance = await client.getBalance({ 
-        address: address as `0x${string}`,
+        address: cleanAddress as `0x${string}`,
       });
       
       return formatEther(balance);
@@ -103,8 +104,9 @@ class EvmWalletService {
    */
   async getTokenBalances(address: string, network: SupportedNetwork): Promise<Token[]> {
     try {
-      // Validate address format
-      if (!address || !address.startsWith('0x') || address.length !== 42) {
+      // Validate address format - trim whitespace and check format
+      const cleanAddress = address?.trim();
+      if (!cleanAddress || !cleanAddress.startsWith('0x') || cleanAddress.length !== 42 || !/^0x[a-fA-F0-9]{40}$/.test(cleanAddress)) {
         console.warn('Invalid address format:', address);
         return [];
       }
@@ -150,7 +152,7 @@ class EvmWalletService {
               },
             ],
             functionName: 'balanceOf',
-            args: [address as `0x${string}`],
+            args: [cleanAddress as `0x${string}`],
           });
           
           if (balance && balance > 0n) {

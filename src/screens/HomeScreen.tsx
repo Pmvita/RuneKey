@@ -165,12 +165,12 @@ export const HomeScreen: React.FC = () => {
 
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f8fafc' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
       {/* Light background overlay */}
       <StyledView 
         className="absolute inset-0"
         style={{
-          backgroundColor: 'rgba(248, 250, 252, 0.98)',
+          backgroundColor: 'rgb(93,138,168)',
         }}
       />
 
@@ -188,14 +188,24 @@ export const HomeScreen: React.FC = () => {
           
           {/* Total Portfolio Value */}
           {walletData && (
-            <Card variant="frost" className="p-6 bg-gray-800/90 border border-gray-600 shadow-lg backdrop-blur-sm">
-              <StyledText className="text-sm text-slate-400 mb-1">
-                Total Portfolio Value
-              </StyledText>
+            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <StyledView className="flex-row justify-between items-center mb-2">
+                <StyledText className="text-sm text-slate-600">
+                  Total Portfolio Value
+                </StyledText>
+                <StyledView className="flex-row items-center">
+                  <StyledText className={`text-sm font-medium ${calculateTotalValue() > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {calculateTotalValue() > 0 ? '+' : ''}{((calculateTotalValue() - 15000000) / 15000000 * 100).toFixed(2)}%
+                  </StyledText>
+                  <StyledText className={`ml-1 ${calculateTotalValue() > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {calculateTotalValue() > 0 ? '↗' : '↘'}
+                  </StyledText>
+                </StyledView>
+              </StyledView>
               <StyledText className="text-3xl font-bold text-black">
                 {formatUSD(calculateTotalValue())}
               </StyledText>
-            </Card>
+            </StyledView>
           )}
         </StyledView>
 
@@ -204,7 +214,7 @@ export const HomeScreen: React.FC = () => {
 
         {/* Quick Actions */}
         <StyledView className="px-6 mb-6">
-          <Card variant="frost" className="p-6 bg-gray-800/90 border border-gray-600 shadow-lg backdrop-blur-sm">
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <StyledView className="flex-row justify-around">
               <StyledView className="items-center">
                 <StyledTouchableOpacity
@@ -216,7 +226,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-up" size={24} color="#ef4444" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-black text-sm mt-2 font-medium">Send</StyledText>
+                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Send</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
@@ -229,7 +239,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-down" size={24} color="#22c55e" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-black text-sm mt-2 font-medium">Receive</StyledText>
+                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Receive</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
@@ -242,10 +252,10 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
                 </StyledTouchableOpacity>
-                <StyledText className="text-black text-sm mt-2 font-medium">Swap</StyledText>
+                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Swap</StyledText>
               </StyledView>
             </StyledView>
-          </Card>
+          </StyledView>
         </StyledView>
 
         {/* Assets Section */}
@@ -272,7 +282,7 @@ export const HomeScreen: React.FC = () => {
             </StyledView>
           )}
           
-          <Card variant="frost" className="overflow-hidden bg-gray-800/90 border border-gray-600 shadow-lg backdrop-blur-sm">
+          <StyledView className="overflow-hidden border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             {/* Tokens with Live Price Data - Sorted by Value */}
             {walletData && walletData.tokens && walletData.tokens
               .map((token: any, index: number) => {
@@ -321,7 +331,7 @@ export const HomeScreen: React.FC = () => {
                 </StyledText>
               </StyledView>
             )}
-          </Card>
+          </StyledView>
         </StyledView>
       </StyledScrollView>
     </SafeAreaView>

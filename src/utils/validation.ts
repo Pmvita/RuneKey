@@ -32,8 +32,9 @@ export const validateSolanaAddress = (address: string): boolean => {
 
 export const validateEvmAddress = (address: string): boolean => {
   // EVM addresses are hex strings starting with 0x and 40 characters long
+  const cleanAddress = address?.trim();
   const evmRegex = /^0x[a-fA-F0-9]{40}$/;
-  return evmRegex.test(address);
+  return evmRegex.test(cleanAddress);
 };
 
 export const validatePrivateKey = (privateKey: string, network: SupportedNetwork): boolean => {
