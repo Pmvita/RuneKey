@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, Modal, FlatList, TouchableOpacity, Alert, ScrollView, TextInput, Image } from 'react-native';
 import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Input } from '../components/common/Input';
 import { useWallet } from '../hooks/wallet/useWallet';
 import { useSwap } from '../hooks/swap/useSwap';
 import { usePrices } from '../hooks/token/usePrices';
 import { walletService } from '../services/blockchain/walletService';
-import { Token, SwapParams } from '../types';
+import { priceService, CoinInfo } from '../services/api/priceService';
+import { Token, SwapParams, SwapQuote } from '../types';
 import { logger } from '../utils/logger';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
+import { COMMON_TOKENS } from '../constants';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledFlatList = styled(FlatList);
 const StyledScrollView = styled(ScrollView);
+const StyledTextInput = styled(TextInput);
 
 export const SwapScreen: React.FC = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -27,6 +29,9 @@ export const SwapScreen: React.FC = () => {
   const [outputAmount, setOutputAmount] = useState('');
   const [slippage, setSlippage] = useState(0.5);
   const [showSlippageSettings, setShowSlippageSettings] = useState(false);
+  const [allTokens, setAllTokens] = useState<Token[]>([]);
+  const [isLoadingTokens, setIsLoadingTokens] = useState(false);
+  const [cryptoCoins, setCryptoCoins] = useState<CoinInfo[]>([]);
 
   const { currentWallet, activeNetwork, isConnected } = useWallet();
   const { connectDevWallet } = useDevWallet();
@@ -44,18 +49,112 @@ export const SwapScreen: React.FC = () => {
 
   // Auto-connect developer wallet in development mode
   useEffect(() => {
-    console.log('🔄 SwapScreen: Checking wallet connection...', { isConnected, currentWallet });
-    if (!isConnected && !currentWallet) {
-      console.log('🔗 SwapScreen: Connecting developer wallet...');
+    if (!currentWallet) {
       connectDevWallet();
     }
-  }, [isConnected, currentWallet, connectDevWallet]);
+  }, [currentWallet, connectDevWallet]);
 
-  // Force connect wallet for development
+  // Fetch crypto tokens from API
   useEffect(() => {
-    console.log('🚀 SwapScreen: Force connecting wallet for development...');
-    connectDevWallet();
-  }, []);
+    const fetchCryptoTokens = async () => {
+      setIsLoadingTokens(true);
+      try {
+        // Fetch top 100 coins from CoinGecko
+        const result = await priceService.fetchTopCoins(100);
+        if (result.success) {
+          setCryptoCoins(result.data);
+          
+          // Convert CoinInfo to Token format
+          const tokensFromAPI: Token[] = result.data.map(coin => ({
+            address: coin.id, // Use coin ID as address for API tokens
+            symbol: coin.symbol.toUpperCase(),
+            name: coin.name,
+            decimals: 18, // Default decimals
+            balance: '0', // No balance for API tokens
+            logoURI: coin.image,
+            currentPrice: coin.current_price,
+            priceChange24h: coin.price_change_percentage_24h,
+            marketCap: coin.market_cap,
+          }));
+          
+          // Combine with wallet tokens and common tokens
+          const walletTokens = getAvailableTokens();
+          const commonTokens = (COMMON_TOKENS as any)[activeNetwork] || [];
+          
+          const allTokensCombined = [
+            ...walletTokens,
+            ...commonTokens,
+            ...tokensFromAPI
+          ];
+          
+          // Remove duplicates based on symbol
+          const uniqueTokens = allTokensCombined.filter((token, index, self) => 
+            index === self.findIndex(t => t.symbol === token.symbol)
+          );
+          
+          setAllTokens(uniqueTokens);
+        }
+      } catch (error) {
+        console.error('Failed to fetch crypto tokens:', error);
+        // Fallback to wallet tokens and common tokens only
+        const walletTokens = getAvailableTokens();
+        const commonTokens = (COMMON_TOKENS as any)[activeNetwork] || [];
+        
+        // Add some popular tokens as fallback
+        const fallbackTokens: Token[] = [
+          {
+            address: 'bitcoin',
+            symbol: 'BTC',
+            name: 'Bitcoin',
+            decimals: 8,
+            balance: '0',
+            logoURI: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
+            currentPrice: 43250.12,
+            priceChange24h: 2.98,
+            marketCap: 847123456789,
+          },
+          {
+            address: 'ethereum',
+            symbol: 'ETH',
+            name: 'Ethereum',
+            decimals: 18,
+            balance: '0',
+            logoURI: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
+            currentPrice: 2650.45,
+            priceChange24h: 1.94,
+            marketCap: 318765432109,
+          },
+          {
+            address: 'binancecoin',
+            symbol: 'BNB',
+            name: 'BNB',
+            decimals: 18,
+            balance: '0',
+            logoURI: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
+            currentPrice: 312.45,
+            priceChange24h: 0.79,
+            marketCap: 48123456789,
+          },
+        ];
+        
+        const allTokensCombined = [
+          ...walletTokens,
+          ...commonTokens,
+          ...fallbackTokens
+        ];
+        
+        const uniqueTokens = allTokensCombined.filter((token, index, self) => 
+          index === self.findIndex(t => t.symbol === token.symbol)
+        );
+        
+        setAllTokens(uniqueTokens);
+      } finally {
+        setIsLoadingTokens(false);
+      }
+    };
+
+    fetchCryptoTokens();
+  }, [activeNetwork]);
 
   // Log screen focus
   useFocusEffect(
@@ -64,7 +163,6 @@ export const SwapScreen: React.FC = () => {
     }, [])
   );
 
-  // Get available tokens (wallet tokens + common tokens)
   const getAvailableTokens = (): Token[] => {
     if (!currentWallet) return [];
 
@@ -91,10 +189,8 @@ export const SwapScreen: React.FC = () => {
     return uniqueTokens;
   };
 
-  const availableTokens = getAvailableTokens();
-
   // Filter tokens based on search query
-  const filteredTokens = availableTokens.filter(token =>
+  const filteredTokens = allTokens.filter(token =>
     token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     token.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -179,52 +275,36 @@ export const SwapScreen: React.FC = () => {
   };
 
   const handleExecuteSwap = async () => {
-    if (!selectedInputToken || !selectedOutputToken || !inputAmount) return;
+    if (!selectedInputToken || !selectedOutputToken || !inputAmount) {
+      Alert.alert('Error', 'Please select tokens and enter an amount');
+      return;
+    }
 
     try {
-      // Show confirmation alert
-      Alert.alert(
-        'Confirm Swap',
-        `Swap ${inputAmount} ${selectedInputToken.symbol} for approximately ${outputAmount} ${selectedOutputToken.symbol}?\n\nSlippage: ${slippage}%\nPrice Impact: ${mockQuote.priceImpact}%`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Confirm', 
-            onPress: async () => {
-              try {
-                // Mock swap execution
-                Alert.alert('Success', 'Swap completed successfully!');
-                setInputAmount('');
-                setOutputAmount('');
-              } catch (err) {
-                Alert.alert('Swap Failed', err instanceof Error ? err.message : 'Unknown error');
-              }
-            }
-          },
-        ]
-      );
-    } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Unknown error');
+      // For development mode, we'll use a mock quote
+      const mockSwapQuote: SwapQuote = {
+        inputToken: selectedInputToken,
+        outputToken: selectedOutputToken,
+        inputAmount,
+        outputAmount,
+        priceImpact: mockQuote.priceImpact,
+        route: [],
+        slippage,
+        exchangeRate: mockQuote.exchangeRate,
+      };
+
+      const result = await executeSwap(mockSwapQuote);
+      
+      // executeSwap returns the transaction hash on success
+      if (result) {
+        Alert.alert('Success', 'Swap executed successfully!');
+        setInputAmount('');
+        setOutputAmount('');
+      }
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to execute swap');
     }
   };
-
-  const renderTokenItem = ({ item }: { item: Token }) => (
-    <StyledTouchableOpacity
-      onPress={() => handleTokenSelection(item)}
-      className="flex-row items-center p-4 border-b border-gray-100"
-    >
-      <StyledView className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
-      <StyledView className="flex-1">
-        <StyledText className="font-medium text-slate-900">{item.symbol}</StyledText>
-        <StyledText className="text-sm text-slate-500">{item.name}</StyledText>
-      </StyledView>
-      {tokenSelectionType === 'input' && (
-        <StyledText className="text-sm text-slate-600">
-          {parseFloat(item.balance || '0').toFixed(4)}
-        </StyledText>
-      )}
-    </StyledTouchableOpacity>
-  );
 
   const inputUSDValue = selectedInputToken && inputAmount 
     ? calculateUSDValue(selectedInputToken.address, inputAmount) 
@@ -278,13 +358,16 @@ export const SwapScreen: React.FC = () => {
 
               <StyledView className="flex-row items-center space-x-3">
                 <StyledView className="flex-1">
-                  <Input
-                    placeholder="0.0"
-                    value={inputAmount}
-                    onChangeText={setInputAmount}
-                    keyboardType="numeric"
-                    className="text-xl"
-                  />
+                  <StyledView className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                    <StyledTextInput
+                      placeholder="0.0"
+                      value={inputAmount}
+                      onChangeText={setInputAmount}
+                      keyboardType="numeric"
+                      className="text-xl text-slate-900"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </StyledView>
                   {inputUSDValue && (
                     <StyledText className="text-sm text-slate-500 mt-1">
                       ~${inputUSDValue.toFixed(2)}
@@ -335,12 +418,16 @@ export const SwapScreen: React.FC = () => {
 
               <StyledView className="flex-row items-center space-x-3">
                 <StyledView className="flex-1">
-                  <Input
-                    placeholder="0.0"
-                    value={outputAmount}
-                    onChangeText={() => {}} // Read-only
-                    className="text-xl"
-                  />
+                  <StyledView className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                    <StyledTextInput
+                      placeholder="0.0"
+                      value={outputAmount}
+                      onChangeText={() => {}} // Read-only
+                      editable={false}
+                      className="text-xl text-slate-900"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </StyledView>
                   {outputUSDValue && (
                     <StyledText className="text-sm text-slate-500 mt-1">
                       ~${outputUSDValue.toFixed(2)}
@@ -494,28 +581,75 @@ export const SwapScreen: React.FC = () => {
 
           {/* Search Input */}
           <StyledView className="p-4">
-            <Input
-              placeholder="Search tokens..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              leftElement={
-                <Ionicons name="search" size={20} color="#6B7280" />
-              }
-            />
+            <StyledView className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
+              <Ionicons name="search" size={20} color="#6B7280" />
+              <StyledTextInput
+                placeholder="Search tokens..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                className="flex-1 ml-3 text-slate-900"
+                placeholderTextColor="#9CA3AF"
+              />
+            </StyledView>
           </StyledView>
 
           {/* Token List */}
           <FlatList
             data={filteredTokens}
             keyExtractor={(item: Token) => item.address}
-            renderItem={({ item }: { item: Token }) => renderTokenItem({ item })}
+            renderItem={({ item }: { item: Token }) => (
+              <StyledTouchableOpacity
+                onPress={() => handleTokenSelection(item)}
+                className="flex-row items-center p-4 border-b border-gray-100"
+              >
+                {item.logoURI ? (
+                  <Image 
+                    source={{ uri: item.logoURI }} 
+                    style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12 }}
+                    onError={() => {
+                      // Handle image loading errors silently
+                      console.log('Failed to load image for token:', item.symbol);
+                    }}
+                  />
+                ) : (
+                  <StyledView className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
+                )}
+                <StyledView className="flex-1">
+                  <StyledText className="font-medium text-slate-900">{item.symbol}</StyledText>
+                  <StyledText className="text-sm text-slate-500">{item.name}</StyledText>
+                  {item.currentPrice && (
+                    <StyledText className="text-xs text-slate-400">
+                      ${item.currentPrice.toFixed(2)}
+                    </StyledText>
+                  )}
+                </StyledView>
+                {tokenSelectionType === 'input' && item.balance && parseFloat(item.balance) > 0 && (
+                  <StyledView className="items-end">
+                    <StyledText className="text-sm text-slate-600">
+                      {parseFloat(item.balance).toFixed(4)}
+                    </StyledText>
+                    {item.currentPrice && (
+                      <StyledText className="text-xs text-slate-400">
+                        ~${(parseFloat(item.balance) * item.currentPrice).toFixed(2)}
+                      </StyledText>
+                    )}
+                  </StyledView>
+                )}
+              </StyledTouchableOpacity>
+            )}
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <StyledView className="p-8 items-center">
-                <StyledText className="text-slate-500 text-center">
-                  No tokens found
-                </StyledText>
+                {isLoadingTokens ? (
+                  <StyledText className="text-slate-500 text-center">
+                    Loading tokens...
+                  </StyledText>
+                ) : (
+                  <StyledText className="text-slate-500 text-center">
+                    No tokens found
+                  </StyledText>
+                )}
               </StyledView>
             }
           />
@@ -527,12 +661,24 @@ export const SwapScreen: React.FC = () => {
                 Popular Tokens
               </StyledText>
               <StyledView className="flex-row flex-wrap">
-                {walletService.getCommonTokens(activeNetwork).slice(0, 6).map((token) => (
+                {allTokens.slice(0, 6).map((token) => (
                   <StyledTouchableOpacity
                     key={token.address}
                     onPress={() => handleTokenSelection(token)}
-                    className="bg-gray-100 px-3 py-2 rounded-lg mr-2 mb-2"
+                    className="bg-gray-100 px-3 py-2 rounded-lg mr-2 mb-2 flex-row items-center"
                   >
+                    {token.logoURI ? (
+                      <Image 
+                        source={{ uri: token.logoURI }} 
+                        style={{ width: 16, height: 16, borderRadius: 8, marginRight: 4 }}
+                        onError={() => {
+                          // Handle image loading errors silently
+                          console.log('Failed to load image for popular token:', token.symbol);
+                        }}
+                      />
+                    ) : (
+                      <StyledView className="w-4 h-4 bg-gray-300 rounded-full mr-1" />
+                    )}
                     <StyledText className="text-sm font-medium text-slate-900">
                       {token.symbol}
                     </StyledText>
@@ -590,13 +736,17 @@ export const SwapScreen: React.FC = () => {
 
             <StyledView className="mb-4">
               <StyledText className="text-sm text-slate-600 mb-2">Custom</StyledText>
-              <Input
-                placeholder="0.5"
-                value={slippage.toString()}
-                onChangeText={(text) => setSlippage(parseFloat(text) || 0.5)}
-                keyboardType="numeric"
-                rightElement={<StyledText className="text-slate-500">%</StyledText>}
-              />
+              <StyledView className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                <StyledTextInput
+                  placeholder="0.5"
+                  value={slippage.toString()}
+                  onChangeText={(text) => setSlippage(parseFloat(text) || 0.5)}
+                  keyboardType="numeric"
+                  className="flex-1 text-slate-900"
+                  placeholderTextColor="#9CA3AF"
+                />
+                <StyledText className="text-slate-500 mr-3">%</StyledText>
+              </StyledView>
             </StyledView>
 
             <StyledTouchableOpacity
