@@ -27,6 +27,7 @@ interface SettingsItemProps {
   onPress?: () => void;
   rightElement?: React.ReactNode;
   showArrow?: boolean;
+  variant?: 'default' | 'danger' | 'warning';
 }
 
 const SettingsItem: React.FC<SettingsItemProps> = ({
@@ -36,43 +37,71 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
   onPress,
   rightElement,
   showArrow = true,
-}) => (
-  <StyledTouchableOpacity
-    className="flex-row items-center py-4 px-6 border-b border-ice-200 dark:border-ice-700"
-    onPress={onPress}
-    disabled={!onPress}
-  >
-                <StyledView className="w-10 h-10 bg-glass-white dark:bg-glass-dark border border-glass-frost dark:border-ice-700/50 rounded-full items-center justify-center mr-4 shadow-sm">
-              {icon === 'wallet' ? (
-                <StyledImage
-                  source={require('../../assets/icon.png')}
-                  className="w-5 h-5"
-                  resizeMode="contain"
-                />
-              ) : (
-                <Ionicons name={icon as any} size={20} color="#0ea5e9" />
-              )}
-            </StyledView>
-    <StyledView className="flex-1">
-      <StyledText className="text-base font-semibold text-ice-900 dark:text-ice-100">
-        {title}
-      </StyledText>
-      {subtitle && (
-        <StyledText className="text-sm text-ice-600 dark:text-ice-400 mt-1">
-          {subtitle}
-        </StyledText>
-      )}
-    </StyledView>
-    {rightElement && (
-      <StyledView className="mr-2">
-        {rightElement}
+  variant = 'default',
+}) => {
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'danger':
+        return {
+          iconColor: '#dc2626',
+          titleColor: 'text-red-600',
+          subtitleColor: 'text-red-500',
+        };
+      case 'warning':
+        return {
+          iconColor: '#f59e0b',
+          titleColor: 'text-amber-600',
+          subtitleColor: 'text-amber-500',
+        };
+      default:
+        return {
+          iconColor: '#6b7280',
+          titleColor: 'text-slate-900',
+          subtitleColor: 'text-slate-600',
+        };
+    }
+  };
+
+  const styles = getVariantStyles();
+
+  return (
+    <StyledTouchableOpacity
+      className="flex-row items-center py-4 px-6 border-b border-gray-200"
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <StyledView className="w-10 h-10 bg-gray-100 border border-gray-200 rounded-full items-center justify-center mr-4 shadow-sm">
+        {icon === 'wallet' ? (
+          <StyledImage
+            source={require('../../assets/icon.png')}
+            style={{ width: 20, height: 20 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Ionicons name={icon as any} size={20} color={styles.iconColor} />
+        )}
       </StyledView>
-    )}
-    {showArrow && onPress && (
-      <Ionicons name="chevron-forward" size={20} color="#64748b" />
-    )}
-  </StyledTouchableOpacity>
-);
+      <StyledView className="flex-1">
+        <StyledText className={`text-base font-semibold ${styles.titleColor}`}>
+          {title}
+        </StyledText>
+        {subtitle && (
+          <StyledText className={`text-sm ${styles.subtitleColor} mt-1`}>
+            {subtitle}
+          </StyledText>
+        )}
+      </StyledView>
+      {rightElement && (
+        <StyledView className="mr-2">
+          {rightElement}
+        </StyledView>
+      )}
+      {showArrow && onPress && (
+        <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+      )}
+    </StyledTouchableOpacity>
+  );
+};
 
 export const SettingsScreen: React.FC = () => {
   const { theme, setTheme, developerMode, setDeveloperMode } = useAppStore();
@@ -208,65 +237,98 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-ice-200 dark:bg-ice-950">
-      {/* Icy blue background overlay */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      {/* Background overlay */}
       <StyledView 
         className="absolute inset-0"
         style={{
-          backgroundColor: 'rgba(56, 189, 248, 0.03)',
+          backgroundColor: 'rgb(93,138,168)',
         }}
       />
       
       <StyledScrollView className="flex-1">
         {/* Header */}
         <StyledView className="p-6">
-          <StyledText className="text-2xl font-bold text-ice-900 dark:text-ice-100 mb-2">
+          <StyledText className="text-2xl font-bold text-slate-900 mb-2 text-center">
             Settings
           </StyledText>
-          <StyledText className="text-ice-600 dark:text-ice-400">
+          <StyledText className="text-slate-600 text-center">
             Manage your wallet preferences
           </StyledText>
         </StyledView>
 
         {/* Wallet Info */}
         {currentWallet && (
-          <Card variant="frost" className="mx-6 mb-6">
-            <StyledView className="p-4">
-              <StyledView className="flex-row items-center mb-3">
-                <StyledView className="w-12 h-12 bg-frost-200 dark:bg-frost-800 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="wallet" size={24} color="#0ea5e9" />
+          <StyledView className="mx-6 mb-6">
+            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <StyledView className="flex-row items-center mb-4">
+                <StyledView className="w-12 h-12 bg-blue-100 border border-blue-200 rounded-full items-center justify-center mr-4">
+                  <Ionicons name="wallet" size={24} color="#3b82f6" />
                 </StyledView>
                 <StyledView className="flex-1">
-                                                        <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100">
-                     Wallet
-                   </StyledText>
-                   <StyledText className="text-sm text-ice-600 dark:text-ice-400">
-                     {formatWalletAddress(currentWallet.address)}
-                   </StyledText>
+                  <StyledText className="text-lg font-semibold text-slate-900">
+                    Connected Wallet
+                  </StyledText>
+                  <StyledText className="text-sm text-slate-600">
+                    {formatWalletAddress(currentWallet.address)}
+                  </StyledText>
                 </StyledView>
-              </StyledView>
-              
-              <StyledView className="flex-row items-center justify-between">
-                <StyledText className="text-sm text-ice-600 dark:text-ice-400">
-                  Network: {currentWallet.network}
-                </StyledText>
-                <StyledView className="bg-green-100 dark:bg-green-900 px-2 py-1 rounded">
-                  <StyledText className="text-xs text-green-800 dark:text-green-200 font-medium">
+                <StyledView className="bg-green-100 border border-green-200 px-3 py-1 rounded-full">
+                  <StyledText className="text-xs text-green-700 font-medium">
                     Connected
                   </StyledText>
                 </StyledView>
               </StyledView>
+              
+              <StyledView className="flex-row items-center justify-between">
+                <StyledText className="text-sm text-slate-600">
+                  Network: {currentWallet.network}
+                </StyledText>
+                <StyledText className="text-sm text-slate-600">
+                  {formatUSD(walletData?.totalValue || 0)}
+                </StyledText>
+              </StyledView>
             </StyledView>
-          </Card>
+          </StyledView>
         )}
 
+        {/* Quick Actions */}
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Quick Actions
+          </StyledText>
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <StyledView className="flex-row justify-between">
+              <StyledTouchableOpacity className="items-center flex-1">
+                <StyledView className="w-12 h-12 bg-blue-100 border border-blue-200 rounded-full items-center justify-center mb-2">
+                  <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
+                </StyledView>
+                <StyledText className="text-xs text-slate-600 font-medium">Switch Network</StyledText>
+              </StyledTouchableOpacity>
+              
+              <StyledTouchableOpacity className="items-center flex-1">
+                <StyledView className="w-12 h-12 bg-green-100 border border-green-200 rounded-full items-center justify-center mb-2">
+                  <Ionicons name="shield-checkmark" size={24} color="#16a34a" />
+                </StyledView>
+                <StyledText className="text-xs text-slate-600 font-medium">Security</StyledText>
+              </StyledTouchableOpacity>
+              
+              <StyledTouchableOpacity className="items-center flex-1">
+                <StyledView className="w-12 h-12 bg-purple-100 border border-purple-200 rounded-full items-center justify-center mb-2">
+                  <Ionicons name="help-circle" size={24} color="#9333ea" />
+                </StyledView>
+                <StyledText className="text-xs text-slate-600 font-medium">Help</StyledText>
+              </StyledTouchableOpacity>
+            </StyledView>
+          </StyledView>
+        </StyledView>
+
         {/* Preferences */}
-        <Card variant="frost" className="mx-6 mb-6">
-          <StyledView className="p-2">
-            <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 px-4 py-2">
-              Preferences
-            </StyledText>
-            
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Preferences
+          </StyledText>
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <SettingsItem
               icon="moon"
               title="Dark Mode"
@@ -275,7 +337,7 @@ export const SettingsScreen: React.FC = () => {
                 <Switch
                   value={theme === 'dark'}
                   onValueChange={(value) => setTheme(value ? 'dark' : 'light')}
-                  trackColor={{ false: '#e2e8f0', true: '#0ea5e9' }}
+                  trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
                   thumbColor={theme === 'dark' ? '#ffffff' : '#ffffff'}
                 />
               }
@@ -290,7 +352,7 @@ export const SettingsScreen: React.FC = () => {
                 <Switch
                   value={notificationsEnabled}
                   onValueChange={setNotificationsEnabled}
-                  trackColor={{ false: '#e2e8f0', true: '#0ea5e9' }}
+                  trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
                   thumbColor={notificationsEnabled ? '#ffffff' : '#ffffff'}
                 />
               }
@@ -305,7 +367,7 @@ export const SettingsScreen: React.FC = () => {
                 <Switch
                   value={biometricEnabled}
                   onValueChange={setBiometricEnabled}
-                  trackColor={{ false: '#e2e8f0', true: '#0ea5e9' }}
+                  trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
                   thumbColor={biometricEnabled ? '#ffffff' : '#ffffff'}
                 />
               }
@@ -320,22 +382,21 @@ export const SettingsScreen: React.FC = () => {
                 <Switch
                   value={developerMode}
                   onValueChange={setDeveloperMode}
-                  trackColor={{ false: '#e2e8f0', true: '#0ea5e9' }}
+                  trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
                   thumbColor={developerMode ? '#ffffff' : '#ffffff'}
                 />
               }
               showArrow={false}
             />
           </StyledView>
-        </Card>
+        </StyledView>
 
         {/* Security */}
-        <Card variant="frost" className="mx-6 mb-6">
-          <StyledView className="p-2">
-            <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 px-4 py-2">
-              Security
-            </StyledText>
-            
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Security
+          </StyledText>
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <SettingsItem
               icon="shield-checkmark"
               title="Security Settings"
@@ -357,15 +418,14 @@ export const SettingsScreen: React.FC = () => {
               onPress={handleExportWallet}
             />
           </StyledView>
-        </Card>
+        </StyledView>
 
         {/* Support */}
-        <Card variant="frost" className="mx-6 mb-6">
-          <StyledView className="p-2">
-            <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 px-4 py-2">
-              Support
-            </StyledText>
-            
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Support
+          </StyledText>
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <SettingsItem
               icon="help-circle"
               title="Help & FAQ"
@@ -394,58 +454,94 @@ export const SettingsScreen: React.FC = () => {
               onPress={() => Alert.alert('Privacy', 'Privacy policy will be available soon!')}
             />
           </StyledView>
-        </Card>
+        </StyledView>
+
+        {/* Networks */}
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Networks
+          </StyledText>
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            {Object.entries(NETWORK_CONFIGS).map(([networkId, config]) => (
+              <StyledTouchableOpacity
+                key={networkId}
+                className={`p-4 border-b border-gray-200 ${
+                  activeNetwork === networkId ? 'bg-blue-50 border-blue-200' : ''
+                }`}
+                onPress={() => handleNetworkChange(networkId as SupportedNetwork)}
+              >
+                <StyledView className="flex-row items-center justify-between">
+                  <StyledView className="flex-row items-center">
+                    <StyledText className="text-2xl mr-3">
+                      {config.icon}
+                    </StyledText>
+                    <StyledView>
+                      <StyledText className="font-medium text-slate-900">
+                        {config.name}
+                      </StyledText>
+                      <StyledText className="text-sm text-slate-600">
+                        {config.symbol}
+                      </StyledText>
+                    </StyledView>
+                  </StyledView>
+                  
+                  {activeNetwork === networkId && (
+                    <Ionicons name="checkmark-circle" size={20} color="#3b82f6" />
+                  )}
+                </StyledView>
+              </StyledTouchableOpacity>
+            ))}
+          </StyledView>
+        </StyledView>
 
         {/* Danger Zone */}
-        <Card variant="frost" className="mx-6 mb-6">
-          <StyledView className="p-2">
-            <StyledText className="text-lg font-semibold text-red-600 dark:text-red-400 px-4 py-2">
-              Danger Zone
-            </StyledText>
-            
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-red-600 mb-4">
+            Danger Zone
+          </StyledText>
+          <StyledView className="p-6 border border-red-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#fef2f2' }}>
             <SettingsItem
               icon="trash"
               title="Delete Wallet"
               subtitle="Permanently delete your wallet and all data"
               onPress={handleDeleteWallet}
+              variant="danger"
             />
           </StyledView>
-        </Card>
+        </StyledView>
 
         {/* Debug Info */}
         {__DEV__ && (
-          <Card variant="frost" className="mx-6 mb-6">
-            <StyledView className="p-2">
-              <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 px-4 py-2">
-                Debug Info
-              </StyledText>
-              
-              <StyledView className="px-4 py-2 space-y-2">
-                <StyledText className="text-sm text-ice-600 dark:text-ice-400">
+          <StyledView className="mx-6 mb-6">
+            <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+              Debug Info
+            </StyledText>
+            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <StyledView className="space-y-2">
+                <StyledText className="text-sm text-slate-600">
                   isConnected: {isConnected ? 'true' : 'false'}
                 </StyledText>
-                <StyledText className="text-sm text-ice-600 dark:text-ice-400">
+                <StyledText className="text-sm text-slate-600">
                   currentWallet: {currentWallet ? currentWallet.id : 'null'}
                 </StyledText>
-                <StyledText className="text-sm text-ice-600 dark:text-ice-400">
+                <StyledText className="text-sm text-slate-600">
                   walletData: {walletData ? 'loaded' : 'not loaded'}
                 </StyledText>
-                <StyledText className="text-sm text-ice-600 dark:text-ice-400">
+                <StyledText className="text-sm text-slate-600">
                   loadingData: {loadingData ? 'true' : 'false'}
                 </StyledText>
               </StyledView>
             </StyledView>
-          </Card>
+          </StyledView>
         )}
 
         {/* Wallet Actions */}
-        <Card variant="frost" className="mx-6 mb-6">
-          <StyledView className="p-2">
-            <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 px-4 py-2">
-              Wallet Actions
-            </StyledText>
-            
-            <StyledView className="px-4 py-2 space-y-3">
+        <StyledView className="mx-6 mb-6">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Wallet Actions
+          </StyledText>
+          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <StyledView className="space-y-3">
               <Button
                 title="Export Private Key"
                 onPress={() => {
@@ -484,48 +580,7 @@ export const SettingsScreen: React.FC = () => {
               />
             </StyledView>
           </StyledView>
-        </Card>
-
-        {/* Network Selection */}
-        <Card variant="frost" className="mx-6 mb-6">
-          <StyledView className="p-2">
-            <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100 px-4 py-2">
-              Networks
-            </StyledText>
-            
-            <StyledView className="overflow-hidden">
-              {Object.entries(NETWORK_CONFIGS).map(([networkId, config]) => (
-                <StyledTouchableOpacity
-                  key={networkId}
-                  className={`p-4 border-b border-ice-200 dark:border-ice-700 ${
-                    activeNetwork === networkId ? 'bg-ice-100 dark:bg-ice-800' : ''
-                  }`}
-                  onPress={() => handleNetworkChange(networkId as SupportedNetwork)}
-                >
-                  <StyledView className="flex-row items-center justify-between">
-                    <StyledView className="flex-row items-center">
-                      <StyledText className="text-2xl mr-3">
-                        {config.icon}
-                      </StyledText>
-                      <StyledView>
-                        <StyledText className="font-medium text-ice-900 dark:text-ice-100">
-                          {config.name}
-                        </StyledText>
-                        <StyledText className="text-sm text-ice-600 dark:text-ice-400">
-                          {config.symbol}
-                        </StyledText>
-                      </StyledView>
-                    </StyledView>
-                    
-                    {activeNetwork === networkId && (
-                      <Ionicons name="checkmark-circle" size={20} color="#0ea5e9" />
-                    )}
-                  </StyledView>
-                </StyledTouchableOpacity>
-              ))}
-            </StyledView>
-          </StyledView>
-        </Card>
+        </StyledView>
 
         {/* Logout Button */}
         <StyledView className="px-6 mb-8">
@@ -539,11 +594,11 @@ export const SettingsScreen: React.FC = () => {
 
         {/* App Version */}
         <StyledView className="items-center pb-6">
-          <StyledText className="text-sm text-ice-500 dark:text-ice-500">
+          <StyledText className="text-sm text-slate-500">
             RuneKey v1.0.0
           </StyledText>
         </StyledView>
       </StyledScrollView>
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 };

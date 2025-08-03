@@ -254,6 +254,19 @@ export const HomeScreen: React.FC = () => {
                 </StyledTouchableOpacity>
                 <StyledText className="text-slate-600 text-sm mt-2 font-medium">Swap</StyledText>
               </StyledView>
+
+              <StyledView className="items-center">
+                <StyledTouchableOpacity
+                  className="w-16 h-16 bg-yellow-50 border border-yellow-200 rounded-full items-center justify-center shadow-sm"
+                  onPress={() => {
+                    logger.logButtonPress('Buy', 'navigate to buy screen');
+                    /* Navigate to buy */
+                  }}
+                >
+                  <Ionicons name="card" size={24} color="#eab308" />
+                </StyledTouchableOpacity>
+                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Buy</StyledText>
+              </StyledView>
             </StyledView>
           </StyledView>
         </StyledView>

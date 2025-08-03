@@ -47,6 +47,33 @@ export const SwapScreen: React.FC = () => {
     clearError,
   } = useSwap();
 
+  // Define getAvailableTokens function before it's used
+  const getAvailableTokens = (): Token[] => {
+    if (!currentWallet) return [];
+
+    const commonTokens = walletService.getCommonTokens(activeNetwork);
+    const walletTokens = currentWallet.tokens;
+
+    // Create native token object
+    const nativeToken: Token = {
+      address: activeNetwork === 'solana' 
+        ? 'So11111111111111111111111111111111111111112'
+        : '0x0000000000000000000000000000000000000000',
+      symbol: activeNetwork === 'solana' ? 'SOL' : 'ETH',
+      name: activeNetwork === 'solana' ? 'Solana' : 'Ethereum',
+      decimals: activeNetwork === 'solana' ? 9 : 18,
+      balance: currentWallet.balance,
+    };
+
+    // Combine all tokens and remove duplicates
+    const allTokens = [nativeToken, ...commonTokens, ...walletTokens];
+    const uniqueTokens = allTokens.filter((token, index, self) => 
+      index === self.findIndex(t => t.address === token.address)
+    );
+
+    return uniqueTokens;
+  };
+
   // Auto-connect developer wallet in development mode
   useEffect(() => {
     if (!currentWallet) {
@@ -162,32 +189,6 @@ export const SwapScreen: React.FC = () => {
       logger.logScreenFocus('SwapScreen');
     }, [])
   );
-
-  const getAvailableTokens = (): Token[] => {
-    if (!currentWallet) return [];
-
-    const commonTokens = walletService.getCommonTokens(activeNetwork);
-    const walletTokens = currentWallet.tokens;
-
-    // Create native token object
-    const nativeToken: Token = {
-      address: activeNetwork === 'solana' 
-        ? 'So11111111111111111111111111111111111111112'
-        : '0x0000000000000000000000000000000000000000',
-      symbol: activeNetwork === 'solana' ? 'SOL' : 'ETH',
-      name: activeNetwork === 'solana' ? 'Solana' : 'Ethereum',
-      decimals: activeNetwork === 'solana' ? 9 : 18,
-      balance: currentWallet.balance,
-    };
-
-    // Combine all tokens and remove duplicates
-    const allTokens = [nativeToken, ...commonTokens, ...walletTokens];
-    const uniqueTokens = allTokens.filter((token, index, self) => 
-      index === self.findIndex(t => t.address === token.address)
-    );
-
-    return uniqueTokens;
-  };
 
   // Filter tokens based on search query
   const filteredTokens = allTokens.filter(token =>
