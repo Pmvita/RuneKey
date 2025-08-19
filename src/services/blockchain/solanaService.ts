@@ -11,6 +11,7 @@ import {
 // import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Wallet, Token, SupportedNetwork } from '../../types';
 import { NETWORK_CONFIGS } from '../../constants';
+import { logger } from '../../utils/logger';
 
 class SolanaWalletService {
   private connection: Connection;
@@ -104,8 +105,7 @@ class SolanaWalletService {
    */
   async getTokenBalances(address: string): Promise<Token[]> {
     try {
-      // For now, return empty array for React Native compatibility
-      // TODO: Implement proper SPL token support with React Native compatible packages
+      // For now, return empty array as SPL token fetching is disabled
       console.log('SPL token balance fetching temporarily disabled for React Native compatibility');
       return [];
     } catch (error) {

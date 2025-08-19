@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
 import { styled } from 'nativewind';
+import { logger } from '../../utils/logger';
 
 const StyledView = styled(View);
 
@@ -64,8 +65,9 @@ export const ParticleEffect: React.FC<ParticleEffectProps> = ({
 
   useEffect(() => {
     if (active) {
-      console.log('🎯 ANIMATION: ' + type + ' particles launched');
+      // Launch particles
       createParticles();
+      console.log('🎯 ANIMATION: ' + type + ' particles launched');
     } else {
       setParticles([]);
     }

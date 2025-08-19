@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import { styled } from 'nativewind';
+import { logger } from '../../utils/logger';
 
 const StyledText = styled(Text);
 

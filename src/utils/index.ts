@@ -2,3 +2,4 @@
 export * from './formatters';
 export * from './validation';
 export * from './seedPhrase';
+export * from './logger';

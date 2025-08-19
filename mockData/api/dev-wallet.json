@@ -40,11 +40,11 @@
         "symbol": "USDC",
         "name": "USD Coin",
         "decimals": 6,
-        "balance": "5000000.00",
+        "balance": "1348052.40",
         "currentPrice": 1.00,
         "priceChange24h": 0.00,
         "marketCap": 45678901234,
-        "usdValue": 5000000.00,
+        "usdValue": 1348052.40,
         "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png"
       },
       {

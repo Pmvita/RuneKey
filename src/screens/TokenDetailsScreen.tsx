@@ -27,6 +27,19 @@ export const TokenDetailsScreen: React.FC = () => {
   const { currentWallet } = useWallet();
   const { transactions } = useWalletStore();
   
+  // Validate token object
+  if (!token || !token.symbol) {
+    return (
+      <StyledSafeAreaView className="flex-1" style={{ backgroundColor: '#f8fafc' }}>
+        <StyledView className="flex-1 items-center justify-center p-6">
+          <StyledText className="text-lg text-slate-600 text-center">
+            Invalid token data. Please try again.
+          </StyledText>
+        </StyledView>
+      </StyledSafeAreaView>
+    );
+  }
+  
   const [coinInfo, setCoinInfo] = useState<CoinInfo | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,15 +72,22 @@ export const TokenDetailsScreen: React.FC = () => {
         priceService.fetchChartData(coinGeckoId, 30)
       ]);
 
-      if (coinInfoResult.success) {
-        setCoinInfo(coinInfoResult.data);
+      if (coinInfoResult.success && coinInfoResult.data) {
+        // Validate that the coinInfo has required fields
+        const validatedCoinInfo = coinInfoResult.data;
+        if (validatedCoinInfo.id && validatedCoinInfo.symbol && validatedCoinInfo.name) {
+          setCoinInfo(validatedCoinInfo);
+        } else {
+          console.log('Invalid coin info received:', validatedCoinInfo);
+          setError('Invalid coin data received');
+        }
       }
 
-      if (chartDataResult.success) {
+      if (chartDataResult.success && chartDataResult.data) {
         setChartData(chartDataResult.data);
       }
     } catch (err) {
-      console.error('Failed to load token data:', err);
+      console.log('Failed to load token data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load token data');
     } finally {
       setIsLoading(false);
@@ -129,12 +149,12 @@ export const TokenDetailsScreen: React.FC = () => {
       return total + (token.usdValue || 0);
     }, 0);
     
-    const tokenValue = parseFloat(token.balance || '0') * coinInfo.current_price;
+    const tokenValue = parseFloat(token.balance || '0') * (coinInfo.current_price || 0);
     return totalPortfolioValue > 0 ? (tokenValue / totalPortfolioValue) * 100 : 0;
   };
 
   const renderChart = () => {
-    if (!chartData || !chartData.prices.length) {
+    if (!chartData || !chartData.prices || !Array.isArray(chartData.prices) || chartData.prices.length === 0) {
       return (
         <StyledView className="h-48 bg-gray-100 rounded-lg items-center justify-center">
           <StyledText className="text-slate-500">Chart data unavailable</StyledText>
@@ -145,7 +165,7 @@ export const TokenDetailsScreen: React.FC = () => {
     // Simple fallback chart implementation
     const prices = chartData.prices
       .map(([timestamp, price]) => price)
-      .filter(price => price && !isNaN(price) && isFinite(price));
+      .filter(price => price !== null && price !== undefined && !isNaN(price) && isFinite(price) && price > 0);
 
     if (prices.length === 0) {
       return (
@@ -205,7 +225,7 @@ export const TokenDetailsScreen: React.FC = () => {
                   className="bg-blue-500 rounded-sm"
                   style={{
                     width: (screenWidth - 80) / 20,
-                    height: `${Math.max(2, height)}%`,
+                    height: Math.max(2, height),
                     minHeight: 2,
                   }}
                 />
@@ -227,8 +247,10 @@ export const TokenDetailsScreen: React.FC = () => {
 
   // Filter transactions for this specific token
   const tokenTransactions = transactions.filter(tx => 
-    (tx.token.symbol && token.symbol && tx.token.symbol.toLowerCase() === token.symbol.toLowerCase()) ||
-    (tx.token.address && token.address && tx.token.address.toLowerCase() === token.address.toLowerCase())
+    tx && tx.token && (
+      (tx.token.symbol && token.symbol && tx.token.symbol.toLowerCase() === token.symbol.toLowerCase()) ||
+      (tx.token.address && token.address && tx.token.address.toLowerCase() === token.address.toLowerCase())
+    )
   ).slice(0, 5); // Show only last 5 transactions
 
   const formatTransactionAmount = (amount: string, decimals: number) => {
@@ -256,7 +278,7 @@ export const TokenDetailsScreen: React.FC = () => {
     }
   };
 
-  const getTransactionIcon = (type: 'send' | 'receive' | 'swap') => {
+  const getTransactionIcon = (type: 'send' | 'receive' | 'swap' | string) => {
     switch (type) {
       case 'send':
         return 'arrow-up';
@@ -269,7 +291,7 @@ export const TokenDetailsScreen: React.FC = () => {
     }
   };
 
-  const getTransactionColor = (type: 'send' | 'receive' | 'swap') => {
+  const getTransactionColor = (type: 'send' | 'receive' | 'swap' | string) => {
     switch (type) {
       case 'send':
         return 'text-red-600';
@@ -282,7 +304,7 @@ export const TokenDetailsScreen: React.FC = () => {
     }
   };
 
-  const getTransactionBgColor = (type: 'send' | 'receive' | 'swap') => {
+  const getTransactionBgColor = (type: 'send' | 'receive' | 'swap' | string) => {
     switch (type) {
       case 'send':
         return 'bg-red-100';
@@ -319,24 +341,28 @@ export const TokenDetailsScreen: React.FC = () => {
               <Ionicons name="arrow-back" size={24} color="#64748b" />
             </StyledTouchableOpacity>
             <StyledView className="flex-row items-center flex-1">
-              {coinInfo?.image ? (
+              {coinInfo?.image && typeof coinInfo.image === 'string' && coinInfo.image.trim() !== '' ? (
                 <Image 
                   source={{ uri: coinInfo.image }} 
                   style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                  onError={() => {
+                    // Fallback to placeholder if image fails to load
+                    console.log('Failed to load image for', token.symbol);
+                  }}
                 />
               ) : (
                 <StyledView className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
                   <StyledText className="text-gray-600 font-bold text-sm">
-                    {token.symbol.charAt(0)}
+                    {token.symbol && token.symbol.length > 0 ? token.symbol.charAt(0).toUpperCase() : '?'}
                   </StyledText>
                 </StyledView>
               )}
               <StyledView>
                 <StyledText className="text-2xl font-bold text-slate-900">
-                  {token.symbol}
+                  {token.symbol || 'Unknown'}
                 </StyledText>
                 <StyledText className="text-slate-600">
-                  {token.name}
+                  {token.name || 'Unknown Token'}
                 </StyledText>
               </StyledView>
             </StyledView>
@@ -349,7 +375,7 @@ export const TokenDetailsScreen: React.FC = () => {
             <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
               <StyledView className="flex-row items-center justify-between mb-4">
                 <StyledText className="text-3xl font-bold text-slate-900">
-                  ${coinInfo.current_price ? coinInfo.current_price.toLocaleString(undefined, {
+                  ${coinInfo.current_price && !isNaN(coinInfo.current_price) ? coinInfo.current_price.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 6,
                   }) : '0.00'}
@@ -398,15 +424,15 @@ export const TokenDetailsScreen: React.FC = () => {
                 <StyledText className="text-sm text-slate-600 mb-2">Your Balance</StyledText>
                 <StyledView className="flex-row justify-between items-center mb-2">
                   <StyledText className="text-lg font-semibold text-slate-900">
-                    {formatBalance(token.balance || '0', token.decimals)} {token.symbol}
+                    {formatBalance(token.balance || '0', token.decimals)} {token.symbol || 'Unknown'}
                   </StyledText>
                   <StyledText className="text-sm text-slate-500">
                     ≈ {formatUSDValue(token.usdValue || 0)}
                   </StyledText>
                 </StyledView>
-                {coinInfo?.current_price && (
+                {coinInfo?.current_price && !isNaN(coinInfo.current_price) && (
                   <StyledText className="text-xs text-slate-500">
-                    @ ${coinInfo.current_price.toFixed(6)} per {token.symbol}
+                    @ ${coinInfo.current_price.toFixed(6)} per {token.symbol || 'Unknown'}
                   </StyledText>
                 )}
               </StyledView>
@@ -427,7 +453,7 @@ export const TokenDetailsScreen: React.FC = () => {
             </StyledText>
             
             <StyledView className="space-y-3">
-              {coinInfo.market_cap && (
+              {coinInfo.market_cap && !isNaN(coinInfo.market_cap) && coinInfo.market_cap > 0 && (
                 <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   <StyledView className="flex-row justify-between items-center">
                     <StyledText className="text-slate-600">Market Cap</StyledText>
@@ -438,18 +464,18 @@ export const TokenDetailsScreen: React.FC = () => {
                 </StyledView>
               )}
 
-              {coinInfo.total_volume && (
+              {coinInfo.total_volume && !isNaN(coinInfo.total_volume) && coinInfo.total_volume > 0 && (
                 <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   <StyledView className="flex-row justify-between items-center">
                     <StyledText className="text-slate-600">24h Volume</StyledText>
                     <StyledText className="text-slate-900 font-semibold">
-                      {formatVolume(coinInfo.total_volume)}
+                      {formatUSDValue(coinInfo.total_volume)}
                     </StyledText>
                   </StyledView>
                 </StyledView>
               )}
 
-              {coinInfo.circulating_supply && (
+              {coinInfo.circulating_supply && !isNaN(coinInfo.circulating_supply) && coinInfo.circulating_supply > 0 && (
                 <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   <StyledView className="flex-row justify-between items-center">
                     <StyledText className="text-slate-600">Circulating Supply</StyledText>
@@ -460,7 +486,7 @@ export const TokenDetailsScreen: React.FC = () => {
                 </StyledView>
               )}
 
-              {coinInfo.market_cap_rank && (
+              {coinInfo.market_cap_rank && !isNaN(coinInfo.market_cap_rank) && coinInfo.market_cap_rank > 0 && (
                 <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   <StyledView className="flex-row justify-between items-center">
                     <StyledText className="text-slate-600">Market Rank</StyledText>
@@ -471,7 +497,7 @@ export const TokenDetailsScreen: React.FC = () => {
                 </StyledView>
               )}
 
-              {coinInfo.ath && (
+              {coinInfo.ath && !isNaN(coinInfo.ath) && coinInfo.ath > 0 && (
                 <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   <StyledView className="flex-row justify-between items-center">
                     <StyledText className="text-slate-600">All Time High</StyledText>
@@ -537,36 +563,36 @@ export const TokenDetailsScreen: React.FC = () => {
                 >
                   <StyledView className="flex-row items-center justify-between mb-2">
                     <StyledView className="flex-row items-center">
-                      <StyledView className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${getTransactionBgColor(tx.type)}`}>
+                      <StyledView className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${getTransactionBgColor(tx.type || 'unknown')}`}>
                         <Ionicons 
-                          name={getTransactionIcon(tx.type) as any} 
+                          name={getTransactionIcon(tx.type || 'unknown') as any} 
                           size={16} 
-                          color={tx.type === 'send' ? '#dc2626' : tx.type === 'receive' ? '#16a34a' : '#2563eb'} 
+                          color={(tx.type || 'unknown') === 'send' ? '#dc2626' : (tx.type || 'unknown') === 'receive' ? '#16a34a' : '#2563eb'} 
                         />
                       </StyledView>
                       <StyledView>
-                        <StyledText className="text-slate-900 font-medium capitalize">
-                          {tx.type}
-                        </StyledText>
-                        <StyledText className="text-xs text-slate-500">
-                          {formatTransactionDate(tx.timestamp)}
-                        </StyledText>
+                                              <StyledText className="text-slate-900 font-medium capitalize">
+                        {tx.type || 'Unknown'}
+                      </StyledText>
+                      <StyledText className="text-xs text-slate-500">
+                        {tx.timestamp ? formatTransactionDate(tx.timestamp) : 'Unknown time'}
+                      </StyledText>
                       </StyledView>
                     </StyledView>
                     <StyledView className="items-end">
-                      <StyledText className={`font-semibold ${getTransactionColor(tx.type)}`}>
-                        {tx.type === 'send' ? '-' : '+'}
-                        {formatTransactionAmount(tx.amount, tx.token.decimals)} {tx.token.symbol}
-                      </StyledText>
+                                              <StyledText className={`font-semibold ${getTransactionColor(tx.type || 'unknown')}`}>
+                          {(tx.type || 'unknown') === 'send' ? '-' : '+'}
+                          {formatTransactionAmount(tx.amount || '0', tx.token?.decimals || 18)} {tx.token?.symbol || 'Unknown'}
+                        </StyledText>
                       <StyledView className={`px-2 py-1 rounded-full ${
-                        tx.status === 'confirmed' ? 'bg-green-100' : 
-                        tx.status === 'pending' ? 'bg-yellow-100' : 'bg-red-100'
+                        (tx.status || 'unknown') === 'confirmed' ? 'bg-green-100' : 
+                        (tx.status || 'unknown') === 'pending' ? 'bg-yellow-100' : 'bg-red-100'
                       }`}>
                         <StyledText className={`text-xs font-medium ${
-                          tx.status === 'confirmed' ? 'text-green-700' : 
-                          tx.status === 'pending' ? 'text-yellow-700' : 'text-red-700'
+                          (tx.status || 'unknown') === 'confirmed' ? 'text-green-700' : 
+                          (tx.status || 'unknown') === 'pending' ? 'text-yellow-700' : 'text-red-700'
                         }`}>
-                          {tx.status}
+                          {tx.status || 'Unknown'}
                         </StyledText>
                       </StyledView>
                     </StyledView>
@@ -574,10 +600,10 @@ export const TokenDetailsScreen: React.FC = () => {
                   
                   <StyledView className="flex-row justify-between items-center">
                     <StyledText className="text-xs text-slate-500">
-                      {tx.type === 'send' ? 'To:' : 'From:'} {tx.type === 'send' ? tx.to : tx.from}
+                      {(tx.type || 'unknown') === 'send' ? 'To:' : 'From:'} {(tx.type || 'unknown') === 'send' ? (tx.to || 'Unknown') : (tx.from || 'Unknown')}
                     </StyledText>
                     <StyledText className="text-xs text-slate-500">
-                      {tx.hash.substring(0, 8)}...{tx.hash.substring(tx.hash.length - 6)}
+                      {tx.hash && tx.hash.length > 14 ? `${tx.hash.substring(0, 8)}...${tx.hash.substring(tx.hash.length - 6)}` : 'Unknown hash'}
                     </StyledText>
                   </StyledView>
                 </StyledView>
@@ -587,7 +613,7 @@ export const TokenDetailsScreen: React.FC = () => {
             <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl items-center" style={{ backgroundColor: '#e8eff3' }}>
               <Ionicons name="receipt-outline" size={48} color="#64748b" />
               <StyledText className="text-slate-500 mt-2 text-center">
-                No transactions found for {token.symbol}
+                No transactions found for {token.symbol || 'Unknown'}
               </StyledText>
               <StyledText className="text-slate-400 text-sm text-center mt-1">
                 Your transaction history for this token will appear here

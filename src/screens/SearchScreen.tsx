@@ -393,7 +393,7 @@ export const SearchScreen: React.FC = () => {
                                 <StyledText className={`text-xs font-medium ${
                                   token.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
                                 }`}>
-                                  {token.price_change_percentage_24h > 0 ? '+' : ''}{token.price_change_percentage_24h.toFixed(2)}%
+                                  {`${token.price_change_percentage_24h > 0 ? '+' : ''}${token.price_change_percentage_24h.toFixed(2)}%`}
                                 </StyledText>
                                 <Ionicons 
                                   name={token.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
@@ -547,7 +547,7 @@ export const SearchScreen: React.FC = () => {
                     <StyledText className={`text-sm font-medium ${
                       item.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {item.price_change_percentage_24h > 0 ? '+' : ''}{item.price_change_percentage_24h.toFixed(2)}%
+                      {`${item.price_change_percentage_24h > 0 ? '+' : ''}${item.price_change_percentage_24h.toFixed(2)}%`}
                     </StyledText>
                     <Ionicons 
                       name={item.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 

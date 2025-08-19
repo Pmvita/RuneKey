@@ -84,8 +84,7 @@ export const AnimatedPriceChange: React.FC<AnimatedPriceChangeProps> = ({
           isPositive ? 'text-green-600' : 'text-red-600'
         }`}
       >
-        {isPositive ? '+' : ''}
-        {displayValue.toFixed(2)}%
+        {`${isPositive ? '+' : ''}${displayValue.toFixed(2)}%`}
       </StyledText>
     </StyledView>
   );
