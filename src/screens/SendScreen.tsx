@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../types';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
+import { LiquidGlass } from '../components';
 import {
   StyledView,
   StyledText,

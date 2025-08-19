@@ -1,7 +1,8 @@
 // Import polyfills first
 import './src/utils/polyfills';
 
-// Reanimated removed - using pure React animations
+// Import react-native-reanimated
+import 'react-native-reanimated';
 
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';

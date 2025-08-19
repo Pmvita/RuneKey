@@ -7,6 +7,7 @@ import { priceService, CoinInfo, ChartData } from '../services/api/priceService'
 import { useWallet } from '../hooks/wallet/useWallet';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
+import { LiquidGlass } from '../components';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 

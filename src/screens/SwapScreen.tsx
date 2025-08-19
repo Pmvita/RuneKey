@@ -13,6 +13,7 @@ import { Token, SwapParams, SwapQuote } from '../types';
 import { logger } from '../utils/logger';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { COMMON_TOKENS } from '../constants';
+import { LiquidGlass } from '../components';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -398,9 +399,11 @@ export const SwapScreen: React.FC = () => {
 
             {/* Swap Button */}
             <StyledView className="items-center my-2">
-              <StyledTouchableOpacity
+              <LiquidGlass
+                className="p-2"
+                cornerRadius={100}
+                elasticity={0.3}
                 onPress={handleSwapTokens}
-                className="bg-white p-2 rounded-full border border-gray-200"
                 disabled={!selectedInputToken || !selectedOutputToken}
               >
                 <Ionicons 
@@ -408,7 +411,7 @@ export const SwapScreen: React.FC = () => {
                   size={20} 
                   color={selectedInputToken && selectedOutputToken ? "#3B82F6" : "#9CA3AF"} 
                 />
-              </StyledTouchableOpacity>
+              </LiquidGlass>
             </StyledView>
 
             {/* Output Token */}
@@ -458,7 +461,12 @@ export const SwapScreen: React.FC = () => {
 
             {/* Quote Info */}
             {inputAmount && selectedInputToken && selectedOutputToken && (
-              <StyledView className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+              <LiquidGlass
+                className="mb-4 p-4"
+                cornerRadius={16}
+                elasticity={0.15}
+                blurAmount={0.6}
+              >
                 <StyledView className="flex-row justify-between items-center mb-2">
                   <StyledText className="text-sm text-slate-600">
                     Exchange Rate
@@ -496,27 +504,29 @@ export const SwapScreen: React.FC = () => {
                     </StyledText>
                   </StyledTouchableOpacity>
                 </StyledView>
-              </StyledView>
+              </LiquidGlass>
             )}
 
             {/* Swap Button */}
-            <StyledTouchableOpacity
-              onPress={handleExecuteSwap}
-              disabled={!selectedInputToken || !selectedOutputToken || !inputAmount}
+            <LiquidGlass
               className={`w-full py-3 px-4 rounded-lg ${
                 selectedInputToken && selectedOutputToken && inputAmount
-                  ? 'bg-blue-600'
-                  : 'bg-gray-300'
+                  ? 'bg-blue-600/20'
+                  : 'bg-gray-300/20'
               }`}
+              cornerRadius={16}
+              elasticity={0.2}
+              onPress={handleExecuteSwap}
+              disabled={!selectedInputToken || !selectedOutputToken || !inputAmount}
             >
               <StyledText className={`text-center font-semibold ${
                 selectedInputToken && selectedOutputToken && inputAmount
-                  ? 'text-white'
+                  ? 'text-blue-700'
                   : 'text-gray-500'
               }`}>
                 {isLoading ? 'Getting Quote...' : 'Swap'}
               </StyledText>
-            </StyledTouchableOpacity>
+            </LiquidGlass>
           </StyledView>
         </StyledView>
 
@@ -526,7 +536,12 @@ export const SwapScreen: React.FC = () => {
             Recent Swaps
           </StyledText>
           
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+          <LiquidGlass
+            className="p-6"
+            cornerRadius={20}
+            elasticity={0.1}
+            blurAmount={0.6}
+          >
             <StyledView className="space-y-3">
               <StyledView className="flex-row justify-between items-center p-3 bg-white rounded-lg">
                 <StyledView className="flex-row items-center">
@@ -556,7 +571,7 @@ export const SwapScreen: React.FC = () => {
                 </StyledView>
               </StyledView>
             </StyledView>
-          </StyledView>
+          </LiquidGlass>
         </StyledView>
       </StyledScrollView>
 

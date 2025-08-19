@@ -14,6 +14,7 @@ import {
   AnimatedButton,
   ParticleEffect,
   AnimatedProgressBar,
+  LiquidGlass,
 } from '../components';
 import { useWallet } from '../hooks/wallet/useWallet';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
@@ -208,9 +209,17 @@ export const HomeScreen: React.FC = () => {
           
           {/* Total Portfolio Value */}
           {walletData ? (
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledView className="flex-row justify-between items-center mb-2">
-                <StyledText className="text-sm text-slate-600">
+            <LiquidGlass
+              cornerRadius={20}
+              elasticity={0.2}
+              blurAmount={1.0}
+              onPress={() => {
+                console.log('🎯 ANIMATION: Portfolio card pressed - liquid glass effect');
+                logger.logButtonPress('Portfolio', 'portfolio card interaction');
+              }}
+            >
+              <StyledView className="flex-row justify-between items-center mb-1">
+                <StyledText className="text-sm text-slate-600 mt-1 px-4">
                   Total Portfolio Value
                 </StyledText>
                 <StyledView className="flex-row items-center">
@@ -220,13 +229,15 @@ export const HomeScreen: React.FC = () => {
                   />
                 </StyledView>
               </StyledView>
-              <AnimatedNumber
-                value={calculateTotalValue()}
-                format="currency"
-                className="text-3xl font-bold text-black"
-                duration={1500}
-              />
-            </StyledView>
+              <StyledView className="px-3 pb-10">
+                <AnimatedNumber
+                  value={calculateTotalValue()}
+                  format="currency"
+                  className="text-3xl font-bold text-black"
+                  duration={1500}
+                />
+              </StyledView>
+            </LiquidGlass>
           ) : (
             <PortfolioSkeleton />
           )}
@@ -235,15 +246,26 @@ export const HomeScreen: React.FC = () => {
         {/* Spacing */}
         <StyledView className="h-4" />
 
+
+
         {/* Quick Actions */}
         <StyledView className="px-6 mb-6">
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <StyledView className="flex-row justify-around">
+          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+            Quick Actions
+          </StyledText>
+          <LiquidGlass
+            cornerRadius={20}
+            elasticity={0.15}
+            blurAmount={0.8}
+          >
+            <StyledView className="flex-row justify-around items-center p-5">
               <StyledView className="items-center">
-                <StyledTouchableOpacity
-                  className="w-16 h-16 bg-red-50 border border-red-200 rounded-full items-center justify-center shadow-sm"
+                <LiquidGlass
+                  className="w-16 h-16 bg-red-50/50 border border-red-200/50 rounded-full items-center justify-center"
+                  cornerRadius={100}
+                  elasticity={0.3}
                   onPress={() => {
-                    console.log('🎯 ANIMATION: Send button pressed - triggering particle effect');
+                    console.log('🎯 ANIMATION: Send button pressed - liquid glass effect');
                     logger.logButtonPress('Send', 'navigate to send screen');
                     setShowParticles(true);
                     setTimeout(() => {
@@ -255,15 +277,17 @@ export const HomeScreen: React.FC = () => {
                   }}
                 >
                   <Ionicons name="arrow-up" size={24} color="#ef4444" />
-                </StyledTouchableOpacity>
-                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Send</StyledText>
+                </LiquidGlass>
+                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Send</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
-                <StyledTouchableOpacity
-                  className="w-16 h-16 bg-green-50 border border-green-200 rounded-full items-center justify-center shadow-sm"
+                <LiquidGlass
+                  className="w-16 h-16 bg-green-50/50 border border-green-200/50 rounded-full items-center justify-center"
+                  cornerRadius={100}
+                  elasticity={0.3}
                   onPress={() => {
-                    console.log('🎯 ANIMATION: Receive button pressed - triggering particle effect');
+                    console.log('🎯 ANIMATION: Receive button pressed - liquid glass effect');
                     logger.logButtonPress('Receive', 'navigate to receive screen');
                     setShowParticles(true);
                     setTimeout(() => {
@@ -273,15 +297,17 @@ export const HomeScreen: React.FC = () => {
                   }}
                 >
                   <Ionicons name="arrow-down" size={24} color="#22c55e" />
-                </StyledTouchableOpacity>
-                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Receive</StyledText>
+                </LiquidGlass>
+                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Receive</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
-                <StyledTouchableOpacity
-                  className="w-16 h-16 bg-blue-50 border border-blue-200 rounded-full items-center justify-center shadow-sm"
+                <LiquidGlass
+                  className="w-16 h-16 bg-blue-50/50 border border-blue-200/50 rounded-full items-center justify-center"
+                  cornerRadius={100}
+                  elasticity={0.3}
                   onPress={() => {
-                    console.log('🎯 ANIMATION: Swap button pressed - triggering particle effect');
+                    console.log('🎯 ANIMATION: Swap button pressed - liquid glass effect');
                     logger.logButtonPress('Swap', 'navigate to swap screen');
                     setShowParticles(true);
                     setTimeout(() => {
@@ -291,13 +317,15 @@ export const HomeScreen: React.FC = () => {
                   }}
                 >
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
-                </StyledTouchableOpacity>
-                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Swap</StyledText>
+                </LiquidGlass>
+                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Swap</StyledText>
               </StyledView>
 
               <StyledView className="items-center">
-                <StyledTouchableOpacity
-                  className="w-16 h-16 bg-yellow-50 border border-yellow-200 rounded-full items-center justify-center shadow-sm"
+                <LiquidGlass
+                  className="w-16 h-16 bg-yellow-50/50 border border-yellow-200/50 rounded-full items-center justify-center"
+                  cornerRadius={100}
+                  elasticity={0.3}
                   onPress={() => {
                     console.log('🎯 ANIMATION: Buy button pressed - triggering particle effect');
                     logger.logButtonPress('Buy', 'navigate to buy screen');
@@ -309,11 +337,11 @@ export const HomeScreen: React.FC = () => {
                   }}
                 >
                   <Ionicons name="card" size={24} color="#eab308" />
-                </StyledTouchableOpacity>
-                <StyledText className="text-slate-600 text-sm mt-2 font-medium">Buy</StyledText>
+                </LiquidGlass>
+                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Buy</StyledText>
               </StyledView>
             </StyledView>
-          </StyledView>
+          </LiquidGlass>
         </StyledView>
 
         {/* Assets Section */}
@@ -340,7 +368,12 @@ export const HomeScreen: React.FC = () => {
             </StyledView>
           )}
           
-          <StyledView className="overflow-hidden border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+          <LiquidGlass
+            className="overflow-hidden"
+            cornerRadius={20}
+            elasticity={0.1}
+            blurAmount={0.6}
+          >
             {/* Tokens with Live Price Data - Sorted by Value */}
             {walletData && walletData.tokens && walletData.tokens
               .map((token: any, index: number) => {
@@ -402,7 +435,7 @@ export const HomeScreen: React.FC = () => {
                 </StyledText>
               </StyledView>
             )}
-          </StyledView>
+          </LiquidGlass>
         </StyledView>
       </StyledScrollView>
     </SafeAreaView>

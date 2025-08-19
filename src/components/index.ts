@@ -12,6 +12,8 @@ export { SkeletonLoader, TokenSkeleton, PortfolioSkeleton } from './common/Skele
 export { AnimatedButton } from './common/AnimatedButton';
 export { ParticleEffect } from './common/ParticleEffect';
 export { AnimatedProgressBar } from './common/AnimatedProgressBar';
+export { LiquidGlass } from './common/LiquidGlass';
+export { LiquidGlassDemo } from './common/LiquidGlassDemo';
 
 // Token components
 export { TokenListItem } from './token/TokenListItem';

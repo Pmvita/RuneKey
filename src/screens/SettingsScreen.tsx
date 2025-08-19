@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { LiquidGlass } from '../components';
 import { useAppStore } from '../stores/app/useAppStore';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useWallet } from '../hooks/wallet/useWallet';

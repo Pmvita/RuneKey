@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
+import { LiquidGlass } from '../components';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
