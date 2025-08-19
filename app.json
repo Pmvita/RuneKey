@@ -33,6 +33,8 @@
       },
       "permissions": [
         "CAMERA",
+        "android.permission.CAMERA",
+        "CAMERA",
         "android.permission.CAMERA"
       ]
     },
@@ -52,6 +54,12 @@
       "eas": {
         "projectId": "aa3d93f0-a744-4c64-a238-ecbbd0b8f4c6"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aa3d93f0-a744-4c64-a238-ecbbd0b8f4c6"
     }
   }
 }
