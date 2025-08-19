@@ -19,7 +19,9 @@
       "bundleIdentifier": "com.runekey.app",
       "icon": "./assets/icon.png",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses camera to scan QR codes for wallet addresses"
+        "NSCameraUsageDescription": "Allow RuneKey to access camera to scan QR codes for wallet addresses.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -30,7 +32,8 @@
         "backgroundColor": "#3B82F6"
       },
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -44,6 +47,11 @@
           "cameraPermission": "Allow RuneKey to access camera to scan QR codes for wallet addresses."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "aa3d93f0-a744-4c64-a238-ecbbd0b8f4c6"
+      }
+    }
   }
 }
