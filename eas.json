@@ -8,19 +8,23 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": true
-      }
-    },
-    "ios-simulator": {
-      "extends": "development",
-      "ios": {
-        "simulator": true
+        "simulator": true,
+        "resourceClass": "m-medium"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      }
     },
-    "production": {}
+    "production": {
+      "autoIncrement": true,
+      "distribution": "store",
+      "ios": {
+        "resourceClass": "m-medium"
+      }
+    }
   },
   "submit": {
     "production": {}
