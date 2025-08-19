@@ -1,8 +1,6 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../constants';
 import { PriceData, ApiResponse } from '../../types';
-import cryptoPricesData from '../../mockData/api/crypto-prices.json';
-import chartData from '../../mockData/api/chart-data.json';
 
 // Enhanced types for coin data
 export interface CoinInfo {
@@ -45,7 +43,37 @@ export interface ChartData {
 
 class PriceService {
   private baseURL = API_ENDPOINTS.COINGECKO;
-  private useMockData = false; // Flag to use mock data when API fails
+  private requestQueue: Array<() => Promise<any>> = [];
+  private isProcessing = false;
+  private lastRequestTime = 0;
+  private minRequestInterval = 1200; // 1.2 seconds between requests (CoinGecko free tier limit)
+
+  /**
+   * Rate-limited request handler
+   */
+  private async makeRateLimitedRequest<T>(requestFn: () => Promise<T>): Promise<T> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const delay = this.minRequestInterval - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    try {
+      this.lastRequestTime = Date.now();
+      return await requestFn();
+    } catch (error: any) {
+      if (error.response?.status === 429) {
+        // Rate limited - wait longer and retry
+        console.log('⚠️ Rate limited by CoinGecko API, waiting 5 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        this.lastRequestTime = Date.now();
+        return await requestFn();
+      }
+      throw error;
+    }
+  }
 
   /**
    * Fetch token prices from CoinGecko
@@ -66,37 +94,39 @@ class PriceService {
         return { data: {}, success: true };
       }
 
-      const response = await axios.get(
-        `${this.baseURL}/simple/price`,
-        {
-          params: {
-            ids: formattedAddresses,
-            vs_currencies: 'usd',
-            include_24hr_change: true,
-            include_last_updated_at: true,
-          },
-          timeout: 10000,
-        }
-      );
+      return await this.makeRateLimitedRequest(async () => {
+        const response = await axios.get(
+          `${this.baseURL}/simple/price`,
+          {
+            params: {
+              ids: formattedAddresses,
+              vs_currencies: 'usd',
+              include_24hr_change: true,
+              include_last_updated_at: true,
+            },
+            timeout: 10000,
+          }
+        );
 
-      // Transform response to match our PriceData interface
-      const transformedData: PriceData = {};
-      
-      Object.entries(response.data).forEach(([coinId, priceInfo]: [string, any]) => {
-        const originalAddress = this.getOriginalAddress(coinId, tokenAddresses);
-        if (originalAddress) {
-          transformedData[originalAddress] = {
-            usd: priceInfo.usd || 0,
-            usd_24h_change: priceInfo.usd_24h_change || 0,
-            last_updated_at: priceInfo.last_updated_at || Date.now(),
-          };
-        }
+        // Transform response to match our PriceData interface
+        const transformedData: PriceData = {};
+        
+        Object.entries(response.data).forEach(([coinId, priceInfo]: [string, any]) => {
+          const originalAddress = this.getOriginalAddress(coinId, tokenAddresses);
+          if (originalAddress) {
+            transformedData[originalAddress] = {
+              usd: priceInfo.usd || 0,
+              usd_24h_change: priceInfo.usd_24h_change || 0,
+              last_updated_at: priceInfo.last_updated_at || Date.now(),
+            };
+          }
+        });
+
+        return {
+          data: transformedData,
+          success: true,
+        };
       });
-
-      return {
-        data: transformedData,
-        success: true,
-      };
     } catch (error) {
       console.error('Failed to fetch token prices:', error);
       return {
@@ -112,38 +142,29 @@ class PriceService {
    */
   async fetchCoinInfo(coinId: string): Promise<ApiResponse<CoinInfo>> {
     try {
-      const response = await axios.get(
-        `${this.baseURL}/coins/${coinId}`,
-        {
-          params: {
-            localization: false,
-            tickers: false,
-            market_data: true,
-            community_data: false,
-            developer_data: false,
-            sparkline: false,
-          },
-          timeout: 10000,
-        }
-      );
+      return await this.makeRateLimitedRequest(async () => {
+        const response = await axios.get(
+          `${this.baseURL}/coins/${coinId}`,
+          {
+            params: {
+              localization: false,
+              tickers: false,
+              market_data: true,
+              community_data: false,
+              developer_data: false,
+              sparkline: false,
+            },
+            timeout: 10000,
+          }
+        );
 
-      return {
-        data: response.data,
-        success: true,
-      };
-    } catch (error) {
-      console.error('Failed to fetch coin info:', error);
-      
-      // Fallback to mock data
-      const mockCoinId = this.getMockCoinId(coinId);
-      if (mockCoinId && cryptoPricesData[mockCoinId]) {
-        console.log('Using mock data for coin info:', coinId);
         return {
-          data: cryptoPricesData[mockCoinId] as CoinInfo,
+          data: response.data,
           success: true,
         };
-      }
-      
+      });
+    } catch (error) {
+      console.error('Failed to fetch coin info:', error);
       return {
         data: {} as CoinInfo,
         success: false,
@@ -161,35 +182,26 @@ class PriceService {
     currency: string = 'usd'
   ): Promise<ApiResponse<ChartData>> {
     try {
-      const response = await axios.get(
-        `${this.baseURL}/coins/${coinId}/market_chart`,
-        {
-          params: {
-            vs_currency: currency,
-            days: days,
-            interval: days <= 1 ? 'hourly' : 'daily',
-          },
-          timeout: 15000,
-        }
-      );
+      return await this.makeRateLimitedRequest(async () => {
+        const response = await axios.get(
+          `${this.baseURL}/coins/${coinId}/market_chart`,
+          {
+            params: {
+              vs_currency: currency,
+              days: days,
+              interval: days <= 1 ? 'hourly' : 'daily',
+            },
+            timeout: 15000,
+          }
+        );
 
-      return {
-        data: response.data,
-        success: true,
-      };
-    } catch (error) {
-      console.error('Failed to fetch chart data:', error);
-      
-      // Fallback to mock data
-      const mockCoinId = this.getMockCoinId(coinId);
-      if (mockCoinId && chartData[mockCoinId]) {
-        console.log('Using mock data for chart:', coinId);
         return {
-          data: chartData[mockCoinId] as ChartData,
+          data: response.data,
           success: true,
         };
-      }
-      
+      });
+    } catch (error) {
+      console.error('Failed to fetch chart data:', error);
       return {
         data: { prices: [], market_caps: [], total_volumes: [] },
         success: false,
@@ -203,25 +215,27 @@ class PriceService {
    */
   async fetchTopCoins(limit: number = 100): Promise<ApiResponse<CoinInfo[]>> {
     try {
-      const response = await axios.get(
-        `${this.baseURL}/coins/markets`,
-        {
-          params: {
-            vs_currency: 'usd',
-            order: 'market_cap_desc',
-            per_page: limit,
-            page: 1,
-            sparkline: false,
-            price_change_percentage: '24h,7d,30d',
-          },
-          timeout: 10000,
-        }
-      );
+      return await this.makeRateLimitedRequest(async () => {
+        const response = await axios.get(
+          `${this.baseURL}/coins/markets`,
+          {
+            params: {
+              vs_currency: 'usd',
+              order: 'market_cap_desc',
+              per_page: limit,
+              page: 1,
+              sparkline: false,
+              price_change_percentage: '24h,7d,30d',
+            },
+            timeout: 10000,
+          }
+        );
 
-      return {
-        data: response.data,
-        success: true,
-      };
+        return {
+          data: response.data,
+          success: true,
+        };
+      });
     } catch (error) {
       console.error('Failed to fetch top coins:', error);
       return {
@@ -237,20 +251,22 @@ class PriceService {
    */
   async searchCoins(query: string): Promise<ApiResponse<any[]>> {
     try {
-      const response = await axios.get(
-        `${this.baseURL}/search`,
-        {
-          params: {
-            query: query,
-          },
-          timeout: 10000,
-        }
-      );
+      return await this.makeRateLimitedRequest(async () => {
+        const response = await axios.get(
+          `${this.baseURL}/search`,
+          {
+            params: {
+              query: query,
+            },
+            timeout: 10000,
+          }
+        );
 
-      return {
-        data: response.data.coins || [],
-        success: true,
-      };
+        return {
+          data: response.data.coins || [],
+          success: true,
+        };
+      });
     } catch (error) {
       console.error('Failed to search coins:', error);
       return {
@@ -355,14 +371,16 @@ class PriceService {
    */
   async fetchTrendingTokens(): Promise<ApiResponse<any[]>> {
     try {
-      const response = await axios.get(`${this.baseURL}/search/trending`, {
-        timeout: 10000,
-      });
+      return await this.makeRateLimitedRequest(async () => {
+        const response = await axios.get(`${this.baseURL}/search/trending`, {
+          timeout: 10000,
+        });
 
-      return {
-        data: response.data.coins || [],
-        success: true,
-      };
+        return {
+          data: response.data.coins || [],
+          success: true,
+        };
+      });
     } catch (error) {
       console.error('Failed to fetch trending tokens:', error);
       return {
@@ -371,27 +389,6 @@ class PriceService {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
-  }
-
-  /**
-   * Get mock coin ID from real coin ID
-   */
-  private getMockCoinId(coinId: string): string | null {
-    // Map common coin IDs to mock data keys
-    const coinIdMap: Record<string, string> = {
-      'bitcoin': 'bitcoin',
-      'btc': 'bitcoin',
-      'ethereum': 'ethereum',
-      'eth': 'ethereum',
-      'usd-coin': 'usd-coin',
-      'usdc': 'usd-coin',
-      'tether': 'tether',
-      'usdt': 'tether',
-      'binancecoin': 'binancecoin',
-      'bnb': 'binancecoin',
-    };
-
-    return coinIdMap[coinId.toLowerCase()] || null;
   }
 }
 

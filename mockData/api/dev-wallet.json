@@ -15,9 +15,6 @@
         "name": "Bitcoin",
         "decimals": 8,
         "balance": "35.5",
-        "currentPrice": 43250.12,
-        "priceChange24h": 2.98,
-        "marketCap": 847123456789,
         "usdValue": 1535379.26,
         "logoURI": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
       },
@@ -28,9 +25,6 @@
         "name": "Ethereum",
         "decimals": 18,
         "balance": "1250.875",
-        "currentPrice": 2650.45,
-        "priceChange24h": 1.94,
-        "marketCap": 318765432109,
         "usdValue": 3316250.94,
         "logoURI": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"
       },
@@ -41,9 +35,6 @@
         "name": "USD Coin",
         "decimals": 6,
         "balance": "1348052.40",
-        "currentPrice": 1.00,
-        "priceChange24h": 0.00,
-        "marketCap": 45678901234,
         "usdValue": 1348052.40,
         "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png"
       },
@@ -54,9 +45,6 @@
         "name": "Tether USD",
         "decimals": 6,
         "balance": "3000000.00",
-        "currentPrice": 1.00,
-        "priceChange24h": 0.00,
-        "marketCap": 98765432109,
         "usdValue": 3000000.00,
         "logoURI": "https://assets.coingecko.com/coins/images/325/large/Tether.png"
       },
@@ -67,9 +55,6 @@
         "name": "BNB",
         "decimals": 18,
         "balance": "15000.00",
-        "currentPrice": 312.45,
-        "priceChange24h": 0.79,
-        "marketCap": 48123456789,
         "usdValue": 4686750.00,
         "logoURI": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png"
       }
@@ -104,14 +89,14 @@
         "timestamp": 1707264000000,
         "status": "confirmed",
         "type": "receive",
-        "gasPrice": "25000000000",
-        "gasUsed": "65000"
+        "gasPrice": "0",
+        "gasUsed": "0"
       },
       {
-        "hash": "0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456",
+        "hash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba",
         "from": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
         "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef3",
-        "amount": "1000000.0",
+        "amount": "1000.0",
         "token": {
           "symbol": "USDC",
           "name": "USD Coin",
@@ -120,8 +105,40 @@
         "timestamp": 1707177600000,
         "status": "confirmed",
         "type": "send",
-        "gasPrice": "22000000000",
-        "gasUsed": "45000"
+        "gasPrice": "15000000000",
+        "gasUsed": "65000"
+      },
+      {
+        "hash": "0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321",
+        "from": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef4",
+        "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
+        "amount": "500.0",
+        "token": {
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6
+        },
+        "timestamp": 1707091200000,
+        "status": "confirmed",
+        "type": "receive",
+        "gasPrice": "0",
+        "gasUsed": "0"
+      },
+      {
+        "hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "from": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
+        "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef5",
+        "amount": "25.0",
+        "token": {
+          "symbol": "BNB",
+          "name": "BNB",
+          "decimals": 18
+        },
+        "timestamp": 1707004800000,
+        "status": "confirmed",
+        "type": "send",
+        "gasPrice": "18000000000",
+        "gasUsed": "21000"
       }
     ],
     "networks": [

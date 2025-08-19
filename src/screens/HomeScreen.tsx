@@ -104,10 +104,10 @@ export const HomeScreen: React.FC = () => {
         // Fetch live prices for all tokens
         fetchPrices(tokenAddresses);
         
-        // Set up interval for price updates
+        // Set up interval for price updates (respecting API rate limits)
         const interval = setInterval(() => {
           fetchPrices(tokenAddresses);
-        }, 30000); // Update every 30 seconds
+        }, 60000); // Update every 60 seconds to respect API limits
         
         return () => {
           clearInterval(interval);

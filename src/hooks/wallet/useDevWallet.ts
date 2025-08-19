@@ -3,8 +3,7 @@ import { useWalletStore } from '../../stores/wallet/useWalletStore';
 import { useCoinData } from '../token/useCoinData';
 import { priceService } from '../../services/api/priceService';
 
-// Import mock data
-import mockCryptoPrices from '../../mockData/api/crypto-prices.json';
+// Import mock wallet structure (without prices)
 import mockDevWallet from '../../mockData/api/dev-wallet.json';
 
 export const useDevWallet = () => {
@@ -76,51 +75,75 @@ export const useDevWallet = () => {
 
       console.log('🔗 Connecting Dev Wallet...');
 
-      // Use mock data instead of API calls for immediate development
-      const tokensWithPrices = devWalletConfig.tokens.map((token) => {
-        const mockPriceData = mockCryptoPrices[token.coinId as keyof typeof mockCryptoPrices];
-        
-        if (mockPriceData) {
-          const tokenValue = parseFloat(token.balance) * mockPriceData.current_price;
+      // Fetch live prices for all tokens
+      const coinIds = devWalletConfig.tokens.map(token => token.coinId);
+      const livePrices = await priceService.fetchTopCoins(100);
+      
+      if (livePrices.success && livePrices.data) {
+        const tokensWithPrices = devWalletConfig.tokens.map((token) => {
+          const livePriceData = livePrices.data.find(coin => 
+            coin.id === token.coinId || coin.symbol.toLowerCase() === token.symbol.toLowerCase()
+          );
+          
+          if (livePriceData) {
+            const tokenValue = parseFloat(token.balance) * livePriceData.current_price;
+            return {
+              ...token,
+              currentPrice: livePriceData.current_price,
+              priceChange24h: livePriceData.price_change_percentage_24h,
+              marketCap: livePriceData.market_cap,
+              usdValue: tokenValue,
+            };
+          }
+          
+          // Fallback if live data not available
           return {
             ...token,
-            currentPrice: mockPriceData.current_price,
-            priceChange24h: mockPriceData.price_change_percentage_24h,
-            marketCap: mockPriceData.market_cap,
-            usdValue: tokenValue,
+            currentPrice: 0,
+            priceChange24h: 0,
+            marketCap: 0,
+            usdValue: 0,
           };
-        }
+        });
+
+        // Calculate total portfolio value
+        const totalValue = tokensWithPrices.reduce((sum, token) => sum + (token.usdValue || 0), 0);
+
+        console.log('💰 Dev Wallet Portfolio:', {
+          totalValue: `$${totalValue.toLocaleString()}`,
+          tokens: tokensWithPrices.map(t => `${t.symbol}: $${t.usdValue?.toLocaleString()}`)
+        });
+
+        // Connect the wallet using the store
+        connectDeveloperWallet();
         
-        // Fallback if mock data not available
         return {
+          ...devWalletConfig,
+          balance: '1250.875', // ETH balance
+          tokens: tokensWithPrices,
+          totalValue,
+        };
+      } else {
+        throw new Error('Failed to fetch live price data');
+      }
+    } catch (err) {
+      console.error('❌ Failed to connect dev wallet:', err);
+      setError(err instanceof Error ? err.message : 'Failed to connect dev wallet');
+      
+      // Fallback to basic wallet connection without prices
+      connectDeveloperWallet();
+      return {
+        ...devWalletConfig,
+        balance: '1250.875',
+        tokens: devWalletConfig.tokens.map(token => ({
           ...token,
           currentPrice: 0,
           priceChange24h: 0,
           marketCap: 0,
           usdValue: 0,
-        };
-      });
-
-      // Calculate total portfolio value
-      const totalValue = tokensWithPrices.reduce((sum, token) => sum + (token.usdValue || 0), 0);
-
-      console.log('💰 Dev Wallet Portfolio:', {
-        totalValue: `$${totalValue.toLocaleString()}`,
-        tokens: tokensWithPrices.map(t => `${t.symbol}: $${t.usdValue?.toLocaleString()}`)
-      });
-
-      // Connect the wallet using the store
-      connectDeveloperWallet();
-      
-      return {
-        ...devWalletConfig,
-        balance: '1250.875', // ETH balance
-        tokens: tokensWithPrices,
-        totalValue,
+        })),
+        totalValue: 0,
       };
-    } catch (err) {
-      console.error('❌ Failed to connect dev wallet:', err);
-      setError(err instanceof Error ? err.message : 'Failed to connect dev wallet');
     } finally {
       setIsLoading(false);
     }
@@ -128,12 +151,15 @@ export const useDevWallet = () => {
 
   const getTokenDetails = useCallback(async (coinId: string) => {
     try {
-      // Use mock data for development
-      const mockPriceData = mockCryptoPrices[coinId as keyof typeof mockCryptoPrices];
+      // Fetch live data from CoinGecko
+      const [coinInfo, chartData] = await Promise.all([
+        priceService.fetchCoinInfo(coinId),
+        priceService.fetchChartData(coinId, 30)
+      ]);
       
       return {
-        coinInfo: mockPriceData || null,
-        chartData: null, // Chart data not available in mock
+        coinInfo: coinInfo.success ? coinInfo.data : null,
+        chartData: chartData.success ? chartData.data : null,
       };
     } catch (err) {
       console.error('Failed to fetch token details:', err);
