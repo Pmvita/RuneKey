@@ -8,8 +8,7 @@
     "balance": "1250.875",
     "totalValue": 15500000,
     "tokens": [
-      {
-        "coinId": "bitcoin",
+      { "coinId": "bitcoin",
         "address": "0x0000000000000000000000000000000000000000",
         "symbol": "BTC",
         "name": "Bitcoin",
@@ -18,8 +17,7 @@
         "usdValue": 1535379.26,
         "logoURI": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
       },
-      {
-        "coinId": "ethereum",
+      {"coinId": "ethereum",
         "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "symbol": "ETH",
         "name": "Ethereum",

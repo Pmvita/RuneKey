@@ -9,9 +9,12 @@ import Animated, {
   withSpring, 
   withTiming, 
   withSequence,
+  withRepeat,
+  withDelay,
   interpolate,
   Extrapolate,
-  runOnJS
+  runOnJS,
+  Easing
 } from 'react-native-reanimated';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -43,6 +46,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const { connectDeveloperWallet } = useWalletStore();
 
@@ -55,6 +59,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const socialTranslateY = useSharedValue(30);
   const devModeOpacity = useSharedValue(0);
   const shakeAnimation = useSharedValue(0);
+  
+  // New animation values
+  const gradientRotation = useSharedValue(0);
+  const rippleScale = useSharedValue(0);
+  const rippleOpacity = useSharedValue(0);
+  const successScale = useSharedValue(0);
+  const successOpacity = useSharedValue(0);
+  const buttonGradientOffset = useSharedValue(0);
 
   // Keyboard listener
   useEffect(() => {
@@ -73,9 +85,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   // Initial animations
   useEffect(() => {
-    // Staggered entrance animations
+    // Logo bounce animation
     logoOpacity.value = withTiming(1, { duration: 800 });
-    logoScale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    logoScale.value = withSequence(
+      withSpring(1.2, { damping: 8, stiffness: 100 }),
+      withSpring(1, { damping: 15, stiffness: 150 })
+    );
+    
+    // Animated gradient background
+    gradientRotation.value = withRepeat(
+      withTiming(360, { duration: 20000, easing: Easing.linear }),
+      -1,
+      false
+    );
+    
+    // Button gradient animation
+    buttonGradientOffset.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
     
     setTimeout(() => {
       formOpacity.value = withTiming(1, { duration: 600 });
@@ -142,8 +171,35 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     );
   };
 
+  const triggerRippleEffect = () => {
+    rippleScale.value = 0;
+    rippleOpacity.value = 1;
+    rippleScale.value = withTiming(1, { duration: 400 });
+    rippleOpacity.value = withTiming(0, { duration: 400 });
+  };
+
+  const showSuccessAnimation = () => {
+    setShowSuccess(true);
+    successScale.value = 0;
+    successOpacity.value = 0;
+    
+    successOpacity.value = withTiming(1, { duration: 300 });
+    successScale.value = withSequence(
+      withSpring(1.2, { damping: 8, stiffness: 100 }),
+      withSpring(1, { damping: 15, stiffness: 150 })
+    );
+    
+    setTimeout(() => {
+      successOpacity.value = withTiming(0, { duration: 300 });
+      setShowSuccess(false);
+    }, 2000);
+  };
+
   const handleLogin = async () => {
     logger.logButtonPress('Sign In', 'attempt login', { email });
+    
+    // Trigger ripple effect
+    triggerRippleEffect();
     
     // Validate inputs
     const isEmailValid = validateEmail(email);
@@ -159,7 +215,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       // Simulate login process
       await new Promise(resolve => setTimeout(resolve, 1500));
       logger.logButtonPress('Sign In', 'login successful');
-      onLoginSuccess();
+      
+      // Show success animation
+      showSuccessAnimation();
+      
+      // Delay navigation to show success animation
+      setTimeout(() => {
+        onLoginSuccess();
+      }, 1000);
     } catch (error) {
       logger.logError('Login', error);
       Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
@@ -211,15 +274,36 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     transform: [{ translateX: shakeAnimation.value }],
   }));
 
+  const gradientAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${gradientRotation.value}deg` }],
+  }));
+
+  const rippleAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: rippleScale.value }],
+    opacity: rippleOpacity.value,
+  }));
+
+  const successAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: successScale.value }],
+    opacity: successOpacity.value,
+  }));
+
+  const buttonGradientStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: interpolate(buttonGradientOffset.value, [0, 1], [0, 100]) }],
+  }));
+
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: '#0f172a' }}>
-      {/* Enhanced gradient background */}
-      <StyledView 
+      {/* Animated gradient background */}
+      <AnimatedView 
         className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 70%, #475569 100%)',
-          backgroundColor: '#0f172a',
-        }}
+        style={[
+          {
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 70%, #475569 100%)',
+            backgroundColor: '#0f172a',
+          },
+          gradientAnimatedStyle
+        ]}
       />
       
       {/* Subtle particle effect overlay */}
@@ -306,17 +390,54 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     </StyledText>
                   </StyledTouchableOpacity>
 
-                  <Button
-                    title="Sign In"
-                    onPress={handleLogin}
-                    loading={loading}
-                    variant="frost"
-                    fullWidth
-                    size="lg"
-                  />
+                  {/* Enhanced Sign In Button with Ripple Effect */}
+                  <StyledView className="relative overflow-hidden rounded-lg">
+                    <StyledTouchableOpacity
+                      onPress={handleLogin}
+                      disabled={loading}
+                      className="bg-gradient-to-r from-frost-500 to-ice-400 px-6 py-4 rounded-lg items-center justify-center shadow-lg"
+                      activeOpacity={0.8}
+                    >
+                      <StyledView className="flex-row items-center">
+                        {loading ? (
+                          <StyledView className="mr-2">
+                            <Ionicons name="refresh" size={20} color="white" />
+                          </StyledView>
+                        ) : (
+                          <StyledView className="mr-2">
+                            <Ionicons name="log-in-outline" size={20} color="white" />
+                          </StyledView>
+                        )}
+                        <StyledText className="text-white font-semibold text-lg">
+                          {loading ? 'Signing In...' : 'Sign In'}
+                        </StyledText>
+                      </StyledView>
+                    </StyledTouchableOpacity>
+                    
+                    {/* Ripple Effect */}
+                    <AnimatedView 
+                      className="absolute inset-0 bg-white/30 rounded-lg"
+                      style={rippleAnimatedStyle}
+                    />
+                  </StyledView>
                 </StyledView>
               </Card>
             </AnimatedView>
+
+            {/* Success Animation Overlay */}
+            {showSuccess && (
+              <AnimatedView 
+                className="absolute inset-0 items-center justify-center z-50"
+                style={successAnimatedStyle}
+              >
+                <StyledView className="w-20 h-20 bg-green-500 rounded-full items-center justify-center shadow-2xl">
+                  <Ionicons name="checkmark" size={40} color="white" />
+                </StyledView>
+                <StyledText className="text-white text-lg font-semibold mt-4">
+                  Welcome back!
+                </StyledText>
+              </AnimatedView>
+            )}
 
             {/* Spacer */}
             <StyledView className="h-8" />
