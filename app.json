@@ -34,6 +34,8 @@
       },
       "permissions": [
         "CAMERA",
+        "android.permission.CAMERA",
+        "CAMERA",
         "android.permission.CAMERA"
       ]
     },
@@ -58,7 +60,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/aa3d93f0-a744-4c64-a238-ecbbd0b8f4c6"
+      "url": "https://u.expo.dev/1b94cc14-eacf-4030-9168-e1527070761b"
     },
     "owner": "pmvita"
   }
