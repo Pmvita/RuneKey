@@ -299,7 +299,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
                   <StyledTouchableOpacity 
                     onPress={handleForgotPassword}
-                    className="self-end"
+                    className="self-end mb-6"
                   >
                     <StyledText className="text-frost-400 font-medium text-sm">
                       Forgot Password?
