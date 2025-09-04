@@ -26,6 +26,7 @@ import {
   SparklineChart,
   LoadingOverlay,
   TabSelector,
+  BubbleBackground,
 } from '../components';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
@@ -607,22 +608,8 @@ export const HomeScreen: React.FC = () => {
         onComplete={() => setShowParticles(false)}
       />
       
-      {/* Enhanced background gradient */}
-      <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#f8fafc',
-      }} />
-
-      {/* Subtle background pattern */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03 }}>
-        <View style={{ position: 'absolute', top: 100, left: 40, width: 200, height: 200, backgroundColor: '#3b82f6', borderRadius: 100 }} />
-        <View style={{ position: 'absolute', top: 300, right: 60, width: 150, height: 150, backgroundColor: '#10b981', borderRadius: 75 }} />
-        <View style={{ position: 'absolute', bottom: 200, left: 80, width: 120, height: 120, backgroundColor: '#f59e0b', borderRadius: 60 }} />
-      </View>
+      {/* Animated Bubble Background */}
+      <BubbleBackground />
 
       <ScrollView 
         style={{ flex: 1 }}
