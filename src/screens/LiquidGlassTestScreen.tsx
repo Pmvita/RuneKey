@@ -1,15 +1,9 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LiquidGlass } from '../components/common/LiquidGlass';
 import { useNavigation } from '@react-navigation/native';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export const LiquidGlassTestScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -20,48 +14,48 @@ export const LiquidGlassTestScreen: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
-      <StyledScrollView className="flex-1 p-4">
+      <ScrollView className="flex-1 p-4">
         {/* Header */}
-        <StyledView className="mb-8">
-          <StyledTouchableOpacity
+        <View className="mb-8">
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="mb-4 p-2"
           >
             <Ionicons name="arrow-back" size={24} color="white" />
-          </StyledTouchableOpacity>
+          </TouchableOpacity>
           
-          <StyledText className="text-3xl font-bold text-white text-center mb-2">
+          <Text className="text-3xl font-bold text-white text-center mb-2">
             Liquid Glass Demo
-          </StyledText>
-          <StyledText className="text-white/70 text-center">
+          </Text>
+          <Text className="text-white/70 text-center">
             Apple's liquid glass effect for React Native
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
         {/* Basic Examples */}
-        <StyledView className="mb-8">
-          <StyledText className="text-xl font-semibold text-white mb-4">
+        <View className="mb-8">
+          <Text className="text-xl font-semibold text-white mb-4">
             Basic Examples
-          </StyledText>
+          </Text>
           
           {/* Simple Card */}
-          <StyledView className="mb-4">
+          <View className="mb-4">
             <LiquidGlass
               className="p-6"
               cornerRadius={20}
               onPress={() => handlePress('Simple card')}
             >
-              <StyledText className="text-white text-lg font-semibold text-center">
+              <Text className="text-white text-lg font-semibold text-center">
                 Simple Glass Card
-              </StyledText>
-              <StyledText className="text-white/70 text-center mt-2">
+              </Text>
+              <Text className="text-white/70 text-center mt-2">
                 Basic liquid glass effect
-              </StyledText>
+              </Text>
             </LiquidGlass>
-          </StyledView>
+          </View>
 
           {/* Interactive Button */}
-          <StyledView className="mb-4">
+          <View className="mb-4">
             <LiquidGlass
               className="p-4 bg-blue-500/20"
               cornerRadius={100}
@@ -69,21 +63,21 @@ export const LiquidGlassTestScreen: React.FC = () => {
               onPress={() => handlePress('Interactive button')}
               enableTilt={true}
             >
-              <StyledText className="text-white text-center font-semibold">
+              <Text className="text-white text-center font-semibold">
                 Press & Tilt Me!
-              </StyledText>
+              </Text>
             </LiquidGlass>
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Advanced Configurations */}
-        <StyledView className="mb-8">
-          <StyledText className="text-xl font-semibold text-white mb-4">
+        <View className="mb-8">
+          <Text className="text-xl font-semibold text-white mb-4">
             Advanced Configurations
-          </StyledText>
+          </Text>
           
           {/* High Elasticity */}
-          <StyledView className="mb-4">
+          <View className="mb-4">
             <LiquidGlass
               className="p-6 bg-green-500/20"
               cornerRadius={16}
@@ -91,17 +85,17 @@ export const LiquidGlassTestScreen: React.FC = () => {
               springConfig={{ damping: 8, stiffness: 100 }}
               onPress={() => handlePress('High elasticity')}
             >
-              <StyledText className="text-white text-center font-semibold">
+              <Text className="text-white text-center font-semibold">
                 Super Bouncy Glass
-              </StyledText>
-              <StyledText className="text-white/70 text-center mt-2">
+              </Text>
+              <Text className="text-white/70 text-center mt-2">
                 High elasticity for playful interactions
-              </StyledText>
+              </Text>
             </LiquidGlass>
-          </StyledView>
+          </View>
 
           {/* Custom Styling */}
-          <StyledView className="mb-4">
+          <View className="mb-4">
             <LiquidGlass
               className="p-6"
               cornerRadius={12}
@@ -113,47 +107,47 @@ export const LiquidGlassTestScreen: React.FC = () => {
               }}
               onPress={() => handlePress('Custom styling')}
             >
-              <StyledText className="text-orange-200 text-center font-semibold">
+              <Text className="text-orange-200 text-center font-semibold">
                 Custom Orange Glass
-              </StyledText>
-              <StyledText className="text-orange-200/70 text-center mt-2">
+              </Text>
+              <Text className="text-orange-200/70 text-center mt-2">
                 With custom colors and borders
-              </StyledText>
+              </Text>
             </LiquidGlass>
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Use Cases */}
-        <StyledView className="mb-8">
-          <StyledText className="text-xl font-semibold text-white mb-4">
+        <View className="mb-8">
+          <Text className="text-xl font-semibold text-white mb-4">
             Use Cases
-          </StyledText>
+          </Text>
           
           {/* Portfolio Card */}
-          <StyledView className="mb-4">
+          <View className="mb-4">
             <LiquidGlass
               className="p-6 bg-white/10"
               cornerRadius={20}
               elasticity={0.2}
               onPress={() => handlePress('Portfolio card')}
             >
-              <StyledView className="flex-row justify-between items-center mb-2">
-                <StyledText className="text-white/80 text-sm">
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="text-white/80 text-sm">
                   Portfolio Value
-                </StyledText>
-                <StyledText className="text-green-400 text-sm">
+                </Text>
+                <Text className="text-green-400 text-sm">
                   +2.5%
-                </StyledText>
-              </StyledView>
-              <StyledText className="text-white text-2xl font-bold">
+                </Text>
+              </View>
+              <Text className="text-white text-2xl font-bold">
                 $15,500.00
-              </StyledText>
+              </Text>
             </LiquidGlass>
-          </StyledView>
+          </View>
 
           {/* Action Buttons */}
-          <StyledView className="mb-4">
-            <StyledView className="flex-row justify-around">
+          <View className="mb-4">
+            <View className="flex-row justify-around">
               <LiquidGlass
                 className="w-16 h-16 bg-red-500/20 rounded-full items-center justify-center"
                 cornerRadius={100}
@@ -180,37 +174,37 @@ export const LiquidGlassTestScreen: React.FC = () => {
               >
                 <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
               </LiquidGlass>
-            </StyledView>
-          </StyledView>
-        </StyledView>
+            </View>
+          </View>
+        </View>
 
         {/* Performance Info */}
-        <StyledView className="mb-8 p-4 bg-black/20 rounded-lg">
-          <StyledText className="text-white font-semibold text-center mb-2">
+        <View className="mb-8 p-4 bg-black/20 rounded-lg">
+          <Text className="text-white font-semibold text-center mb-2">
             Performance Features
-          </StyledText>
-          <StyledText className="text-white/70 text-center text-sm">
+          </Text>
+          <Text className="text-white/70 text-center text-sm">
             • 60fps animations on UI thread{'\n'}
             • Native performance with react-native-reanimated{'\n'}
             • Smooth spring physics{'\n'}
             • Gesture-based interactions{'\n'}
             • Cross-platform compatibility
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
         {/* Back to Home */}
-        <StyledView className="mb-8">
+        <View className="mb-8">
           <LiquidGlass
             className="p-4 bg-white/10"
             cornerRadius={16}
             onPress={() => navigation.navigate('Home')}
           >
-            <StyledText className="text-white text-center font-semibold">
+            <Text className="text-white text-center font-semibold">
               Back to Home
-            </StyledText>
+            </Text>
           </LiquidGlass>
-        </StyledView>
-      </StyledScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

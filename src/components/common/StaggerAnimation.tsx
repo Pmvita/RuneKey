@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { styled } from 'nativewind';
-
-const StyledView = styled(View);
-
 interface StaggerAnimationProps {
   children: React.ReactNode[];
   delay?: number;
@@ -69,9 +65,9 @@ export const StaggerAnimation: React.FC<StaggerAnimationProps> = ({
   };
 
   return (
-    <StyledView className={className}>
+    <View className={className}>
       {children.map((child, index) => (
-        <StyledView
+        <View
           key={index}
           style={{
             ...getAnimationStyle(index),
@@ -79,8 +75,8 @@ export const StaggerAnimation: React.FC<StaggerAnimationProps> = ({
           }}
         >
           {child}
-        </StyledView>
+        </View>
       ))}
-    </StyledView>
+    </View>
   );
 }; 

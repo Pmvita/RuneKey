@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface SeedPhraseScreenProps {
   seedPhrase: string[];
@@ -65,108 +59,108 @@ export const SeedPhraseScreen: React.FC<SeedPhraseScreenProps> = ({
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0f9ff' }}>
       {/* Icy blue background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgba(14, 165, 233, 0.05)',
         }}
       />
-      <StyledView 
+      <View 
         className="absolute bottom-0 left-0 w-40 h-40 rounded-full opacity-10"
         style={{
           backgroundColor: 'rgba(186, 230, 253, 0.4)',
           transform: [{ translateX: -20 }, { translateY: 20 }],
         }}
       />
-      <StyledScrollView className="flex-1">
+      <ScrollView className="flex-1">
         {/* Header */}
-        <StyledView className="p-6 pb-4">
-          <StyledView className="flex-row items-center mb-4">
-            <StyledTouchableOpacity onPress={onBack} className="mr-4">
+        <View className="p-6 pb-4">
+          <View className="flex-row items-center mb-4">
+            <TouchableOpacity onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#6B7280" />
-            </StyledTouchableOpacity>
-            <StyledText className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            </TouchableOpacity>
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Backup Wallet
-            </StyledText>
-          </StyledView>
-          <StyledText className="text-gray-600 dark:text-gray-400">
+            </Text>
+          </View>
+          <Text className="text-gray-600 dark:text-gray-400">
             Write down your recovery phrase and store it safely
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
-        <StyledView className="px-6">
+        <View className="px-6">
           {/* Security Warning */}
           <Card variant="outlined" className="p-4 mb-6 border-red-200 dark:border-red-800">
-            <StyledView className="flex-row items-start">
+            <View className="flex-row items-start">
               <Ionicons name="warning" size={24} color="#EF4444" />
-              <StyledView className="ml-3 flex-1">
-                <StyledText className="text-red-800 dark:text-red-200 font-bold mb-2">
+              <View className="ml-3 flex-1">
+                <Text className="text-red-800 dark:text-red-200 font-bold mb-2">
                   Critical Security Information
-                </StyledText>
-                <StyledView className="space-y-2">
-                  <StyledText className="text-red-700 dark:text-red-300 text-sm">
+                </Text>
+                <View className="space-y-2">
+                  <Text className="text-red-700 dark:text-red-300 text-sm">
                     • This recovery phrase is the ONLY way to restore your wallet
-                  </StyledText>
-                  <StyledText className="text-red-700 dark:text-red-300 text-sm">
+                  </Text>
+                  <Text className="text-red-700 dark:text-red-300 text-sm">
                     • Never share it with anyone or store it digitally
-                  </StyledText>
-                  <StyledText className="text-red-700 dark:text-red-300 text-sm">
+                  </Text>
+                  <Text className="text-red-700 dark:text-red-300 text-sm">
                     • Write it down on paper and store in a safe place
-                  </StyledText>
-                  <StyledText className="text-red-700 dark:text-red-300 text-sm">
+                  </Text>
+                  <Text className="text-red-700 dark:text-red-300 text-sm">
                     • If you lose it, your funds will be lost forever
-                  </StyledText>
-                </StyledView>
-              </StyledView>
-            </StyledView>
+                  </Text>
+                </View>
+              </View>
+            </View>
           </Card>
 
           {/* Seed Phrase Display */}
           <Card variant="outlined" className="p-6 mb-6">
-            <StyledText className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
+            <Text className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
               Your 12-Word Recovery Phrase
-            </StyledText>
+            </Text>
 
             {!isRevealed ? (
-              <StyledView className="items-center py-8">
-                <StyledView className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full items-center justify-center mb-4">
+              <View className="items-center py-8">
+                <View className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full items-center justify-center mb-4">
                   <Ionicons name="eye-off" size={32} color="#6B7280" />
-                </StyledView>
-                <StyledText className="text-gray-600 dark:text-gray-400 text-center mb-4">
+                </View>
+                <Text className="text-gray-600 dark:text-gray-400 text-center mb-4">
                   Your recovery phrase is hidden for security
-                </StyledText>
+                </Text>
                 <Button
                   title="Reveal Recovery Phrase"
                   onPress={handleReveal}
                   variant="outline"
                 />
-              </StyledView>
+              </View>
             ) : (
               <>
-                <StyledView className="grid grid-cols-2 gap-3">
+                <View className="grid grid-cols-2 gap-3">
                   {seedPhrase.map((word, index) => (
-                    <StyledView 
+                    <View 
                       key={index}
                       className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg flex-row items-center"
                     >
-                      <StyledText className="text-sm text-gray-500 dark:text-gray-400 w-6">
+                      <Text className="text-sm text-gray-500 dark:text-gray-400 w-6">
                         {index + 1}.
-                      </StyledText>
-                      <StyledText className="text-base font-medium text-gray-900 dark:text-gray-100 ml-2">
+                      </Text>
+                      <Text className="text-base font-medium text-gray-900 dark:text-gray-100 ml-2">
                         {word}
-                      </StyledText>
-                    </StyledView>
+                      </Text>
+                    </View>
                   ))}
-                </StyledView>
+                </View>
 
-                <StyledView className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
-                  <StyledView className="flex-row items-start">
+                <View className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
+                  <View className="flex-row items-start">
                     <Ionicons name="create" size={20} color="#F59E0B" />
-                    <StyledText className="text-yellow-800 dark:text-yellow-200 ml-3 flex-1">
+                    <Text className="text-yellow-800 dark:text-yellow-200 ml-3 flex-1">
                       Write these words down in order on paper. Do not screenshot or copy to clipboard.
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               </>
             )}
           </Card>
@@ -174,11 +168,11 @@ export const SeedPhraseScreen: React.FC<SeedPhraseScreenProps> = ({
           {/* Confirmation Checkbox */}
           {isRevealed && (
             <Card variant="outlined" className="p-4 mb-6">
-              <StyledTouchableOpacity 
+              <TouchableOpacity 
                 onPress={() => setHasWrittenDown(!hasWrittenDown)}
                 className="flex-row items-center"
               >
-                <StyledView className={`w-6 h-6 rounded border-2 mr-3 items-center justify-center ${
+                <View className={`w-6 h-6 rounded border-2 mr-3 items-center justify-center ${
                   hasWrittenDown 
                     ? 'bg-primary-500 border-primary-500' 
                     : 'border-gray-300 dark:border-gray-600'
@@ -186,11 +180,11 @@ export const SeedPhraseScreen: React.FC<SeedPhraseScreenProps> = ({
                   {hasWrittenDown && (
                     <Ionicons name="checkmark" size={16} color="white" />
                   )}
-                </StyledView>
-                <StyledText className="text-gray-900 dark:text-gray-100 flex-1">
+                </View>
+                <Text className="text-gray-900 dark:text-gray-100 flex-1">
                   I have written down my recovery phrase on paper and stored it in a safe place
-                </StyledText>
-              </StyledTouchableOpacity>
+                </Text>
+              </TouchableOpacity>
             </Card>
           )}
 
@@ -203,8 +197,8 @@ export const SeedPhraseScreen: React.FC<SeedPhraseScreenProps> = ({
               fullWidth
             />
           )}
-        </StyledView>
-      </StyledScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

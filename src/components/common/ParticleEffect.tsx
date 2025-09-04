@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { styled } from 'nativewind';
 import { logger } from '../../utils/logger';
-
-const StyledView = styled(View);
 
 interface Particle {
   id: number;
@@ -102,9 +99,9 @@ export const ParticleEffect: React.FC<ParticleEffectProps> = ({
   if (!active || particles.length === 0) return null;
 
   return (
-    <StyledView className={`absolute inset-0 pointer-events-none ${className}`}>
+    <View className={`absolute inset-0 pointer-events-none ${className}`}>
       {particles.map(particle => (
-        <StyledView
+        <View
           key={particle.id}
           className={`absolute rounded-full ${
             type === 'confetti' ? 'rounded-sm' : 'rounded-full'
@@ -123,6 +120,6 @@ export const ParticleEffect: React.FC<ParticleEffectProps> = ({
           }}
         />
       ))}
-    </StyledView>
+    </View>
   );
 }; 

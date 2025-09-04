@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface SeedVerifyScreenProps {
   seedPhrase: string[];
@@ -80,71 +74,71 @@ export const SeedVerifyScreen: React.FC<SeedVerifyScreenProps> = ({
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0f9ff' }}>
       {/* Icy blue background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgba(14, 165, 233, 0.05)',
         }}
       />
-      <StyledView 
+      <View 
         className="absolute bottom-10 right-0 w-44 h-44 rounded-full opacity-8"
         style={{
           backgroundColor: 'rgba(186, 230, 253, 0.3)',
           transform: [{ translateX: 30 }],
         }}
       />
-      <StyledScrollView className="flex-1">
+      <ScrollView className="flex-1">
         {/* Header */}
-        <StyledView className="p-6 pb-4">
-          <StyledView className="flex-row items-center mb-4">
-            <StyledTouchableOpacity onPress={onBack} className="mr-4">
+        <View className="p-6 pb-4">
+          <View className="flex-row items-center mb-4">
+            <TouchableOpacity onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#6B7280" />
-            </StyledTouchableOpacity>
-            <StyledText className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            </TouchableOpacity>
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Verify Backup
-            </StyledText>
-          </StyledView>
-          <StyledText className="text-gray-600 dark:text-gray-400">
+            </Text>
+          </View>
+          <Text className="text-gray-600 dark:text-gray-400">
             Select the correct words to verify your recovery phrase
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
-        <StyledView className="px-6">
+        <View className="px-6">
           {/* Progress */}
-          <StyledView className="mb-6">
-            <StyledView className="flex-row items-center justify-between mb-2">
-              <StyledText className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Verification Progress
-              </StyledText>
-              <StyledText className="text-sm text-gray-500 dark:text-gray-400">
+              </Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">
                 {selectedWords.filter(w => w).length} of {verificationPositions.length}
-              </StyledText>
-            </StyledView>
-            <StyledView className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-              <StyledView 
+              </Text>
+            </View>
+            <View className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+              <View 
                 className="h-2 bg-primary-500 rounded-full"
                 style={{ 
                   width: `${(selectedWords.filter(w => w).length / verificationPositions.length) * 100}%` 
                 }}
               />
-            </StyledView>
-          </StyledView>
+            </View>
+          </View>
 
           {/* Verification Slots */}
           <Card variant="outlined" className="p-6 mb-6">
-            <StyledText className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
+            <Text className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
               Fill in the missing words
-            </StyledText>
+            </Text>
 
-            <StyledView className="space-y-3">
+            <View className="space-y-3">
               {verificationPositions.map((position, index) => (
-                <StyledView key={position} className="flex-row items-center">
-                  <StyledText className="text-base font-medium text-gray-700 dark:text-gray-300 w-16">
+                <View key={position} className="flex-row items-center">
+                  <Text className="text-base font-medium text-gray-700 dark:text-gray-300 w-16">
                     Word {position + 1}:
-                  </StyledText>
-                  <StyledView className="flex-1">
+                  </Text>
+                  <View className="flex-1">
                     {selectedWords[index] ? (
-                      <StyledTouchableOpacity
+                      <TouchableOpacity
                         onPress={() => {
                           const newSelected = [...selectedWords];
                           newSelected[index] = '';
@@ -152,36 +146,36 @@ export const SeedVerifyScreen: React.FC<SeedVerifyScreenProps> = ({
                         }}
                         className="bg-primary-100 dark:bg-primary-900 border border-primary-300 dark:border-primary-700 p-3 rounded-lg"
                       >
-                        <StyledText className="text-primary-800 dark:text-primary-200 font-medium">
+                        <Text className="text-primary-800 dark:text-primary-200 font-medium">
                           {selectedWords[index]}
-                        </StyledText>
-                      </StyledTouchableOpacity>
+                        </Text>
+                      </TouchableOpacity>
                     ) : (
-                      <StyledView className="border-2 border-dashed border-gray-300 dark:border-gray-600 p-3 rounded-lg">
-                        <StyledText className="text-gray-400 dark:text-gray-500">
+                      <View className="border-2 border-dashed border-gray-300 dark:border-gray-600 p-3 rounded-lg">
+                        <Text className="text-gray-400 dark:text-gray-500">
                           Select word {position + 1}
-                        </StyledText>
-                      </StyledView>
+                        </Text>
+                      </View>
                     )}
-                  </StyledView>
-                </StyledView>
+                  </View>
+                </View>
               ))}
-            </StyledView>
+            </View>
           </Card>
 
           {/* Word Selection */}
           <Card variant="outlined" className="p-6 mb-6">
-            <StyledText className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Text className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
               Select from these words:
-            </StyledText>
+            </Text>
 
-            <StyledView className="flex-row flex-wrap">
+            <View className="flex-row flex-wrap">
               {shuffledWords.map((word, index) => {
                 const isSelected = selectedWords.includes(word);
                 const currentEmptyIndex = selectedWords.findIndex(w => !w);
                 
                 return (
-                  <StyledTouchableOpacity
+                  <TouchableOpacity
                     key={`${word}-${index}`}
                     onPress={() => {
                       if (!isSelected && currentEmptyIndex !== -1) {
@@ -195,17 +189,17 @@ export const SeedVerifyScreen: React.FC<SeedVerifyScreenProps> = ({
                         : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
                     }`}
                   >
-                    <StyledText className={`font-medium ${
+                    <Text className={`font-medium ${
                       isSelected 
                         ? 'text-gray-400 dark:text-gray-500'
                         : 'text-gray-900 dark:text-gray-100'
                     }`}>
                       {word}
-                    </StyledText>
-                  </StyledTouchableOpacity>
+                    </Text>
+                  </TouchableOpacity>
                 );
               })}
-            </StyledView>
+            </View>
           </Card>
 
           {/* Verify Button */}
@@ -217,17 +211,17 @@ export const SeedVerifyScreen: React.FC<SeedVerifyScreenProps> = ({
           />
 
           {/* Security Note */}
-          <StyledView className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-            <StyledView className="flex-row items-start">
+          <View className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+            <View className="flex-row items-start">
               <Ionicons name="information-circle" size={20} color="#3B82F6" />
-              <StyledText className="text-blue-800 dark:text-blue-200 ml-3 text-sm">
+              <Text className="text-blue-800 dark:text-blue-200 ml-3 text-sm">
                 This verification ensures you have correctly written down your recovery phrase. 
                 Your wallet security depends on keeping this phrase safe.
-              </StyledText>
-            </StyledView>
-          </StyledView>
-        </StyledView>
-      </StyledScrollView>
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

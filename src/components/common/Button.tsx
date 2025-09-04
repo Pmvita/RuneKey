@@ -1,11 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, ActivityIndicator } from 'react-native';
-import { styled } from 'nativewind';
 import { logger } from '../../utils/logger';
-
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledText = styled(Text);
-const StyledView = styled(View);
 
 interface ButtonProps {
   title: string;
@@ -125,7 +120,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <StyledTouchableOpacity
+    <TouchableOpacity
       className={`${getBaseClasses()} ${getVariantClasses()} ${className}`}
       onPress={handlePress}
       disabled={disabled || loading}
@@ -134,17 +129,17 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator size="small" color="white" />
       ) : (
-        <StyledView className="flex-row items-center">
+        <View className="flex-row items-center">
           {icon ? (
-            <StyledView className="mr-2">
+            <View className="mr-2">
               {icon}
-            </StyledView>
+            </View>
           ) : null}
-          <StyledText className={getTextClasses()}>
+          <Text className={getTextClasses()}>
             {title || 'Button'}
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
       )}
-    </StyledTouchableOpacity>
+    </TouchableOpacity>
   );
 };

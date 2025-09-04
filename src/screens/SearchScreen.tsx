@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,12 +7,6 @@ import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
 import { LiquidGlass } from '../components';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledFlatList = styled(FlatList);
 
 interface SearchResult {
   id: string;
@@ -194,23 +187,23 @@ export const SearchScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
       {/* Background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgb(93,138,168)',
         }}
       />
       
-      <StyledScrollView className="flex-1">
+      <ScrollView className="flex-1">
         {/* Header */}
-        <StyledView className="p-6">
-          <StyledText className="text-2xl font-bold text-slate-900 mb-4 text-center">
+        <View className="p-6">
+          <Text className="text-2xl font-bold text-slate-900 mb-4 text-center">
             Search
-          </StyledText>
+          </Text>
           
           {/* Search Input */}
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <StyledView className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
               <Ionicons name="search-outline" size={20} color="#6B7280" />
               <TextInput
                 value={searchQuery}
@@ -219,17 +212,17 @@ export const SearchScreen: React.FC = () => {
                 placeholderTextColor="#6B7280"
                 style={{ flex: 1, marginLeft: 12, color: '#374151' }}
               />
-            </StyledView>
-          </StyledView>
-        </StyledView>
+            </View>
+          </View>
+        </View>
 
         {/* Categories */}
-        <StyledView className="px-6 mb-6">
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <StyledScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <StyledView className="flex-row" style={{ gap: 12 }}>
+        <View className="px-6 mb-6">
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="flex-row" style={{ gap: 12 }}>
                 {categories.map((category) => (
-                  <StyledTouchableOpacity
+                  <TouchableOpacity
                     key={category.id}
                     className={`flex-row items-center px-4 py-2 rounded-full border ${
                       selectedCategory === category.id
@@ -243,7 +236,7 @@ export const SearchScreen: React.FC = () => {
                       size={16} 
                       color={selectedCategory === category.id ? '#ffffff' : '#6b7280'} 
                     />
-                    <StyledText 
+                    <Text 
                       className={`ml-2 font-medium ${
                         selectedCategory === category.id
                           ? 'text-white'
@@ -251,117 +244,117 @@ export const SearchScreen: React.FC = () => {
                       }`}
                     >
                       {category.label}
-                    </StyledText>
-                  </StyledTouchableOpacity>
+                    </Text>
+                  </TouchableOpacity>
                 ))}
-              </StyledView>
-            </StyledScrollView>
-          </StyledView>
-        </StyledView>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
 
         {/* Search Results or Default Content */}
-        <StyledView className="px-6">
+        <View className="px-6">
           {searchQuery ? (
             // Search Results
             <>
-              <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+              <Text className="text-lg font-semibold text-slate-900 mb-4">
                 Results for "{searchQuery}"
-              </StyledText>
+              </Text>
               {filteredResults.length > 0 ? (
-                <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   {filteredResults.map((item, index) => (
-                    <StyledTouchableOpacity
+                    <TouchableOpacity
                       key={item.id}
                       className={`p-4 flex-row items-center ${
                         index !== filteredResults.length - 1 ? 'border-b border-gray-200' : ''
                       }`}
                     >
-                      <StyledView className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
+                      <View className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
                         <Ionicons name={item.icon as any} size={24} color="#6b7280" />
-                      </StyledView>
-                      <StyledView className="flex-1">
-                        <StyledView className="flex-row items-center">
-                          <StyledText className="text-base font-semibold text-slate-900">
+                      </View>
+                      <View className="flex-1">
+                        <View className="flex-row items-center">
+                          <Text className="text-base font-semibold text-slate-900">
                             {item.name}
-                          </StyledText>
+                          </Text>
                           {item.symbol && (
-                            <StyledText className="text-sm text-slate-600 ml-2">
+                            <Text className="text-sm text-slate-600 ml-2">
                               {item.symbol}
-                            </StyledText>
+                            </Text>
                           )}
                           {item.trending && (
-                            <StyledView className="ml-2 px-2 py-1 bg-orange-100 rounded">
-                              <StyledText className="text-xs text-orange-600 font-medium">
+                            <View className="ml-2 px-2 py-1 bg-orange-100 rounded">
+                              <Text className="text-xs text-orange-600 font-medium">
                                 Trending
-                              </StyledText>
-                            </StyledView>
+                              </Text>
+                            </View>
                           )}
-                        </StyledView>
-                        <StyledText className="text-sm text-slate-600 mt-1">
+                        </View>
+                        <Text className="text-sm text-slate-600 mt-1">
                           {item.description}
-                        </StyledText>
-                        <StyledText className={`text-xs font-medium mt-1 ${getTypeColor(item.type)}`}>
+                        </Text>
+                        <Text className={`text-xs font-medium mt-1 ${getTypeColor(item.type)}`}>
                           {item.type.toUpperCase()}
-                        </StyledText>
-                      </StyledView>
-                    </StyledTouchableOpacity>
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   ))}
-                </StyledView>
+                </View>
               ) : (
-                <StyledView className="p-8 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <StyledView className="items-center">
+                <View className="p-8 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                  <View className="items-center">
                     <Ionicons name="search-outline" size={48} color="#6b7280" />
-                    <StyledText className="text-lg font-semibold text-slate-700 mt-4 mb-2">
+                    <Text className="text-lg font-semibold text-slate-700 mt-4 mb-2">
                       No Results Found
-                    </StyledText>
-                    <StyledText className="text-slate-600 text-center">
+                    </Text>
+                    <Text className="text-slate-600 text-center">
                       Try adjusting your search terms or browse categories below.
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               )}
             </>
           ) : (
             // Default Content
             <>
               {/* Trending Tokens */}
-              <StyledView className="mb-6">
-                <StyledView className="flex-row items-center justify-between mb-4">
-                  <StyledText className="text-lg font-semibold text-slate-900">
+              <View className="mb-6">
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-lg font-semibold text-slate-900">
                     Trending Tokens
-                  </StyledText>
-                  <StyledTouchableOpacity
+                  </Text>
+                  <TouchableOpacity
                     onPress={fetchTrendingTokens}
                     className="flex-row items-center px-3 py-1 bg-blue-100 rounded-full"
                   >
                     <Ionicons name="refresh" size={16} color="#3b82f6" />
-                    <StyledText className="text-xs text-blue-600 ml-1 font-medium">
+                    <Text className="text-xs text-blue-600 ml-1 font-medium">
                       Refresh
-                    </StyledText>
-                  </StyledTouchableOpacity>
-                </StyledView>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
                 {lastUpdated && (
-                  <StyledView className="flex-row items-center mb-2">
-                    <StyledText className="text-xs text-slate-500">
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-xs text-slate-500">
                       Last updated: {lastUpdated.toLocaleTimeString()}
-                    </StyledText>
-                    <StyledView className="flex-row items-center ml-2">
-                      <StyledView className="w-2 h-2 bg-green-500 rounded-full mr-1" />
-                      <StyledText className="text-xs text-green-600 font-medium">
+                    </Text>
+                    <View className="flex-row items-center ml-2">
+                      <View className="w-2 h-2 bg-green-500 rounded-full mr-1" />
+                      <Text className="text-xs text-green-600 font-medium">
                         Live
-                      </StyledText>
-                    </StyledView>
-                  </StyledView>
+                      </Text>
+                    </View>
+                  </View>
                 )}
-                <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   {isLoadingTrending ? (
-                    <StyledView className="items-center py-8">
-                      <StyledText className="text-slate-600">Loading trending tokens...</StyledText>
-                    </StyledView>
+                    <View className="items-center py-8">
+                      <Text className="text-slate-600">Loading trending tokens...</Text>
+                    </View>
                   ) : apiTrendingTokens.length > 0 ? (
                     <>
                       {apiTrendingTokens.slice(0, 3).map((token, index) => (
-                        <StyledTouchableOpacity
+                        <TouchableOpacity
                           key={`${token.symbol}-${index}`}
                           className={`p-4 flex-row items-center ${
                             index !== Math.min(apiTrendingTokens.length, 3) - 1 ? 'border-b border-gray-200' : ''
@@ -376,108 +369,108 @@ export const SearchScreen: React.FC = () => {
                               }}
                             />
                           ) : (
-                            <StyledView className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
+                            <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
                               <Ionicons name="cash" size={20} color="#6b7280" />
-                            </StyledView>
+                            </View>
                           )}
-                          <StyledView className="flex-1">
-                            <StyledView className="flex-row items-center justify-between">
-                              <StyledText className="text-base font-semibold text-slate-900">
+                          <View className="flex-1">
+                            <View className="flex-row items-center justify-between">
+                              <Text className="text-base font-semibold text-slate-900">
                                 {token.name}
-                              </StyledText>
-                              <StyledText className="text-sm text-slate-600">
+                              </Text>
+                              <Text className="text-sm text-slate-600">
                                 {token.symbol?.toUpperCase()}
-                              </StyledText>
-                            </StyledView>
+                              </Text>
+                            </View>
                             {token.price_change_percentage_24h && (
-                              <StyledView className="flex-row items-center mt-1">
-                                <StyledText className={`text-xs font-medium ${
+                              <View className="flex-row items-center mt-1">
+                                <Text className={`text-xs font-medium ${
                                   token.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
                                 }`}>
                                   {`${token.price_change_percentage_24h > 0 ? '+' : ''}${token.price_change_percentage_24h.toFixed(2)}%`}
-                                </StyledText>
+                                </Text>
                                 <Ionicons 
                                   name={token.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
                                   size={12} 
                                   color={token.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
                                   style={{ marginLeft: 4 }}
                                 />
-                              </StyledView>
+                              </View>
                             )}
-                          </StyledView>
-                        </StyledTouchableOpacity>
+                          </View>
+                        </TouchableOpacity>
                       ))}
                       
                       {apiTrendingTokens.length > 3 && (
-                        <StyledTouchableOpacity
+                        <TouchableOpacity
                           onPress={() => setShowTrendingModal(true)}
                           className="p-4 border-t border-gray-200"
                         >
-                          <StyledView className="flex-row items-center justify-center">
-                            <StyledText className="text-blue-600 font-medium mr-2">
+                          <View className="flex-row items-center justify-center">
+                            <Text className="text-blue-600 font-medium mr-2">
                               See More ({apiTrendingTokens.length - 3} more)
-                            </StyledText>
+                            </Text>
                             <Ionicons name="chevron-forward" size={16} color="#2563eb" />
-                          </StyledView>
-                        </StyledTouchableOpacity>
+                          </View>
+                        </TouchableOpacity>
                       )}
                     </>
                   ) : (
-                    <StyledView className="items-center py-8">
-                      <StyledText className="text-slate-600">No trending tokens available</StyledText>
-                      <StyledText className="text-xs text-slate-500 mt-2 text-center">
+                    <View className="items-center py-8">
+                      <Text className="text-slate-600">No trending tokens available</Text>
+                      <Text className="text-xs text-slate-500 mt-2 text-center">
                         API rate limit reached. Try again later.
-                      </StyledText>
-                    </StyledView>
+                      </Text>
+                    </View>
                   )}
-                </StyledView>
-              </StyledView>
+                </View>
+              </View>
 
               {/* Browse Categories */}
-              <StyledView>
-                <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+              <View>
+                <Text className="text-lg font-semibold text-slate-900 mb-4">
                   Browse by Category
-                </StyledText>
-                <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                </Text>
+                <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
                   {categoryResults.slice(0, 5).map((item, index) => (
-                    <StyledTouchableOpacity
+                    <TouchableOpacity
                       key={item.id}
                       className={`p-4 flex-row items-center ${
                         index !== Math.min(categoryResults.length, 5) - 1 ? 'border-b border-gray-200' : ''
                       }`}
                     >
-                      <StyledView className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
+                      <View className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
                         <Ionicons name={item.icon as any} size={24} color="#6b7280" />
-                      </StyledView>
-                      <StyledView className="flex-1">
-                        <StyledView className="flex-row items-center">
-                          <StyledText className="text-base font-semibold text-slate-900">
+                      </View>
+                      <View className="flex-1">
+                        <View className="flex-row items-center">
+                          <Text className="text-base font-semibold text-slate-900">
                             {item.name}
-                          </StyledText>
+                          </Text>
                           {item.symbol && (
-                            <StyledText className="text-sm text-slate-600 ml-2">
+                            <Text className="text-sm text-slate-600 ml-2">
                               {item.symbol}
-                            </StyledText>
+                            </Text>
                           )}
-                        </StyledView>
-                        <StyledText className="text-sm text-slate-600 mt-1">
+                        </View>
+                        <Text className="text-sm text-slate-600 mt-1">
                           {item.description}
-                        </StyledText>
-                        <StyledText className={`text-xs font-medium mt-1 ${getTypeColor(item.type)}`}>
+                        </Text>
+                        <Text className={`text-xs font-medium mt-1 ${getTypeColor(item.type)}`}>
                           {item.type.toUpperCase()}
-                        </StyledText>
-                      </StyledView>
-                    </StyledTouchableOpacity>
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   ))}
-                </StyledView>
-              </StyledView>
+                </View>
+              </View>
             </>
           )}
-        </StyledView>
+        </View>
 
         {/* Additional Space */}
-        <StyledView className="h-6" />
-      </StyledScrollView>
+        <View className="h-6" />
+      </ScrollView>
 
       {/* Trending Tokens Modal */}
       <Modal
@@ -487,24 +480,24 @@ export const SearchScreen: React.FC = () => {
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
           {/* Modal Header */}
-          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <StyledText className="text-lg font-semibold text-slate-900">
+          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+            <Text className="text-lg font-semibold text-slate-900">
               All Trending Tokens
-            </StyledText>
-            <StyledTouchableOpacity
+            </Text>
+            <TouchableOpacity
               onPress={() => setShowTrendingModal(false)}
               className="p-2"
             >
               <Ionicons name="close" size={24} color="#6B7280" />
-            </StyledTouchableOpacity>
-          </StyledView>
+            </TouchableOpacity>
+          </View>
 
           {/* Token List */}
           <FlatList
             data={apiTrendingTokens}
             keyExtractor={(item) => `${item.symbol}-${item.id}`}
             renderItem={({ item }: { item: TrendingToken }) => (
-              <StyledTouchableOpacity
+              <TouchableOpacity
                 className="flex-row items-center p-4 border-b border-gray-100"
                 onPress={() => {
                   setShowTrendingModal(false);
@@ -532,48 +525,48 @@ export const SearchScreen: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <StyledView className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
+                  <View className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
                 )}
-                <StyledView className="flex-1">
-                  <StyledText className="font-medium text-slate-900">{item.symbol?.toUpperCase()}</StyledText>
-                  <StyledText className="text-sm text-slate-500">{item.name}</StyledText>
+                <View className="flex-1">
+                  <Text className="font-medium text-slate-900">{item.symbol?.toUpperCase()}</Text>
+                  <Text className="text-sm text-slate-500">{item.name}</Text>
                   {item.current_price && (
-                    <StyledText className="text-xs text-slate-400">
+                    <Text className="text-xs text-slate-400">
                       ${item.current_price.toFixed(2)}
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledView>
+                </View>
                 {item.price_change_percentage_24h && (
-                  <StyledView className="items-end">
-                    <StyledText className={`text-sm font-medium ${
+                  <View className="items-end">
+                    <Text className={`text-sm font-medium ${
                       item.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {`${item.price_change_percentage_24h > 0 ? '+' : ''}${item.price_change_percentage_24h.toFixed(2)}%`}
-                    </StyledText>
+                    </Text>
                     <Ionicons 
                       name={item.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
                       size={12} 
                       color={item.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
                       style={{ marginTop: 2 }}
                     />
-                  </StyledView>
+                  </View>
                 )}
-              </StyledTouchableOpacity>
+              </TouchableOpacity>
             )}
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              <StyledView className="p-8 items-center">
+              <View className="p-8 items-center">
                 {isLoadingTrending ? (
-                  <StyledText className="text-slate-500 text-center">
+                  <Text className="text-slate-500 text-center">
                     Loading trending tokens...
-                  </StyledText>
+                  </Text>
                 ) : (
-                  <StyledText className="text-slate-500 text-center">
+                  <Text className="text-slate-500 text-center">
                     No trending tokens available
-                  </StyledText>
+                  </Text>
                 )}
-              </StyledView>
+              </View>
             }
           />
         </SafeAreaView>

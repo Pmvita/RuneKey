@@ -2,9 +2,6 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Add support for nativewind
-config.resolver.sourceExts.push('cjs');
-
 // Configure network settings
 config.server = {
   ...config.server,

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,12 +23,6 @@ import { NETWORK_CONFIGS } from '../constants';
 import { useNavigation } from '@react-navigation/native';
 
 import { logger } from '../utils/logger';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledImage = styled(Image);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export const HomeScreen: React.FC = () => {
   const { isConnected, currentWallet, activeNetwork } = useWallet();
@@ -154,13 +147,13 @@ export const HomeScreen: React.FC = () => {
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'send':
-        return <StyledText className="text-red-500">📤</StyledText>;
+        return <Text className="text-red-500">📤</Text>;
       case 'receive':
-        return <StyledText className="text-green-500">📥</StyledText>;
+        return <Text className="text-green-500">📥</Text>;
       case 'swap':
-        return <StyledText className="text-blue-500">🔄</StyledText>;
+        return <Text className="text-blue-500">🔄</Text>;
       default:
-        return <StyledText className="text-gray-500">📄</StyledText>;
+        return <Text className="text-gray-500">📄</Text>;
     }
   };
 
@@ -188,24 +181,24 @@ export const HomeScreen: React.FC = () => {
       />
       
       {/* Light background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgb(93,138,168)',
         }}
       />
 
-      <StyledScrollView 
+      <ScrollView 
         className="flex-1"
         refreshControl={
           <RefreshControl refreshing={loadingData} onRefresh={onRefresh} />
         }
       >
         {/* Header */}
-        <StyledView className="px-6 pt-6 pb-4">
-          <StyledText className="text-2xl font-bold text-slate-900 mb-2 text-center">
+        <View className="px-6 pt-6 pb-4">
+          <Text className="text-2xl font-bold text-slate-900 mb-2 text-center">
             RuneKey
-          </StyledText>
+          </Text>
           
           {/* Total Portfolio Value */}
           {walletData ? (
@@ -218,48 +211,48 @@ export const HomeScreen: React.FC = () => {
                 logger.logButtonPress('Portfolio', 'portfolio card interaction');
               }}
             >
-              <StyledView className="flex-row justify-between items-center mb-1">
-                <StyledText className="text-sm text-slate-600 mt-1 px-4">
+              <View className="flex-row justify-between items-center mb-1">
+                <Text className="text-sm text-slate-600 mt-1 px-4">
                   Total Portfolio Value
-                </StyledText>
-                <StyledView className="flex-row items-center">
+                </Text>
+                <View className="flex-row items-center">
                   <AnimatedPriceChange 
                     value={((calculateTotalValue() - 15000000) / 15000000 * 100)}
                     className="mr-1"
                   />
-                </StyledView>
-              </StyledView>
-              <StyledView className="px-3 pb-10">
+                </View>
+              </View>
+              <View className="px-3 pb-10">
                 <AnimatedNumber
                   value={calculateTotalValue()}
                   format="currency"
                   className="text-3xl font-bold text-black"
                   duration={1500}
                 />
-              </StyledView>
+              </View>
             </LiquidGlass>
           ) : (
             <PortfolioSkeleton />
           )}
-        </StyledView>
+        </View>
 
         {/* Spacing */}
-        <StyledView className="h-4" />
+        <View className="h-4" />
 
 
 
         {/* Quick Actions */}
-        <StyledView className="px-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="px-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Quick Actions
-          </StyledText>
+          </Text>
           <LiquidGlass
             cornerRadius={20}
             elasticity={0.15}
             blurAmount={0.8}
           >
-            <StyledView className="flex-row justify-around items-center p-5">
-              <StyledView className="items-center">
+            <View className="flex-row justify-around items-center p-5">
+              <View className="items-center">
                 <LiquidGlass
                   className="w-16 h-16 bg-red-50/50 border border-red-200/50 rounded-full items-center justify-center"
                   cornerRadius={100}
@@ -278,10 +271,10 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-up" size={24} color="#ef4444" />
                 </LiquidGlass>
-                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Send</StyledText>
-              </StyledView>
+                <Text className="text-slate-600 text-sm mt-3 font-medium">Send</Text>
+              </View>
 
-              <StyledView className="items-center">
+              <View className="items-center">
                 <LiquidGlass
                   className="w-16 h-16 bg-green-50/50 border border-green-200/50 rounded-full items-center justify-center"
                   cornerRadius={100}
@@ -298,10 +291,10 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="arrow-down" size={24} color="#22c55e" />
                 </LiquidGlass>
-                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Receive</StyledText>
-              </StyledView>
+                <Text className="text-slate-600 text-sm mt-3 font-medium">Receive</Text>
+              </View>
 
-              <StyledView className="items-center">
+              <View className="items-center">
                 <LiquidGlass
                   className="w-16 h-16 bg-blue-50/50 border border-blue-200/50 rounded-full items-center justify-center"
                   cornerRadius={100}
@@ -318,10 +311,10 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
                 </LiquidGlass>
-                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Swap</StyledText>
-              </StyledView>
+                <Text className="text-slate-600 text-sm mt-3 font-medium">Swap</Text>
+              </View>
 
-              <StyledView className="items-center">
+              <View className="items-center">
                 <LiquidGlass
                   className="w-16 h-16 bg-yellow-50/50 border border-yellow-200/50 rounded-full items-center justify-center"
                   cornerRadius={100}
@@ -338,34 +331,34 @@ export const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="card" size={24} color="#eab308" />
                 </LiquidGlass>
-                <StyledText className="text-slate-600 text-sm mt-3 font-medium">Buy</StyledText>
-              </StyledView>
-            </StyledView>
+                <Text className="text-slate-600 text-sm mt-3 font-medium">Buy</Text>
+              </View>
+            </View>
           </LiquidGlass>
-        </StyledView>
+        </View>
 
         {/* Assets Section */}
-        <StyledView className="px-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="px-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Assets
-          </StyledText>
+          </Text>
           
           {/* Loading Indicator */}
           {loadingData && (
-            <StyledView className="mb-4">
+            <View className="mb-4">
               {[1, 2, 3].map((index) => (
                 <TokenSkeleton key={index} />
               ))}
-            </StyledView>
+            </View>
           )}
 
           {/* Live Price Indicator */}
           {isLoadingPrices && !loadingData && (
-            <StyledView className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <StyledText className="text-green-700 text-center font-medium">
+            <View className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <Text className="text-green-700 text-center font-medium">
                 🔄 Updating live prices...
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
           )}
           
           <LiquidGlass
@@ -429,15 +422,15 @@ export const HomeScreen: React.FC = () => {
             
             {/* Fallback for no tokens */}
             {(!walletData || !walletData.tokens || walletData.tokens.length === 0) && (
-              <StyledView className="p-8 items-center">
-                <StyledText className="text-slate-600 text-center">
+              <View className="p-8 items-center">
+                <Text className="text-slate-600 text-center">
                   No tokens found. Add some funds to get started!
-                </StyledText>
-              </StyledView>
+                </Text>
+              </View>
             )}
           </LiquidGlass>
-        </StyledView>
-      </StyledScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

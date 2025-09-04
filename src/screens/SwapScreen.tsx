@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, FlatList, TouchableOpacity, Alert, ScrollView, TextInput, Image } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,13 +13,6 @@ import { logger } from '../utils/logger';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { COMMON_TOKENS } from '../constants';
 import { LiquidGlass } from '../components';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledFlatList = styled(FlatList);
-const StyledScrollView = styled(ScrollView);
-const StyledTextInput = styled(TextInput);
 
 export const SwapScreen: React.FC = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -322,46 +314,46 @@ export const SwapScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
       {/* Background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgb(93,138,168)',
         }}
       />
 
-      <StyledScrollView className="flex-1">
+      <ScrollView className="flex-1">
         {/* Header */}
-        <StyledView className="px-6 pt-6 pb-4">
-          <StyledText className="text-2xl font-bold text-slate-900 mb-2 text-center">
+        <View className="px-6 pt-6 pb-4">
+          <Text className="text-2xl font-bold text-slate-900 mb-2 text-center">
             Swap Tokens
-          </StyledText>
-          <StyledText className="text-sm text-slate-600 text-center">
+          </Text>
+          <Text className="text-sm text-slate-600 text-center">
             Exchange tokens at the best rates
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
         {/* Swap Form */}
-        <StyledView className="px-6 mb-6">
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+        <View className="px-6 mb-6">
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             {/* Input Token */}
-            <StyledView className="mb-4">
-              <StyledView className="flex-row items-center justify-between mb-2">
-                <StyledText className="text-sm text-slate-600">
+            <View className="mb-4">
+              <View className="flex-row items-center justify-between mb-2">
+                <Text className="text-sm text-slate-600">
                   From
-                </StyledText>
+                </Text>
                 {selectedInputToken && (
-                  <StyledTouchableOpacity onPress={handleMaxAmount}>
-                    <StyledText className="text-sm text-blue-600 font-medium">
+                  <TouchableOpacity onPress={handleMaxAmount}>
+                    <Text className="text-sm text-blue-600 font-medium">
                       MAX
-                    </StyledText>
-                  </StyledTouchableOpacity>
+                    </Text>
+                  </TouchableOpacity>
                 )}
-              </StyledView>
+              </View>
 
-              <StyledView className="flex-row items-center space-x-3">
-                <StyledView className="flex-1">
-                  <StyledView className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
-                    <StyledTextInput
+              <View className="flex-row items-center space-x-3">
+                <View className="flex-1">
+                  <View className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                    <TextInput
                       placeholder="0.0"
                       value={inputAmount}
                       onChangeText={setInputAmount}
@@ -369,36 +361,36 @@ export const SwapScreen: React.FC = () => {
                       className="text-xl text-slate-900"
                       placeholderTextColor="#9CA3AF"
                     />
-                  </StyledView>
+                  </View>
                   {inputUSDValue && (
-                    <StyledText className="text-sm text-slate-500 mt-1">
+                    <Text className="text-sm text-slate-500 mt-1">
                       ~${inputUSDValue.toFixed(2)}
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledView>
+                </View>
 
-                <StyledTouchableOpacity
+                <TouchableOpacity
                   onPress={() => handleTokenSelect('input')}
                   className="flex-row items-center bg-white px-3 py-2 rounded-lg border border-gray-200"
                 >
                   {selectedInputToken ? (
                     <>
-                      <StyledText className="font-medium text-slate-900 mr-1">
+                      <Text className="font-medium text-slate-900 mr-1">
                         {selectedInputToken.symbol}
-                      </StyledText>
+                      </Text>
                       <Ionicons name="chevron-down" size={16} color="#6B7280" />
                     </>
                   ) : (
-                    <StyledText className="text-slate-500">
+                    <Text className="text-slate-500">
                       Select Token
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledTouchableOpacity>
-              </StyledView>
-            </StyledView>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Swap Button */}
-            <StyledView className="items-center my-2">
+            <View className="items-center my-2">
               <LiquidGlass
                 className="p-2"
                 cornerRadius={100}
@@ -412,18 +404,18 @@ export const SwapScreen: React.FC = () => {
                   color={selectedInputToken && selectedOutputToken ? "#3B82F6" : "#9CA3AF"} 
                 />
               </LiquidGlass>
-            </StyledView>
+            </View>
 
             {/* Output Token */}
-            <StyledView className="mb-4">
-              <StyledText className="text-sm text-slate-600 mb-2">
+            <View className="mb-4">
+              <Text className="text-sm text-slate-600 mb-2">
                 To
-              </StyledText>
+              </Text>
 
-              <StyledView className="flex-row items-center space-x-3">
-                <StyledView className="flex-1">
-                  <StyledView className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
-                    <StyledTextInput
+              <View className="flex-row items-center space-x-3">
+                <View className="flex-1">
+                  <View className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                    <TextInput
                       placeholder="0.0"
                       value={outputAmount}
                       onChangeText={() => {}} // Read-only
@@ -431,33 +423,33 @@ export const SwapScreen: React.FC = () => {
                       className="text-xl text-slate-900"
                       placeholderTextColor="#9CA3AF"
                     />
-                  </StyledView>
+                  </View>
                   {outputUSDValue && (
-                    <StyledText className="text-sm text-slate-500 mt-1">
+                    <Text className="text-sm text-slate-500 mt-1">
                       ~${outputUSDValue.toFixed(2)}
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledView>
+                </View>
 
-                <StyledTouchableOpacity
+                <TouchableOpacity
                   onPress={() => handleTokenSelect('output')}
                   className="flex-row items-center bg-white px-3 py-2 rounded-lg border border-gray-200"
                 >
                   {selectedOutputToken ? (
                     <>
-                      <StyledText className="font-medium text-slate-900 mr-1">
+                      <Text className="font-medium text-slate-900 mr-1">
                         {selectedOutputToken.symbol}
-                      </StyledText>
+                      </Text>
                       <Ionicons name="chevron-down" size={16} color="#6B7280" />
                     </>
                   ) : (
-                    <StyledText className="text-slate-500">
+                    <Text className="text-slate-500">
                       Select Token
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledTouchableOpacity>
-              </StyledView>
-            </StyledView>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Quote Info */}
             {inputAmount && selectedInputToken && selectedOutputToken && (
@@ -467,43 +459,43 @@ export const SwapScreen: React.FC = () => {
                 elasticity={0.15}
                 blurAmount={0.6}
               >
-                <StyledView className="flex-row justify-between items-center mb-2">
-                  <StyledText className="text-sm text-slate-600">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-sm text-slate-600">
                     Exchange Rate
-                  </StyledText>
-                  <StyledText className="text-sm font-medium text-slate-900">
+                  </Text>
+                  <Text className="text-sm font-medium text-slate-900">
                     1 {selectedInputToken.symbol} = {parseFloat(mockQuote.exchangeRate).toFixed(6)} {selectedOutputToken.symbol}
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
 
-                <StyledView className="flex-row justify-between items-center mb-2">
-                  <StyledText className="text-sm text-slate-600">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-sm text-slate-600">
                     Price Impact
-                  </StyledText>
-                  <StyledText className="text-sm font-medium text-green-600">
+                  </Text>
+                  <Text className="text-sm font-medium text-green-600">
                     {mockQuote.priceImpact.toFixed(2)}%
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
 
-                <StyledView className="flex-row justify-between items-center mb-2">
-                  <StyledText className="text-sm text-slate-600">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-sm text-slate-600">
                     Network Fee
-                  </StyledText>
-                  <StyledText className="text-sm font-medium text-slate-900">
+                  </Text>
+                  <Text className="text-sm font-medium text-slate-900">
                     ~${mockQuote.feeUSD}
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
 
-                <StyledView className="flex-row justify-between items-center">
-                  <StyledText className="text-sm text-slate-600">
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-sm text-slate-600">
                     Slippage Tolerance
-                  </StyledText>
-                  <StyledTouchableOpacity onPress={() => setShowSlippageSettings(true)}>
-                    <StyledText className="text-sm font-medium text-blue-600">
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowSlippageSettings(true)}>
+                    <Text className="text-sm font-medium text-blue-600">
                       {slippage}%
-                    </StyledText>
-                  </StyledTouchableOpacity>
-                </StyledView>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </LiquidGlass>
             )}
 
@@ -519,22 +511,22 @@ export const SwapScreen: React.FC = () => {
               onPress={handleExecuteSwap}
               disabled={!selectedInputToken || !selectedOutputToken || !inputAmount}
             >
-              <StyledText className={`text-center font-semibold ${
+              <Text className={`text-center font-semibold ${
                 selectedInputToken && selectedOutputToken && inputAmount
                   ? 'text-blue-700'
                   : 'text-gray-500'
               }`}>
                 {isLoading ? 'Getting Quote...' : 'Swap'}
-              </StyledText>
+              </Text>
             </LiquidGlass>
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Recent Swaps */}
-        <StyledView className="px-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="px-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Recent Swaps
-          </StyledText>
+          </Text>
           
           <LiquidGlass
             className="p-6"
@@ -542,38 +534,38 @@ export const SwapScreen: React.FC = () => {
             elasticity={0.1}
             blurAmount={0.6}
           >
-            <StyledView className="space-y-3">
-              <StyledView className="flex-row justify-between items-center p-3 bg-white rounded-lg">
-                <StyledView className="flex-row items-center">
-                  <StyledView className="w-8 h-8 bg-blue-100 rounded-full mr-3" />
-                  <StyledView>
-                    <StyledText className="font-medium text-slate-900">ETH → USDC</StyledText>
-                    <StyledText className="text-sm text-slate-500">2 hours ago</StyledText>
-                  </StyledView>
-                </StyledView>
-                <StyledView className="items-end">
-                  <StyledText className="font-medium text-slate-900">+2,650.45 USDC</StyledText>
-                  <StyledText className="text-sm text-green-600">+$2,650.45</StyledText>
-                </StyledView>
-              </StyledView>
+            <View className="space-y-3">
+              <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
+                <View className="flex-row items-center">
+                  <View className="w-8 h-8 bg-blue-100 rounded-full mr-3" />
+                  <View>
+                    <Text className="font-medium text-slate-900">ETH → USDC</Text>
+                    <Text className="text-sm text-slate-500">2 hours ago</Text>
+                  </View>
+                </View>
+                <View className="items-end">
+                  <Text className="font-medium text-slate-900">+2,650.45 USDC</Text>
+                  <Text className="text-sm text-green-600">+$2,650.45</Text>
+                </View>
+              </View>
 
-              <StyledView className="flex-row justify-between items-center p-3 bg-white rounded-lg">
-                <StyledView className="flex-row items-center">
-                  <StyledView className="w-8 h-8 bg-green-100 rounded-full mr-3" />
-                  <StyledView>
-                    <StyledText className="font-medium text-slate-900">USDC → ETH</StyledText>
-                    <StyledText className="text-sm text-slate-500">1 day ago</StyledText>
-                  </StyledView>
-                </StyledView>
-                <StyledView className="items-end">
-                  <StyledText className="font-medium text-slate-900">+0.95 ETH</StyledText>
-                  <StyledText className="text-sm text-red-600">-$2,517.93</StyledText>
-                </StyledView>
-              </StyledView>
-            </StyledView>
+              <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
+                <View className="flex-row items-center">
+                  <View className="w-8 h-8 bg-green-100 rounded-full mr-3" />
+                  <View>
+                    <Text className="font-medium text-slate-900">USDC → ETH</Text>
+                    <Text className="text-sm text-slate-500">1 day ago</Text>
+                  </View>
+                </View>
+                <View className="items-end">
+                  <Text className="font-medium text-slate-900">+0.95 ETH</Text>
+                  <Text className="text-sm text-red-600">-$2,517.93</Text>
+                </View>
+              </View>
+            </View>
           </LiquidGlass>
-        </StyledView>
-      </StyledScrollView>
+        </View>
+      </ScrollView>
 
       {/* Token Selection Modal */}
       <Modal
@@ -583,38 +575,38 @@ export const SwapScreen: React.FC = () => {
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
           {/* Modal Header */}
-          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <StyledText className="text-lg font-semibold text-slate-900">
+          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+            <Text className="text-lg font-semibold text-slate-900">
               Select Token
-            </StyledText>
-            <StyledTouchableOpacity
+            </Text>
+            <TouchableOpacity
               onPress={() => setShowTokenModal(false)}
               className="p-2"
             >
               <Ionicons name="close" size={24} color="#6B7280" />
-            </StyledTouchableOpacity>
-          </StyledView>
+            </TouchableOpacity>
+          </View>
 
           {/* Search Input */}
-          <StyledView className="p-4">
-            <StyledView className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
+          <View className="p-4">
+            <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
               <Ionicons name="search" size={20} color="#6B7280" />
-              <StyledTextInput
+              <TextInput
                 placeholder="Search tokens..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 className="flex-1 ml-3 text-slate-900"
                 placeholderTextColor="#9CA3AF"
               />
-            </StyledView>
-          </StyledView>
+            </View>
+          </View>
 
           {/* Token List */}
           <FlatList
             data={filteredTokens}
             keyExtractor={(item: Token) => item.address}
             renderItem={({ item }: { item: Token }) => (
-              <StyledTouchableOpacity
+              <TouchableOpacity
                 onPress={() => handleTokenSelection(item)}
                 className="flex-row items-center p-4 border-b border-gray-100"
               >
@@ -628,57 +620,57 @@ export const SwapScreen: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <StyledView className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
+                  <View className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
                 )}
-                <StyledView className="flex-1">
-                  <StyledText className="font-medium text-slate-900">{item.symbol}</StyledText>
-                  <StyledText className="text-sm text-slate-500">{item.name}</StyledText>
+                <View className="flex-1">
+                  <Text className="font-medium text-slate-900">{item.symbol}</Text>
+                  <Text className="text-sm text-slate-500">{item.name}</Text>
                   {item.currentPrice && (
-                    <StyledText className="text-xs text-slate-400">
+                    <Text className="text-xs text-slate-400">
                       ${item.currentPrice.toFixed(2)}
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledView>
+                </View>
                 {tokenSelectionType === 'input' && item.balance && parseFloat(item.balance) > 0 && (
-                  <StyledView className="items-end">
-                    <StyledText className="text-sm text-slate-600">
+                  <View className="items-end">
+                    <Text className="text-sm text-slate-600">
                       {parseFloat(item.balance).toFixed(4)}
-                    </StyledText>
+                    </Text>
                     {item.currentPrice && (
-                      <StyledText className="text-xs text-slate-400">
+                      <Text className="text-xs text-slate-400">
                         ~${(parseFloat(item.balance) * item.currentPrice).toFixed(2)}
-                      </StyledText>
+                      </Text>
                     )}
-                  </StyledView>
+                  </View>
                 )}
-              </StyledTouchableOpacity>
+              </TouchableOpacity>
             )}
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              <StyledView className="p-8 items-center">
+              <View className="p-8 items-center">
                 {isLoadingTokens ? (
-                  <StyledText className="text-slate-500 text-center">
+                  <Text className="text-slate-500 text-center">
                     Loading tokens...
-                  </StyledText>
+                  </Text>
                 ) : (
-                  <StyledText className="text-slate-500 text-center">
+                  <Text className="text-slate-500 text-center">
                     No tokens found
-                  </StyledText>
+                  </Text>
                 )}
-              </StyledView>
+              </View>
             }
           />
 
           {/* Popular Tokens */}
           {searchQuery === '' && (
-            <StyledView className="p-4 border-t border-gray-200">
-              <StyledText className="text-sm font-medium text-slate-600 mb-3">
+            <View className="p-4 border-t border-gray-200">
+              <Text className="text-sm font-medium text-slate-600 mb-3">
                 Popular Tokens
-              </StyledText>
-              <StyledView className="flex-row flex-wrap">
+              </Text>
+              <View className="flex-row flex-wrap">
                 {allTokens.slice(0, 6).map((token) => (
-                  <StyledTouchableOpacity
+                  <TouchableOpacity
                     key={token.address}
                     onPress={() => handleTokenSelection(token)}
                     className="bg-gray-100 px-3 py-2 rounded-lg mr-2 mb-2 flex-row items-center"
@@ -693,15 +685,15 @@ export const SwapScreen: React.FC = () => {
                         }}
                       />
                     ) : (
-                      <StyledView className="w-4 h-4 bg-gray-300 rounded-full mr-1" />
+                      <View className="w-4 h-4 bg-gray-300 rounded-full mr-1" />
                     )}
-                    <StyledText className="text-sm font-medium text-slate-900">
+                    <Text className="text-sm font-medium text-slate-900">
                       {token.symbol}
-                    </StyledText>
-                  </StyledTouchableOpacity>
+                    </Text>
+                  </TouchableOpacity>
                 ))}
-              </StyledView>
-            </StyledView>
+              </View>
+            </View>
           )}
         </SafeAreaView>
       </Modal>
@@ -713,26 +705,26 @@ export const SwapScreen: React.FC = () => {
         presentationStyle="pageSheet"
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-          <StyledView className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <StyledText className="text-lg font-semibold text-slate-900">
+          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+            <Text className="text-lg font-semibold text-slate-900">
               Slippage Tolerance
-            </StyledText>
-            <StyledTouchableOpacity
+            </Text>
+            <TouchableOpacity
               onPress={() => setShowSlippageSettings(false)}
               className="p-2"
             >
               <Ionicons name="close" size={24} color="#6B7280" />
-            </StyledTouchableOpacity>
-          </StyledView>
+            </TouchableOpacity>
+          </View>
 
-          <StyledView className="p-4">
-            <StyledText className="text-sm text-slate-600 mb-4">
+          <View className="p-4">
+            <Text className="text-sm text-slate-600 mb-4">
               Your transaction will revert if the price changes unfavorably by more than this percentage.
-            </StyledText>
+            </Text>
 
-            <StyledView className="flex-row space-x-2 mb-4">
+            <View className="flex-row space-x-2 mb-4">
               {[0.1, 0.5, 1.0].map((value) => (
-                <StyledTouchableOpacity
+                <TouchableOpacity
                   key={value}
                   onPress={() => setSlippage(value)}
                   className={`flex-1 py-2 px-4 rounded-lg border ${
@@ -741,19 +733,19 @@ export const SwapScreen: React.FC = () => {
                       : 'bg-white border-gray-200'
                   }`}
                 >
-                  <StyledText className={`text-center font-medium ${
+                  <Text className={`text-center font-medium ${
                     slippage === value ? 'text-white' : 'text-slate-900'
                   }`}>
                     {value}%
-                  </StyledText>
-                </StyledTouchableOpacity>
+                  </Text>
+                </TouchableOpacity>
               ))}
-            </StyledView>
+            </View>
 
-            <StyledView className="mb-4">
-              <StyledText className="text-sm text-slate-600 mb-2">Custom</StyledText>
-              <StyledView className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
-                <StyledTextInput
+            <View className="mb-4">
+              <Text className="text-sm text-slate-600 mb-2">Custom</Text>
+              <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                <TextInput
                   placeholder="0.5"
                   value={slippage.toString()}
                   onChangeText={(text) => setSlippage(parseFloat(text) || 0.5)}
@@ -761,19 +753,19 @@ export const SwapScreen: React.FC = () => {
                   className="flex-1 text-slate-900"
                   placeholderTextColor="#9CA3AF"
                 />
-                <StyledText className="text-slate-500 mr-3">%</StyledText>
-              </StyledView>
-            </StyledView>
+                <Text className="text-slate-500 mr-3">%</Text>
+              </View>
+            </View>
 
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={() => setShowSlippageSettings(false)}
               className="w-full py-3 px-4 bg-blue-600 rounded-lg"
             >
-              <StyledText className="text-center font-semibold text-white">
+              <Text className="text-center font-semibold text-white">
                 Confirm
-              </StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
+              </Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>

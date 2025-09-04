@@ -5,21 +5,18 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
 import { LiquidGlass } from '../components';
-import {
-  StyledView,
-  StyledText,
-  StyledTouchableOpacity,
-  StyledSafeAreaView,
-  StyledScrollView,
-  StyledTextInput,
-} from 'nativewind';
 
 type SendScreenRouteProp = RouteProp<RootStackParamList, 'Send'>;
 
@@ -131,9 +128,9 @@ export const SendScreen: React.FC = () => {
   };
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-ice-200 dark:bg-ice-950">
+    <SafeAreaView className="flex-1 bg-ice-200 dark:bg-ice-950">
       {/* Icy blue background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgba(56, 189, 248, 0.03)',
@@ -144,42 +141,42 @@ export const SendScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <StyledScrollView
+        <ScrollView
           className="flex-1"
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           {/* Header */}
-          <StyledView className="px-6 pt-6 pb-4">
-            <StyledView className="flex-row items-center mb-4">
-              <StyledTouchableOpacity
+          <View className="px-6 pt-6 pb-4">
+            <View className="flex-row items-center mb-4">
+              <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 className="mr-4 p-2"
               >
                 <Ionicons name="arrow-back" size={24} color="#475569" />
-              </StyledTouchableOpacity>
-              <StyledText className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              </TouchableOpacity>
+              <Text className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 Send
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
             
-            <StyledText className="text-slate-600 dark:text-slate-400 mb-6">
+            <Text className="text-slate-600 dark:text-slate-400 mb-6">
               Transfer tokens to another wallet
-            </StyledText>
-          </StyledView>
+            </Text>
+          </View>
 
           {/* Token Selection */}
-          <StyledView className="px-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledText className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <View className="px-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Select Token
-              </StyledText>
+              </Text>
               
-              <StyledScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <StyledView className="flex-row space-x-3">
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row space-x-3">
                   {currentWallet?.tokens.map((token) => (
-                    <StyledTouchableOpacity
+                    <TouchableOpacity
                       key={token.address}
                       onPress={() => {
                         setSelectedToken(token);
@@ -191,33 +188,33 @@ export const SendScreen: React.FC = () => {
                           : 'border-gray-200 bg-white'
                       }`}
                     >
-                      <StyledView className="flex-row items-center">
-                        <StyledView className="w-6 h-6 rounded-full bg-gray-200 mr-2" />
-                        <StyledView>
-                          <StyledText className="font-semibold text-slate-900 dark:text-slate-100">
+                      <View className="flex-row items-center">
+                        <View className="w-6 h-6 rounded-full bg-gray-200 mr-2" />
+                        <View>
+                          <Text className="font-semibold text-slate-900 dark:text-slate-100">
                             {token.symbol}
-                          </StyledText>
-                          <StyledText className="text-sm text-slate-600 dark:text-slate-400">
+                          </Text>
+                          <Text className="text-sm text-slate-600 dark:text-slate-400">
                             {formatBalance(token.balance || '0', token.decimals)}
-                          </StyledText>
-                        </StyledView>
-                      </StyledView>
-                    </StyledTouchableOpacity>
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
                   ))}
-                </StyledView>
-              </StyledScrollView>
-            </StyledView>
-          </StyledView>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
 
           {/* Amount Input */}
-          <StyledView className="px-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledText className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <View className="px-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Amount
-              </StyledText>
+              </Text>
               
-              <StyledView className="flex-row items-center border border-gray-300 rounded-lg bg-white p-4">
-                <StyledTextInput
+              <View className="flex-row items-center border border-gray-300 rounded-lg bg-white p-4">
+                <TextInput
                   value={amount}
                   onChangeText={setAmount}
                   placeholder="0.00"
@@ -225,40 +222,40 @@ export const SendScreen: React.FC = () => {
                   className="flex-1 text-lg font-semibold text-slate-900"
                   style={{ fontSize: 18 }}
                 />
-                <StyledText className="text-lg font-semibold text-slate-600 ml-2">
+                <Text className="text-lg font-semibold text-slate-600 ml-2">
                   {selectedToken?.symbol}
-                </StyledText>
-              </StyledView>
+                </Text>
+              </View>
               
               {selectedToken && (
-                <StyledView className="mt-2 flex-row justify-between">
-                  <StyledText className="text-sm text-slate-600 dark:text-slate-400">
+                <View className="mt-2 flex-row justify-between">
+                  <Text className="text-sm text-slate-600 dark:text-slate-400">
                     Available: {formatBalance(selectedToken.balance || '0', selectedToken.decimals)} {selectedToken.symbol}
-                  </StyledText>
-                  <StyledTouchableOpacity
+                  </Text>
+                  <TouchableOpacity
                     onPress={() => {
                       setAmount(selectedToken.balance || '0');
                       logger.logButtonPress('Max Amount', `set max ${selectedToken.symbol}`);
                     }}
                   >
-                    <StyledText className="text-sm text-blue-600 font-medium">
+                    <Text className="text-sm text-blue-600 font-medium">
                       MAX
-                    </StyledText>
-                  </StyledTouchableOpacity>
-                </StyledView>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               )}
-            </StyledView>
-          </StyledView>
+            </View>
+          </View>
 
           {/* Recipient Address */}
-          <StyledView className="px-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledText className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <View className="px-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Recipient Address
-              </StyledText>
+              </Text>
               
-              <StyledView className="flex-row items-center border border-gray-300 rounded-lg bg-white p-4">
-                <StyledTextInput
+              <View className="flex-row items-center border border-gray-300 rounded-lg bg-white p-4">
+                <TextInput
                   value={recipientAddress}
                   onChangeText={setRecipientAddress}
                   placeholder="Enter wallet address"
@@ -266,7 +263,7 @@ export const SendScreen: React.FC = () => {
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
-                <StyledTouchableOpacity
+                <TouchableOpacity
                   onPress={() => {
                     setShowQRScanner(true);
                     logger.logButtonPress('QR Scanner', 'open QR scanner');
@@ -274,85 +271,85 @@ export const SendScreen: React.FC = () => {
                   className="ml-2 p-2"
                 >
                   <Ionicons name="qr-code" size={20} color="#475569" />
-                </StyledTouchableOpacity>
-              </StyledView>
-            </StyledView>
-          </StyledView>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
 
           {/* Gas Settings */}
-          <StyledView className="px-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledText className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <View className="px-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Gas Settings
-              </StyledText>
+              </Text>
               
-              <StyledView className="flex-row items-center justify-between mb-3">
-                <StyledText className="text-slate-600 dark:text-slate-400">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-slate-600 dark:text-slate-400">
                   Gas Price (Gwei)
-                </StyledText>
-                <StyledTextInput
+                </Text>
+                <TextInput
                   value={gasPrice}
                   onChangeText={setGasPrice}
                   keyboardType="numeric"
                   className="text-right text-slate-900 font-medium"
                   style={{ width: 80 }}
                 />
-              </StyledView>
+              </View>
               
-              <StyledView className="flex-row items-center justify-between">
-                <StyledText className="text-slate-600 dark:text-slate-400">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-slate-600 dark:text-slate-400">
                   Estimated Fee
-                </StyledText>
-                <StyledText className="text-slate-900 dark:text-slate-100 font-medium">
+                </Text>
+                <Text className="text-slate-900 dark:text-slate-100 font-medium">
                   {getEstimatedFee()} ETH
-                </StyledText>
-              </StyledView>
-            </StyledView>
-          </StyledView>
+                </Text>
+              </View>
+            </View>
+          </View>
 
           {/* Transaction Summary */}
-          <StyledView className="px-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledText className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <View className="px-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                 Transaction Summary
-              </StyledText>
+              </Text>
               
-              <StyledView className="space-y-3">
-                <StyledView className="flex-row justify-between">
-                  <StyledText className="text-slate-600 dark:text-slate-400">
+              <View className="space-y-3">
+                <View className="flex-row justify-between">
+                  <Text className="text-slate-600 dark:text-slate-400">
                     Amount
-                  </StyledText>
-                  <StyledText className="text-slate-900 dark:text-slate-100 font-medium">
+                  </Text>
+                  <Text className="text-slate-900 dark:text-slate-100 font-medium">
                     {amount || '0'} {selectedToken?.symbol}
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
                 
-                <StyledView className="flex-row justify-between">
-                  <StyledText className="text-slate-600 dark:text-slate-400">
+                <View className="flex-row justify-between">
+                  <Text className="text-slate-600 dark:text-slate-400">
                     Network Fee
-                  </StyledText>
-                  <StyledText className="text-slate-900 dark:text-slate-100 font-medium">
+                  </Text>
+                  <Text className="text-slate-900 dark:text-slate-100 font-medium">
                     {getEstimatedFee()} ETH
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
                 
-                <StyledView className="border-t border-gray-200 pt-3">
-                  <StyledView className="flex-row justify-between">
-                    <StyledText className="text-slate-900 dark:text-slate-100 font-semibold">
+                <View className="border-t border-gray-200 pt-3">
+                  <View className="flex-row justify-between">
+                    <Text className="text-slate-900 dark:text-slate-100 font-semibold">
                       Total
-                    </StyledText>
-                    <StyledText className="text-slate-900 dark:text-slate-100 font-semibold">
+                    </Text>
+                    <Text className="text-slate-900 dark:text-slate-100 font-semibold">
                       {getTotalAmount().toFixed(6)} {selectedToken?.symbol}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
-              </StyledView>
-            </StyledView>
-          </StyledView>
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
 
           {/* Send Button */}
-          <StyledView className="px-6 pb-6">
-            <StyledTouchableOpacity
+          <View className="px-6 pb-6">
+            <TouchableOpacity
               onPress={handleSend}
               disabled={isLoading}
               className={`p-4 rounded-xl shadow-lg ${
@@ -361,20 +358,20 @@ export const SendScreen: React.FC = () => {
                   : 'bg-gradient-to-r from-blue-500 to-blue-600'
               }`}
             >
-              <StyledView className="flex-row items-center justify-center">
+              <View className="flex-row items-center justify-center">
                 {isLoading ? (
-                  <StyledView className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <View className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                 ) : (
                   <Ionicons name="send" size={20} color="white" style={{ marginRight: 8 }} />
                 )}
-                <StyledText className="text-white font-semibold text-lg">
+                <Text className="text-white font-semibold text-lg">
                   {isLoading ? 'Sending...' : 'Send Transaction'}
-                </StyledText>
-              </StyledView>
-            </StyledTouchableOpacity>
-          </StyledView>
-        </StyledScrollView>
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 }; 

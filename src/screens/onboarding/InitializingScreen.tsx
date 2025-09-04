@@ -1,10 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
 
 interface InitializingScreenProps {
   onComplete: () => void;
@@ -21,28 +17,39 @@ export const InitializingScreen: React.FC<InitializingScreenProps> = ({ onComple
   }, [onComplete]);
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
       {/* Animated background elements */}
-      <StyledView 
-        className="absolute inset-0"
+      <View 
         style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-          backgroundColor: '#0f172a', // Fallback for React Native
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#0f172a',
         }}
       />
       
       {/* Floating background circles */}
-      <StyledView 
-        className="absolute w-96 h-96 rounded-full opacity-10"
+      <View 
         style={{
+          position: 'absolute',
+          width: 384,
+          height: 384,
+          borderRadius: 192,
+          opacity: 0.1,
           top: -150,
           left: -100,
           backgroundColor: 'rgba(56, 189, 248, 0.1)',
         }}
       />
-      <StyledView 
-        className="absolute w-80 h-80 rounded-full opacity-15"
+      <View 
         style={{
+          position: 'absolute',
+          width: 320,
+          height: 320,
+          borderRadius: 160,
+          opacity: 0.15,
           bottom: -120,
           right: -80,
           backgroundColor: 'rgba(186, 230, 253, 0.1)',
@@ -50,28 +57,28 @@ export const InitializingScreen: React.FC<InitializingScreenProps> = ({ onComple
       />
 
       {/* Content */}
-      <StyledView className="flex-1 justify-center items-center px-6">
-        <StyledText className="text-3xl font-bold text-frost-300 mb-2">
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#7dd3fc', marginBottom: 8 }}>
           Initializing Wallet
-        </StyledText>
-        <StyledText className="text-lg text-ice-400 text-center mb-8">
+        </Text>
+        <Text style={{ fontSize: 18, color: '#94a3b8', textAlign: 'center', marginBottom: 32 }}>
           Setting up your secure environment...
-        </StyledText>
+        </Text>
         
         <ActivityIndicator size="large" color="#38bdf8" />
         
-        <StyledView className="mt-8 space-y-2">
-          <StyledText className="text-sm text-ice-500 text-center">
+        <View style={{ marginTop: 32, gap: 8 }}>
+          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center' }}>
             • Establishing secure connection
-          </StyledText>
-          <StyledText className="text-sm text-ice-500 text-center">
+          </Text>
+          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center' }}>
             • Loading blockchain networks
-          </StyledText>
-          <StyledText className="text-sm text-ice-500 text-center">
+          </Text>
+          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center' }}>
             • Preparing wallet interface
-          </StyledText>
-        </StyledView>
-      </StyledView>
+          </Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

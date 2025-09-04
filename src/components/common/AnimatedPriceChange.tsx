@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
-import { styled } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
 
 interface AnimatedPriceChangeProps {
   value: number;
@@ -69,7 +65,7 @@ export const AnimatedPriceChange: React.FC<AnimatedPriceChangeProps> = ({
   const color = isPositive ? '#16a34a' : '#dc2626';
 
   return (
-    <StyledView
+    <View
       className={`flex-row items-center px-3 py-2 rounded-lg ${
         isPositive ? 'bg-green-100' : 'bg-red-100'
       } ${className}`}
@@ -79,13 +75,13 @@ export const AnimatedPriceChange: React.FC<AnimatedPriceChangeProps> = ({
       }}
     >
       <Ionicons name={iconName as any} size={16} color={color} />
-      <StyledText 
+      <Text 
         className={`ml-1 font-semibold ${
           isPositive ? 'text-green-600' : 'text-red-600'
         }`}
       >
         {`${isPositive ? '+' : ''}${displayValue.toFixed(2)}%`}
-      </StyledText>
-    </StyledView>
+      </Text>
+    </View>
   );
 }; 

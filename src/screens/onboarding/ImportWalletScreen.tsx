@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/common/Button';
@@ -9,11 +8,6 @@ import { Input } from '../../components/common/Input';
 import { stringToSeedPhrase, validateSeedPhrase, isValidBIP39Word } from '../../utils/seedPhrase';
 import { validateAddress, validatePrivateKey } from '../../utils/validation';
 import { SUPPORTED_NETWORKS } from '../../constants';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface ImportWalletScreenProps {
   onImportSuccess: (privateKeyOrMnemonic: string) => void;
@@ -107,43 +101,43 @@ export const ImportWalletScreen: React.FC<ImportWalletScreenProps> = ({
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0f9ff' }}>
       {/* Icy blue background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgba(14, 165, 233, 0.05)',
         }}
       />
-      <StyledView 
+      <View 
         className="absolute top-10 right-10 w-32 h-32 rounded-full opacity-10"
         style={{
           backgroundColor: 'rgba(56, 189, 248, 0.4)',
         }}
       />
-      <StyledScrollView className="flex-1">
+      <ScrollView className="flex-1">
         {/* Header */}
-        <StyledView className="p-6 pb-4">
-          <StyledView className="flex-row items-center mb-4">
-            <StyledTouchableOpacity onPress={onBack} className="mr-4">
+        <View className="p-6 pb-4">
+          <View className="flex-row items-center mb-4">
+            <TouchableOpacity onPress={onBack} className="mr-4">
               <Ionicons name="arrow-back" size={24} color="#6B7280" />
-            </StyledTouchableOpacity>
-            <StyledText className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            </TouchableOpacity>
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Import Wallet
-            </StyledText>
-          </StyledView>
-          <StyledText className="text-gray-600 dark:text-gray-400">
+            </Text>
+          </View>
+          <Text className="text-gray-600 dark:text-gray-400">
             Restore your wallet using your recovery phrase or private key
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
-        <StyledView className="px-6">
+        <View className="px-6">
           {/* Import Method Selection */}
           <Card variant="outlined" className="p-4 mb-6">
-            <StyledText className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Text className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
               Import Method
-            </StyledText>
+            </Text>
 
-            <StyledView className="flex-row">
-              <StyledTouchableOpacity
+            <View className="flex-row">
+              <TouchableOpacity
                 onPress={() => setImportMethod('seedPhrase')}
                 className={`flex-1 p-4 rounded-lg border mr-2 ${
                   importMethod === 'seedPhrase'
@@ -151,16 +145,16 @@ export const ImportWalletScreen: React.FC<ImportWalletScreenProps> = ({
                     : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
                 }`}
               >
-                <StyledText className={`text-center font-medium ${
+                <Text className={`text-center font-medium ${
                   importMethod === 'seedPhrase'
                     ? 'text-primary-800 dark:text-primary-200'
                     : 'text-gray-700 dark:text-gray-300'
                 }`}>
                   Recovery Phrase
-                </StyledText>
-              </StyledTouchableOpacity>
+                </Text>
+              </TouchableOpacity>
 
-              <StyledTouchableOpacity
+              <TouchableOpacity
                 onPress={() => setImportMethod('privateKey')}
                 className={`flex-1 p-4 rounded-lg border ml-2 ${
                   importMethod === 'privateKey'
@@ -168,22 +162,22 @@ export const ImportWalletScreen: React.FC<ImportWalletScreenProps> = ({
                     : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
                 }`}
               >
-                <StyledText className={`text-center font-medium ${
+                <Text className={`text-center font-medium ${
                   importMethod === 'privateKey'
                     ? 'text-primary-800 dark:text-primary-200'
                     : 'text-gray-700 dark:text-gray-300'
                 }`}>
                   Private Key
-                </StyledText>
-              </StyledTouchableOpacity>
-            </StyledView>
+                </Text>
+              </TouchableOpacity>
+            </View>
           </Card>
 
           {/* Input Section */}
           <Card variant="outlined" className="p-6 mb-6">
-            <StyledText className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Text className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
               {importMethod === 'seedPhrase' ? 'Recovery Phrase' : 'Private Key'}
-            </StyledText>
+            </Text>
 
             <Input
               placeholder={
@@ -201,32 +195,32 @@ export const ImportWalletScreen: React.FC<ImportWalletScreenProps> = ({
 
             {/* Word Count for Seed Phrase */}
             {importMethod === 'seedPhrase' && inputValue.trim() && (
-              <StyledView className="mt-3 flex-row items-center">
+              <View className="mt-3 flex-row items-center">
                 <Ionicons 
                   name={[12, 15, 18, 21, 24].includes(wordCount) ? "checkmark-circle" : "warning"} 
                   size={16} 
                   color={[12, 15, 18, 21, 24].includes(wordCount) ? "#10B981" : "#F59E0B"} 
                 />
-                <StyledText className={`ml-2 text-sm ${
+                <Text className={`ml-2 text-sm ${
                   [12, 15, 18, 21, 24].includes(wordCount)
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-yellow-600 dark:text-yellow-400'
                 }`}>
                   {wordCount} words
                   {[12, 15, 18, 21, 24].includes(wordCount) ? ' ✓' : ' (needs 12, 15, 18, 21, or 24 words)'}
-                </StyledText>
-              </StyledView>
+                </Text>
+              </View>
             )}
 
             {/* Security Warning */}
-            <StyledView className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
-              <StyledView className="flex-row items-start">
+            <View className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
+              <View className="flex-row items-start">
                 <Ionicons name="warning" size={16} color="#F59E0B" />
-                <StyledText className="text-yellow-800 dark:text-yellow-200 ml-2 text-sm">
+                <Text className="text-yellow-800 dark:text-yellow-200 ml-2 text-sm">
                   Make sure you're in a private location. Never share your recovery phrase or private key with anyone.
-                </StyledText>
-              </StyledView>
-            </StyledView>
+                </Text>
+              </View>
+            </View>
           </Card>
 
           {/* Import Button */}
@@ -240,33 +234,33 @@ export const ImportWalletScreen: React.FC<ImportWalletScreenProps> = ({
 
           {/* Help Section */}
           <Card variant="outlined" className="p-4 mt-6">
-            <StyledText className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
+            <Text className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
               Need Help?
-            </StyledText>
+            </Text>
             
-            <StyledView className="space-y-2">
-              <StyledView className="flex-row items-start">
-                <StyledText className="text-gray-600 dark:text-gray-400 text-sm mr-2">•</StyledText>
-                <StyledText className="text-gray-600 dark:text-gray-400 text-sm flex-1">
+            <View className="space-y-2">
+              <View className="flex-row items-start">
+                <Text className="text-gray-600 dark:text-gray-400 text-sm mr-2">•</Text>
+                <Text className="text-gray-600 dark:text-gray-400 text-sm flex-1">
                   Recovery phrases are usually 12 or 24 words separated by spaces
-                </StyledText>
-              </StyledView>
-              <StyledView className="flex-row items-start">
-                <StyledText className="text-gray-600 dark:text-gray-400 text-sm mr-2">•</StyledText>
-                <StyledText className="text-gray-600 dark:text-gray-400 text-sm flex-1">
+                </Text>
+              </View>
+              <View className="flex-row items-start">
+                <Text className="text-gray-600 dark:text-gray-400 text-sm mr-2">•</Text>
+                <Text className="text-gray-600 dark:text-gray-400 text-sm flex-1">
                   Private keys are 64-character hexadecimal strings
-                </StyledText>
-              </StyledView>
-              <StyledView className="flex-row items-start">
-                <StyledText className="text-gray-600 dark:text-gray-400 text-sm mr-2">•</StyledText>
-                <StyledText className="text-gray-600 dark:text-gray-400 text-sm flex-1">
+                </Text>
+              </View>
+              <View className="flex-row items-start">
+                <Text className="text-gray-600 dark:text-gray-400 text-sm mr-2">•</Text>
+                <Text className="text-gray-600 dark:text-gray-400 text-sm flex-1">
                   Make sure to type carefully - incorrect input cannot be recovered
-                </StyledText>
-              </StyledView>
-            </StyledView>
+                </Text>
+              </View>
+            </View>
           </Card>
-        </StyledView>
-      </StyledScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

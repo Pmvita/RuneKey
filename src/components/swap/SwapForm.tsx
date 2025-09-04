@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { styled } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
@@ -10,10 +9,6 @@ import { useSwap } from '../../hooks/swap/useSwap';
 import { useWallet } from '../../hooks/wallet/useWallet';
 import { usePrices } from '../../hooks/token/usePrices';
 import { Token, SwapParams } from '../../types';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface SwapFormProps {
   availableTokens: Token[];
@@ -188,25 +183,25 @@ export const SwapForm: React.FC<SwapFormProps> = ({
     : null;
 
   return (
-    <StyledView className="p-4">
+    <View className="p-4">
       <Card variant="outlined" className="p-4">
         {/* Input Token */}
-        <StyledView className="mb-4">
-          <StyledView className="flex-row items-center justify-between mb-2">
-            <StyledText className="text-sm text-gray-600 dark:text-gray-400">
+        <View className="mb-4">
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-sm text-gray-600 dark:text-gray-400">
               From
-            </StyledText>
+            </Text>
             {inputToken && (
-              <StyledTouchableOpacity onPress={handleMaxAmount}>
-                <StyledText className="text-sm text-primary-500 font-medium">
+              <TouchableOpacity onPress={handleMaxAmount}>
+                <Text className="text-sm text-primary-500 font-medium">
                   MAX
-                </StyledText>
-              </StyledTouchableOpacity>
+                </Text>
+              </TouchableOpacity>
             )}
-          </StyledView>
+          </View>
 
-          <StyledView className="flex-row items-center space-x-3">
-            <StyledView className="flex-1">
+          <View className="flex-row items-center space-x-3">
+            <View className="flex-1">
               <Input
                 placeholder="0.0"
                 value={inputAmount}
@@ -215,21 +210,21 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                 className="text-xl"
               />
               {inputUSDValue && (
-                <StyledText className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   ~${inputUSDValue.toFixed(2)}
-                </StyledText>
+                </Text>
               )}
-            </StyledView>
+            </View>
 
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={() => onTokenSelect('input')}
               className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg"
             >
               {inputToken ? (
                 <>
-                  <StyledText className="font-medium text-gray-900 dark:text-gray-100 mr-1">
+                  <Text className="font-medium text-gray-900 dark:text-gray-100 mr-1">
                     {inputToken.symbol}
-                  </StyledText>
+                  </Text>
                   <Ionicons 
                     name="chevron-down" 
                     size={16} 
@@ -237,17 +232,17 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                   />
                 </>
               ) : (
-                <StyledText className="text-gray-500 dark:text-gray-400">
+                <Text className="text-gray-500 dark:text-gray-400">
                   Select Token
-                </StyledText>
+                </Text>
               )}
-            </StyledTouchableOpacity>
-          </StyledView>
-        </StyledView>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Swap Button */}
-        <StyledView className="items-center my-2">
-          <StyledTouchableOpacity
+        <View className="items-center my-2">
+          <TouchableOpacity
             onPress={handleSwapTokens}
             className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full"
             disabled={!inputToken || !outputToken}
@@ -257,17 +252,17 @@ export const SwapForm: React.FC<SwapFormProps> = ({
               size={20} 
               color={inputToken && outputToken ? "#3B82F6" : "#9CA3AF"} 
             />
-          </StyledTouchableOpacity>
-        </StyledView>
+          </TouchableOpacity>
+        </View>
 
         {/* Output Token */}
-        <StyledView className="mb-4">
-          <StyledText className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+        <View className="mb-4">
+          <Text className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             To
-          </StyledText>
+          </Text>
 
-          <StyledView className="flex-row items-center space-x-3">
-            <StyledView className="flex-1">
+          <View className="flex-row items-center space-x-3">
+            <View className="flex-1">
               <Input
                 placeholder="0.0"
                 value={outputAmount}
@@ -276,21 +271,21 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                 className="text-xl"
               />
               {outputUSDValue && (
-                <StyledText className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   ~${outputUSDValue.toFixed(2)}
-                </StyledText>
+                </Text>
               )}
-            </StyledView>
+            </View>
 
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={() => onTokenSelect('output')}
               className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg"
             >
               {outputToken ? (
                 <>
-                  <StyledText className="font-medium text-gray-900 dark:text-gray-100 mr-1">
+                  <Text className="font-medium text-gray-900 dark:text-gray-100 mr-1">
                     {outputToken.symbol}
-                  </StyledText>
+                  </Text>
                   <Ionicons 
                     name="chevron-down" 
                     size={16} 
@@ -298,58 +293,58 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                   />
                 </>
               ) : (
-                <StyledText className="text-gray-500 dark:text-gray-400">
+                <Text className="text-gray-500 dark:text-gray-400">
                   Select Token
-                </StyledText>
+                </Text>
               )}
-            </StyledTouchableOpacity>
-          </StyledView>
-        </StyledView>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Quote Info */}
         {currentQuote && (
           <Card variant="default" className="mb-4 p-3">
-            <StyledView className="flex-row justify-between items-center mb-2">
-              <StyledText className="text-sm text-gray-600 dark:text-gray-400">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-sm text-gray-600 dark:text-gray-400">
                 Exchange Rate
-              </StyledText>
-              <StyledText className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              </Text>
+              <Text className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 1 {inputToken?.symbol} = {parseFloat(currentQuote.exchangeRate).toFixed(6)} {outputToken?.symbol}
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
 
-            <StyledView className="flex-row justify-between items-center mb-2">
-              <StyledText className="text-sm text-gray-600 dark:text-gray-400">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-sm text-gray-600 dark:text-gray-400">
                 Price Impact
-              </StyledText>
-              <StyledText className={`text-sm font-medium ${
+              </Text>
+              <Text className={`text-sm font-medium ${
                 getPriceImpactLevel(currentQuote.priceImpact) === 'high' || 
                 getPriceImpactLevel(currentQuote.priceImpact) === 'warning'
                   ? 'text-red-500' 
                   : 'text-green-500'
               }`}>
                 {currentQuote.priceImpact.toFixed(2)}%
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
 
-            <StyledView className="flex-row justify-between items-center">
-              <StyledText className="text-sm text-gray-600 dark:text-gray-400">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm text-gray-600 dark:text-gray-400">
                 Slippage Tolerance
-              </StyledText>
-              <StyledText className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              </Text>
+              <Text className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {slippage}%
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
           </Card>
         )}
 
         {/* Error Display */}
         {error && (
-          <StyledView className="bg-red-50 dark:bg-red-900 p-3 rounded-lg mb-4">
-            <StyledText className="text-red-700 dark:text-red-200 text-sm">
+          <View className="bg-red-50 dark:bg-red-900 p-3 rounded-lg mb-4">
+            <Text className="text-red-700 dark:text-red-200 text-sm">
               {error}
-            </StyledText>
-          </StyledView>
+            </Text>
+          </View>
         )}
 
         {/* Swap Button */}
@@ -361,6 +356,6 @@ export const SwapForm: React.FC<SwapFormProps> = ({
           fullWidth
         />
       </Card>
-    </StyledView>
+    </View>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
 import { View, TouchableOpacity, ViewStyle, Pressable } from 'react-native';
-import { styled } from 'nativewind';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,10 +11,6 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
-
-const StyledView = styled(View);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledPressable = styled(Pressable);
 
 interface LiquidGlassProps {
   children: React.ReactNode;
@@ -247,7 +242,7 @@ const renderContent = () => {
 
     if (onPress && !disabled) {
       return (
-        <StyledTouchableOpacity
+        <TouchableOpacity
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
@@ -255,7 +250,7 @@ const renderContent = () => {
           style={{ borderRadius: cornerRadius }}
         >
           {baseContent}
-        </StyledTouchableOpacity>
+        </TouchableOpacity>
       );
     }
 

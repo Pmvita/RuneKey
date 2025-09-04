@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { styled } from 'nativewind';
 import { Token } from '../../types';
 import { usePrices } from '../../hooks/token/usePrices';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledImage = styled(Image);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface TokenListItemProps {
   token: Token & { coinId?: string };
@@ -69,16 +63,16 @@ export const TokenListItem: React.FC<TokenListItemProps> = ({
   };
 
   return (
-    <StyledTouchableOpacity
+    <TouchableOpacity
       className="flex-row items-center p-4 bg-glass-white dark:bg-glass-dark border-b border-glass-frost dark:border-ice-700/30"
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={0.8}
     >
       {/* Token Icon */}
-      <StyledView className="mr-3">
+      <View className="mr-3">
         {(token.logoURI || getFallbackImageUrl(token.symbol)) && !imageError ? (
-          <StyledImage
+          <Image
             source={{ uri: token.logoURI || getFallbackImageUrl(token.symbol) }}
             className="w-10 h-10 rounded-full"
             onError={() => {
@@ -91,58 +85,58 @@ export const TokenListItem: React.FC<TokenListItemProps> = ({
             }}
           />
         ) : (
-          <StyledView className="w-10 h-10 rounded-full bg-frost-200 dark:bg-ice-700 items-center justify-center">
-            <StyledText className="text-frost-700 dark:text-ice-300 font-bold text-sm">
+          <View className="w-10 h-10 rounded-full bg-frost-200 dark:bg-ice-700 items-center justify-center">
+            <Text className="text-frost-700 dark:text-ice-300 font-bold text-sm">
               {token.symbol?.charAt(0) || '?'}
-            </StyledText>
-          </StyledView>
+            </Text>
+          </View>
         )}
-      </StyledView>
+      </View>
 
       {/* Token Info */}
-      <StyledView className="flex-1">
-        <StyledView className="flex-row items-center justify-between">
-          <StyledView>
-            <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100">
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between">
+          <View>
+            <Text className="text-lg font-semibold text-ice-900 dark:text-ice-100">
               {token.symbol || 'UNKNOWN'}
-            </StyledText>
-            <StyledText className="text-sm text-ice-500 dark:text-ice-400">
+            </Text>
+            <Text className="text-sm text-ice-500 dark:text-ice-400">
               {token.name || 'Unknown Token'}
-            </StyledText>
-          </StyledView>
+            </Text>
+          </View>
 
           {showBalance && (
-            <StyledView className="items-end">
-              <StyledText className="text-lg font-semibold text-ice-900 dark:text-ice-100">
+            <View className="items-end">
+              <Text className="text-lg font-semibold text-ice-900 dark:text-ice-100">
                 {formatBalance(token.balance) || '0'}
-              </StyledText>
+              </Text>
               {usdValue && (
-                <StyledText className="text-sm text-ice-500 dark:text-ice-400">
+                <Text className="text-sm text-ice-500 dark:text-ice-400">
                   {formatUSDValue(usdValue) || '$0.00'}
-                </StyledText>
+                </Text>
               )}
-            </StyledView>
+            </View>
           )}
-        </StyledView>
+        </View>
 
         {/* Price Info */}
         {(showPrice || showPriceChange) && (
-          <StyledView className="flex-row items-center justify-between mt-2">
+          <View className="flex-row items-center justify-between mt-2">
             {showPrice && (
-              <StyledText className="text-sm text-ice-600 dark:text-ice-300">
+              <Text className="text-sm text-ice-600 dark:text-ice-300">
                 {formattedPrice || 'Price unavailable'}
-              </StyledText>
+              </Text>
             )}
 
             {showPriceChange && priceChange && (
-              <StyledView 
+              <View 
                 className={
                   priceChange.isPositive 
                     ? 'px-2 py-1 rounded bg-green-100 dark:bg-green-900' 
                     : 'px-2 py-1 rounded bg-red-100 dark:bg-red-900'
                 }
               >
-                <StyledText 
+                <Text 
                   className={
                     priceChange.isPositive 
                       ? 'text-xs font-medium text-green-800 dark:text-green-200' 
@@ -150,12 +144,12 @@ export const TokenListItem: React.FC<TokenListItemProps> = ({
                   }
                 >
                   {priceChange.formatted || ''}
-                </StyledText>
-              </StyledView>
+                </Text>
+              </View>
             )}
-          </StyledView>
+          </View>
         )}
-      </StyledView>
-    </StyledTouchableOpacity>
+      </View>
+    </TouchableOpacity>
   );
 };

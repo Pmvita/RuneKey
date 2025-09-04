@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, Image } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,13 +12,6 @@ import { useWallet } from '../hooks/wallet/useWallet';
 import { NETWORK_CONFIGS } from '../constants';
 import { SupportedNetwork } from '../types';
 import { logger } from '../utils/logger';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledImage = styled(Image);
-const StyledSafeAreaView = styled(SafeAreaView);
 
 interface SettingsItemProps {
   icon: string;
@@ -66,14 +58,14 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
   const styles = getVariantStyles();
 
   return (
-    <StyledTouchableOpacity
+    <TouchableOpacity
       className="flex-row items-center py-4 px-6 border-b border-gray-200"
       onPress={onPress}
       disabled={!onPress}
     >
-      <StyledView className="w-10 h-10 bg-gray-100 border border-gray-200 rounded-full items-center justify-center mr-4 shadow-sm">
+      <View className="w-10 h-10 bg-gray-100 border border-gray-200 rounded-full items-center justify-center mr-4 shadow-sm">
         {icon === 'wallet' ? (
-          <StyledImage
+          <Image
             source={require('../../assets/icon.png')}
             style={{ width: 20, height: 20 }}
             resizeMode="contain"
@@ -81,26 +73,26 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
         ) : (
           <Ionicons name={icon as any} size={20} color={styles.iconColor} />
         )}
-      </StyledView>
-      <StyledView className="flex-1">
-        <StyledText className={`text-base font-semibold ${styles.titleColor}`}>
+      </View>
+      <View className="flex-1">
+        <Text className={`text-base font-semibold ${styles.titleColor}`}>
           {title}
-        </StyledText>
+        </Text>
         {subtitle && (
-          <StyledText className={`text-sm ${styles.subtitleColor} mt-1`}>
+          <Text className={`text-sm ${styles.subtitleColor} mt-1`}>
             {subtitle}
-          </StyledText>
+          </Text>
         )}
-      </StyledView>
+      </View>
       {rightElement && (
-        <StyledView className="mr-2">
+        <View className="mr-2">
           {rightElement}
-        </StyledView>
+        </View>
       )}
       {showArrow && onPress && (
         <Ionicons name="chevron-forward" size={20} color="#6b7280" />
       )}
-    </StyledTouchableOpacity>
+    </TouchableOpacity>
   );
 };
 
@@ -240,96 +232,96 @@ export const SettingsScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
       {/* Background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{
           backgroundColor: 'rgb(93,138,168)',
         }}
       />
       
-      <StyledScrollView className="flex-1">
+      <ScrollView className="flex-1">
         {/* Header */}
-        <StyledView className="p-6">
-          <StyledText className="text-2xl font-bold text-slate-900 mb-2 text-center">
+        <View className="p-6">
+          <Text className="text-2xl font-bold text-slate-900 mb-2 text-center">
             Settings
-          </StyledText>
-          <StyledText className="text-slate-600 text-center">
+          </Text>
+          <Text className="text-slate-600 text-center">
             Manage your wallet preferences
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
 
         {/* Wallet Info */}
         {currentWallet && (
-          <StyledView className="mx-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledView className="flex-row items-center mb-4">
-                <StyledView className="w-12 h-12 bg-blue-100 border border-blue-200 rounded-full items-center justify-center mr-4">
+          <View className="mx-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <View className="flex-row items-center mb-4">
+                <View className="w-12 h-12 bg-blue-100 border border-blue-200 rounded-full items-center justify-center mr-4">
                   <Ionicons name="wallet" size={24} color="#3b82f6" />
-                </StyledView>
-                <StyledView className="flex-1">
-                  <StyledText className="text-lg font-semibold text-slate-900">
+                </View>
+                <View className="flex-1">
+                  <Text className="text-lg font-semibold text-slate-900">
                     Connected Wallet
-                  </StyledText>
-                  <StyledText className="text-sm text-slate-600">
+                  </Text>
+                  <Text className="text-sm text-slate-600">
                     {formatWalletAddress(currentWallet.address)}
-                  </StyledText>
-                </StyledView>
-                <StyledView className="bg-green-100 border border-green-200 px-3 py-1 rounded-full">
-                  <StyledText className="text-xs text-green-700 font-medium">
+                  </Text>
+                </View>
+                <View className="bg-green-100 border border-green-200 px-3 py-1 rounded-full">
+                  <Text className="text-xs text-green-700 font-medium">
                     Connected
-                  </StyledText>
-                </StyledView>
-              </StyledView>
+                  </Text>
+                </View>
+              </View>
               
-              <StyledView className="flex-row items-center justify-between">
-                <StyledText className="text-sm text-slate-600">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm text-slate-600">
                   Network: {currentWallet.network}
-                </StyledText>
-                <StyledText className="text-sm text-slate-600">
+                </Text>
+                <Text className="text-sm text-slate-600">
                   {formatUSD(walletData?.totalValue || 0)}
-                </StyledText>
-              </StyledView>
-            </StyledView>
-          </StyledView>
+                </Text>
+              </View>
+            </View>
+          </View>
         )}
 
         {/* Quick Actions */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Quick Actions
-          </StyledText>
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <StyledView className="flex-row justify-between">
-              <StyledTouchableOpacity className="items-center flex-1">
-                <StyledView className="w-12 h-12 bg-blue-100 border border-blue-200 rounded-full items-center justify-center mb-2">
+          </Text>
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <View className="flex-row justify-between">
+              <TouchableOpacity className="items-center flex-1">
+                <View className="w-12 h-12 bg-blue-100 border border-blue-200 rounded-full items-center justify-center mb-2">
                   <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
-                </StyledView>
-                <StyledText className="text-xs text-slate-600 font-medium">Switch Network</StyledText>
-              </StyledTouchableOpacity>
+                </View>
+                <Text className="text-xs text-slate-600 font-medium">Switch Network</Text>
+              </TouchableOpacity>
               
-              <StyledTouchableOpacity className="items-center flex-1">
-                <StyledView className="w-12 h-12 bg-green-100 border border-green-200 rounded-full items-center justify-center mb-2">
+              <TouchableOpacity className="items-center flex-1">
+                <View className="w-12 h-12 bg-green-100 border border-green-200 rounded-full items-center justify-center mb-2">
                   <Ionicons name="shield-checkmark" size={24} color="#16a34a" />
-                </StyledView>
-                <StyledText className="text-xs text-slate-600 font-medium">Security</StyledText>
-              </StyledTouchableOpacity>
+                </View>
+                <Text className="text-xs text-slate-600 font-medium">Security</Text>
+              </TouchableOpacity>
               
-              <StyledTouchableOpacity className="items-center flex-1">
-                <StyledView className="w-12 h-12 bg-purple-100 border border-purple-200 rounded-full items-center justify-center mb-2">
+              <TouchableOpacity className="items-center flex-1">
+                <View className="w-12 h-12 bg-purple-100 border border-purple-200 rounded-full items-center justify-center mb-2">
                   <Ionicons name="help-circle" size={24} color="#9333ea" />
-                </StyledView>
-                <StyledText className="text-xs text-slate-600 font-medium">Help</StyledText>
-              </StyledTouchableOpacity>
-            </StyledView>
-          </StyledView>
-        </StyledView>
+                </View>
+                <Text className="text-xs text-slate-600 font-medium">Help</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
 
         {/* Preferences */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Preferences
-          </StyledText>
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+          </Text>
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <SettingsItem
               icon="moon"
               title="Dark Mode"
@@ -389,15 +381,15 @@ export const SettingsScreen: React.FC = () => {
               }
               showArrow={false}
             />
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Security */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Security
-          </StyledText>
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+          </Text>
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <SettingsItem
               icon="shield-checkmark"
               title="Security Settings"
@@ -418,15 +410,15 @@ export const SettingsScreen: React.FC = () => {
               subtitle="Backup your wallet data"
               onPress={handleExportWallet}
             />
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Support */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Support
-          </StyledText>
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+          </Text>
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             <SettingsItem
               icon="help-circle"
               title="Help & FAQ"
@@ -454,53 +446,53 @@ export const SettingsScreen: React.FC = () => {
               subtitle="Learn about our privacy practices"
               onPress={() => Alert.alert('Privacy', 'Privacy policy will be available soon!')}
             />
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Networks */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Networks
-          </StyledText>
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+          </Text>
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
             {Object.entries(NETWORK_CONFIGS).map(([networkId, config]) => (
-              <StyledTouchableOpacity
+              <TouchableOpacity
                 key={networkId}
                 className={`p-4 border-b border-gray-200 ${
                   activeNetwork === networkId ? 'bg-blue-50 border-blue-200' : ''
                 }`}
                 onPress={() => handleNetworkChange(networkId as SupportedNetwork)}
               >
-                <StyledView className="flex-row items-center justify-between">
-                  <StyledView className="flex-row items-center">
-                    <StyledText className="text-2xl mr-3">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <Text className="text-2xl mr-3">
                       {config.icon}
-                    </StyledText>
-                    <StyledView>
-                      <StyledText className="font-medium text-slate-900">
+                    </Text>
+                    <View>
+                      <Text className="font-medium text-slate-900">
                         {config.name}
-                      </StyledText>
-                      <StyledText className="text-sm text-slate-600">
+                      </Text>
+                      <Text className="text-sm text-slate-600">
                         {config.symbol}
-                      </StyledText>
-                    </StyledView>
-                  </StyledView>
+                      </Text>
+                    </View>
+                  </View>
                   
                   {activeNetwork === networkId && (
                     <Ionicons name="checkmark-circle" size={20} color="#3b82f6" />
                   )}
-                </StyledView>
-              </StyledTouchableOpacity>
+                </View>
+              </TouchableOpacity>
             ))}
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Danger Zone */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-red-600 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-red-600 mb-4">
             Danger Zone
-          </StyledText>
-          <StyledView className="p-6 border border-red-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#fef2f2' }}>
+          </Text>
+          <View className="p-6 border border-red-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#fef2f2' }}>
             <SettingsItem
               icon="trash"
               title="Delete Wallet"
@@ -508,41 +500,41 @@ export const SettingsScreen: React.FC = () => {
               onPress={handleDeleteWallet}
               variant="danger"
             />
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
 
         {/* Debug Info */}
         {__DEV__ && (
-          <StyledView className="mx-6 mb-6">
-            <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+          <View className="mx-6 mb-6">
+            <Text className="text-lg font-semibold text-slate-900 mb-4">
               Debug Info
-            </StyledText>
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledView className="space-y-2">
-                <StyledText className="text-sm text-slate-600">
+            </Text>
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <View className="space-y-2">
+                <Text className="text-sm text-slate-600">
                   isConnected: {isConnected ? 'true' : 'false'}
-                </StyledText>
-                <StyledText className="text-sm text-slate-600">
+                </Text>
+                <Text className="text-sm text-slate-600">
                   currentWallet: {currentWallet ? currentWallet.id : 'null'}
-                </StyledText>
-                <StyledText className="text-sm text-slate-600">
+                </Text>
+                <Text className="text-sm text-slate-600">
                   walletData: {walletData ? 'loaded' : 'not loaded'}
-                </StyledText>
-                <StyledText className="text-sm text-slate-600">
+                </Text>
+                <Text className="text-sm text-slate-600">
                   loadingData: {loadingData ? 'true' : 'false'}
-                </StyledText>
-              </StyledView>
-            </StyledView>
-          </StyledView>
+                </Text>
+              </View>
+            </View>
+          </View>
         )}
 
         {/* Wallet Actions */}
-        <StyledView className="mx-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="mx-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Wallet Actions
-          </StyledText>
-          <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <StyledView className="space-y-3">
+          </Text>
+          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+            <View className="space-y-3">
               <Button
                 title="Export Private Key"
                 onPress={() => {
@@ -579,27 +571,27 @@ export const SettingsScreen: React.FC = () => {
                 variant="danger"
                 fullWidth
               />
-            </StyledView>
-          </StyledView>
-        </StyledView>
+            </View>
+          </View>
+        </View>
 
         {/* Logout Button */}
-        <StyledView className="px-6 mb-8">
+        <View className="px-6 mb-8">
           <Button
             title="Logout"
             onPress={handleLogout}
             variant="danger"
             fullWidth
           />
-        </StyledView>
+        </View>
 
         {/* App Version */}
-        <StyledView className="items-center pb-6">
-          <StyledText className="text-sm text-slate-500">
+        <View className="items-center pb-6">
+          <Text className="text-sm text-slate-500">
             RuneKey v1.0.0
-          </StyledText>
-        </StyledView>
-      </StyledScrollView>
+          </Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

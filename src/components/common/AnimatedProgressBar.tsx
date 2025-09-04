@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
-import { styled } from 'nativewind';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-
 interface AnimatedProgressBarProps {
   progress: number; // 0-100
   duration?: number;
@@ -58,10 +53,10 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
     const strokeDashoffset = circumference - (animatedProgress / 100) * circumference;
 
     return (
-      <StyledView className={`items-center justify-center ${className}`}>
-        <StyledView className="relative">
+      <View className={`items-center justify-center ${className}`}>
+        <View className="relative">
           {/* Background circle */}
-          <StyledView
+          <View
             className="absolute"
             style={{
               width: radius * 2,
@@ -72,7 +67,7 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
             }}
           />
           {/* Progress circle */}
-          <StyledView
+          <View
             className="absolute"
             style={{
               width: radius * 2,
@@ -87,19 +82,19 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
           />
           {/* Percentage text */}
           {showPercentage && (
-            <StyledText className="text-lg font-bold text-gray-700">
+            <Text className="text-lg font-bold text-gray-700">
               {Math.round(animatedProgress)}%
-            </StyledText>
+            </Text>
           )}
-        </StyledView>
-      </StyledView>
+        </View>
+      </View>
     );
   }
 
   return (
-    <StyledView className={`${className}`}>
+    <View className={`${className}`}>
       {/* Background bar */}
-      <StyledView
+      <View
         className="rounded-full"
         style={{
           height,
@@ -107,7 +102,7 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
         }}
       >
         {/* Progress bar */}
-        <StyledView
+        <View
           className="rounded-full"
           style={{
             height,
@@ -116,14 +111,14 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
             transition: 'width 0.3s ease',
           }}
         />
-      </StyledView>
+      </View>
       
       {/* Percentage text */}
       {showPercentage && (
-        <StyledText className="text-sm text-gray-600 mt-1 text-center">
+        <Text className="text-sm text-gray-600 mt-1 text-center">
           {Math.round(animatedProgress)}%
-        </StyledText>
+        </Text>
       )}
-    </StyledView>
+    </View>
   );
 }; 

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image, Dimensions } from 'react-native';
-import { styled } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { priceService, CoinInfo, ChartData } from '../services/api/priceService';
@@ -10,12 +9,6 @@ import { logger } from '../utils/logger';
 import { LiquidGlass } from '../components';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledScrollView = styled(ScrollView);
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledSafeAreaView = styled(SafeAreaView);
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -32,11 +25,11 @@ export const TokenDetailsScreen: React.FC = () => {
   if (!token || !token.symbol) {
     return (
       <StyledSafeAreaView className="flex-1" style={{ backgroundColor: '#f8fafc' }}>
-        <StyledView className="flex-1 items-center justify-center p-6">
-          <StyledText className="text-lg text-slate-600 text-center">
+        <View className="flex-1 items-center justify-center p-6">
+          <Text className="text-lg text-slate-600 text-center">
             Invalid token data. Please try again.
-          </StyledText>
-        </StyledView>
+          </Text>
+        </View>
       </StyledSafeAreaView>
     );
   }
@@ -157,9 +150,9 @@ export const TokenDetailsScreen: React.FC = () => {
   const renderChart = () => {
     if (!chartData || !chartData.prices || !Array.isArray(chartData.prices) || chartData.prices.length === 0) {
       return (
-        <StyledView className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-          <StyledText className="text-slate-500">Chart data unavailable</StyledText>
-        </StyledView>
+        <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
+          <Text className="text-slate-500">Chart data unavailable</Text>
+        </View>
       );
     }
 
@@ -170,9 +163,9 @@ export const TokenDetailsScreen: React.FC = () => {
 
     if (prices.length === 0) {
       return (
-        <StyledView className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-          <StyledText className="text-slate-500">No valid price data</StyledText>
-        </StyledView>
+        <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
+          <Text className="text-slate-500">No valid price data</Text>
+        </View>
       );
     }
 
@@ -182,19 +175,19 @@ export const TokenDetailsScreen: React.FC = () => {
 
     if (priceRange <= 0) {
       return (
-        <StyledView className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-          <StyledText className="text-slate-500">No price variation</StyledText>
-        </StyledView>
+        <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
+          <Text className="text-slate-500">No price variation</Text>
+        </View>
       );
     }
 
     return (
-      <StyledView className="bg-white rounded-lg p-4 border border-gray-200">
-        <StyledView className="flex-row justify-between items-center mb-4">
-          <StyledText className="text-lg font-semibold text-slate-900">Price Chart</StyledText>
-          <StyledView className="flex-row space-x-2">
+      <View className="bg-white rounded-lg p-4 border border-gray-200">
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-lg font-semibold text-slate-900">Price Chart</Text>
+          <View className="flex-row space-x-2">
             {(['1d', '7d', '30d'] as const).map((timeframe) => (
-              <StyledTouchableOpacity
+              <TouchableOpacity
                 key={timeframe}
                 onPress={() => setSelectedTimeframe(timeframe)}
                 className={`px-3 py-1 rounded ${
@@ -203,25 +196,25 @@ export const TokenDetailsScreen: React.FC = () => {
                     : 'bg-gray-200'
                 }`}
               >
-                <StyledText className={`text-sm font-medium ${
+                <Text className={`text-sm font-medium ${
                   selectedTimeframe === timeframe 
                     ? 'text-white' 
                     : 'text-slate-600'
                 }`}>
                   {timeframe.toUpperCase()}
-                </StyledText>
-              </StyledTouchableOpacity>
+                </Text>
+              </TouchableOpacity>
             ))}
-          </StyledView>
-        </StyledView>
+          </View>
+        </View>
         
         {/* Simple Bar Chart */}
-        <StyledView className="flex-1">
-          <StyledView className="flex-row items-end justify-between h-32">
+        <View className="flex-1">
+          <View className="flex-row items-end justify-between h-32">
             {prices.slice(-20).map((price, index) => {
               const height = priceRange > 0 ? ((price - minPrice) / priceRange) * 100 : 50;
               return (
-                <StyledView
+                <View
                   key={index}
                   className="bg-blue-500 rounded-sm"
                   style={{
@@ -232,17 +225,17 @@ export const TokenDetailsScreen: React.FC = () => {
                 />
               );
             })}
-          </StyledView>
-          <StyledView className="flex-row justify-between mt-2">
-            <StyledText className="text-xs text-slate-500">
+          </View>
+          <View className="flex-row justify-between mt-2">
+            <Text className="text-xs text-slate-500">
               ${minPrice.toFixed(2)}
-            </StyledText>
-            <StyledText className="text-xs text-slate-500">
+            </Text>
+            <Text className="text-xs text-slate-500">
               ${maxPrice.toFixed(2)}
-            </StyledText>
-          </StyledView>
-        </StyledView>
-      </StyledView>
+            </Text>
+          </View>
+        </View>
+      </View>
     );
   };
 
@@ -321,27 +314,27 @@ export const TokenDetailsScreen: React.FC = () => {
   return (
     <StyledSafeAreaView className="flex-1" style={{ backgroundColor: '#f8fafc' }}>
       {/* Background overlay */}
-      <StyledView 
+      <View 
         className="absolute inset-0"
         style={{ backgroundColor: 'rgb(93,138,168)' }}
       />
       
-      <StyledScrollView
+      <ScrollView
         className="flex-1"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
         {/* Header */}
-        <StyledView className="p-6">
-          <StyledView className="flex-row items-center mb-4">
-            <StyledTouchableOpacity
+        <View className="p-6">
+          <View className="flex-row items-center mb-4">
+            <TouchableOpacity
               onPress={() => navigation.goBack()}
               className="mr-4 p-2 bg-white rounded-full shadow-sm"
             >
               <Ionicons name="arrow-back" size={24} color="#64748b" />
-            </StyledTouchableOpacity>
-            <StyledView className="flex-row items-center flex-1">
+            </TouchableOpacity>
+            <View className="flex-row items-center flex-1">
               {coinInfo?.image && typeof coinInfo.image === 'string' && coinInfo.image.trim() !== '' ? (
                 <Image 
                   source={{ uri: coinInfo.image }} 
@@ -352,36 +345,36 @@ export const TokenDetailsScreen: React.FC = () => {
                   }}
                 />
               ) : (
-                <StyledView className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
-                  <StyledText className="text-gray-600 font-bold text-sm">
+                <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
+                  <Text className="text-gray-600 font-bold text-sm">
                     {token.symbol && token.symbol.length > 0 ? token.symbol.charAt(0).toUpperCase() : '?'}
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
               )}
-              <StyledView>
-                <StyledText className="text-2xl font-bold text-slate-900">
+              <View>
+                <Text className="text-2xl font-bold text-slate-900">
                   {token.symbol || 'Unknown'}
-                </StyledText>
-                <StyledText className="text-slate-600">
+                </Text>
+                <Text className="text-slate-600">
                   {token.name || 'Unknown Token'}
-                </StyledText>
-              </StyledView>
-            </StyledView>
-          </StyledView>
-        </StyledView>
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
         {/* Price and Change Section */}
         {coinInfo && (
-          <StyledView className="px-6 mb-6">
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <StyledView className="flex-row items-center justify-between mb-4">
-                <StyledText className="text-3xl font-bold text-slate-900">
+          <View className="px-6 mb-6">
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-3xl font-bold text-slate-900">
                   ${coinInfo.current_price && !isNaN(coinInfo.current_price) ? coinInfo.current_price.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 6,
                   }) : '0.00'}
-                </StyledText>
-                <StyledView className={`flex-row items-center px-3 py-2 rounded-lg ${
+                </Text>
+                <View className={`flex-row items-center px-3 py-2 rounded-lg ${
                   (coinInfo.price_change_percentage_24h || 0) >= 0 
                     ? 'bg-green-100' 
                     : 'bg-red-100'
@@ -391,241 +384,241 @@ export const TokenDetailsScreen: React.FC = () => {
                     size={16} 
                     color={(coinInfo.price_change_percentage_24h || 0) >= 0 ? '#16a34a' : '#dc2626'} 
                   />
-                  <StyledText className={`ml-1 font-semibold ${
+                  <Text className={`ml-1 font-semibold ${
                     getPriceChangeColor(coinInfo.price_change_percentage_24h || 0)
                   }`}>
                     {(coinInfo.price_change_percentage_24h || 0) >= 0 ? '+' : ''}
                     {(coinInfo.price_change_percentage_24h || 0).toFixed(2)}%
-                  </StyledText>
-                </StyledView>
-              </StyledView>
+                  </Text>
+                </View>
+              </View>
 
               {/* Portfolio Allocation */}
               {currentWallet && (
-                <StyledView className="mb-4 p-4 bg-white rounded-lg">
-                  <StyledText className="text-sm text-slate-600 mb-2">Portfolio Allocation</StyledText>
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-lg font-semibold text-slate-900">
+                <View className="mb-4 p-4 bg-white rounded-lg">
+                  <Text className="text-sm text-slate-600 mb-2">Portfolio Allocation</Text>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-lg font-semibold text-slate-900">
                       {formatBalance(token.balance || '0', token.decimals)} {token.symbol || 'Unknown'}
-                    </StyledText>
-                    <StyledText className="text-sm text-slate-500">
+                    </Text>
+                    <Text className="text-sm text-slate-500">
                       {calculatePortfolioAllocation().toFixed(2)}% of portfolio
-                    </StyledText>
-                  </StyledView>
+                    </Text>
+                  </View>
                   {token.usdValue && (
-                    <StyledText className="text-sm text-slate-600 mt-1">
+                    <Text className="text-sm text-slate-600 mt-1">
                       {formatUSDValue(token.usdValue)}
-                    </StyledText>
+                    </Text>
                   )}
-                </StyledView>
+                </View>
               )}
 
               {/* Live Balance Display */}
-              <StyledView className="p-4 bg-white rounded-lg">
-                <StyledText className="text-sm text-slate-600 mb-2">Your Balance</StyledText>
-                <StyledView className="flex-row justify-between items-center mb-2">
-                  <StyledText className="text-lg font-semibold text-slate-900">
+              <View className="p-4 bg-white rounded-lg">
+                <Text className="text-sm text-slate-600 mb-2">Your Balance</Text>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-lg font-semibold text-slate-900">
                     {formatBalance(token.balance || '0', token.decimals)} {token.symbol || 'Unknown'}
-                  </StyledText>
-                  <StyledText className="text-sm text-slate-500">
+                  </Text>
+                  <Text className="text-sm text-slate-500">
                     ≈ {formatUSDValue(token.usdValue || 0)}
-                  </StyledText>
-                </StyledView>
+                  </Text>
+                </View>
                 {coinInfo?.current_price && !isNaN(coinInfo.current_price) && (
-                  <StyledText className="text-xs text-slate-500">
+                  <Text className="text-xs text-slate-500">
                     @ ${coinInfo.current_price.toFixed(6)} per {token.symbol || 'Unknown'}
-                  </StyledText>
+                  </Text>
                 )}
-              </StyledView>
-            </StyledView>
-          </StyledView>
+              </View>
+            </View>
+          </View>
         )}
 
         {/* Chart Section */}
-        <StyledView className="px-6 mb-6">
+        <View className="px-6 mb-6">
           {renderChart()}
-        </StyledView>
+        </View>
 
         {/* Market Statistics */}
         {coinInfo && (
-          <StyledView className="px-6 mb-6">
-            <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+          <View className="px-6 mb-6">
+            <Text className="text-lg font-semibold text-slate-900 mb-4">
               Market Statistics
-            </StyledText>
+            </Text>
             
-            <StyledView className="space-y-3">
+            <View className="space-y-3">
               {coinInfo.market_cap && !isNaN(coinInfo.market_cap) && coinInfo.market_cap > 0 && (
-                <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-slate-600">Market Cap</StyledText>
-                    <StyledText className="text-slate-900 font-semibold">
+                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-slate-600">Market Cap</Text>
+                    <Text className="text-slate-900 font-semibold">
                       {formatMarketCap(coinInfo.market_cap)}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               )}
 
               {coinInfo.total_volume && !isNaN(coinInfo.total_volume) && coinInfo.total_volume > 0 && (
-                <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-slate-600">24h Volume</StyledText>
-                    <StyledText className="text-slate-900 font-semibold">
+                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-slate-600">24h Volume</Text>
+                    <Text className="text-slate-900 font-semibold">
                       {formatUSDValue(coinInfo.total_volume)}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               )}
 
               {coinInfo.circulating_supply && !isNaN(coinInfo.circulating_supply) && coinInfo.circulating_supply > 0 && (
-                <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-slate-600">Circulating Supply</StyledText>
-                    <StyledText className="text-slate-900 font-semibold">
+                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-slate-600">Circulating Supply</Text>
+                    <Text className="text-slate-900 font-semibold">
                       {coinInfo.circulating_supply.toLocaleString()}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               )}
 
               {coinInfo.market_cap_rank && !isNaN(coinInfo.market_cap_rank) && coinInfo.market_cap_rank > 0 && (
-                <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-slate-600">Market Rank</StyledText>
-                    <StyledText className="text-slate-900 font-semibold">
+                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-slate-600">Market Rank</Text>
+                    <Text className="text-slate-900 font-semibold">
                       #{coinInfo.market_cap_rank}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               )}
 
               {coinInfo.ath && !isNaN(coinInfo.ath) && coinInfo.ath > 0 && (
-                <StyledView className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-slate-600">All Time High</StyledText>
-                    <StyledText className="text-slate-900 font-semibold">
+                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-slate-600">All Time High</Text>
+                    <Text className="text-slate-900 font-semibold">
                       ${coinInfo.ath.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 6,
                       })}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               )}
-            </StyledView>
-          </StyledView>
+            </View>
+          </View>
         )}
 
         {/* Actions */}
-        <StyledView className="px-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="px-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Actions
-          </StyledText>
+          </Text>
           
-          <StyledView className="space-y-3">
-            <StyledTouchableOpacity
+          <View className="space-y-3">
+            <TouchableOpacity
               onPress={() => {
                 logger.logButtonPress('Send Token', 'navigate to send screen');
                 // Navigate to send screen
               }}
               className="w-full py-4 bg-blue-600 rounded-xl items-center"
             >
-              <StyledText className="text-white font-semibold text-base">
+              <Text className="text-white font-semibold text-base">
                 Send
-              </StyledText>
-            </StyledTouchableOpacity>
+              </Text>
+            </TouchableOpacity>
             
-            <StyledTouchableOpacity
+            <TouchableOpacity
               onPress={() => {
                 logger.logButtonPress('Swap Token', 'navigate to swap screen');
                 navigation.goBack();
               }}
               className="w-full py-4 bg-white border border-blue-600 rounded-xl items-center"
             >
-              <StyledText className="text-blue-600 font-semibold text-base">
+              <Text className="text-blue-600 font-semibold text-base">
                 Swap
-              </StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
-        </StyledView>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Recent Transactions */}
-        <StyledView className="px-6 mb-6">
-          <StyledText className="text-lg font-semibold text-slate-900 mb-4">
+        <View className="px-6 mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">
             Recent Transactions
-          </StyledText>
+          </Text>
           
           {tokenTransactions.length > 0 ? (
-            <StyledView className="space-y-3">
+            <View className="space-y-3">
               {tokenTransactions.map((tx, index) => (
-                <StyledView 
+                <View 
                   key={`${tx.hash}-${index}`}
                   className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" 
                   style={{ backgroundColor: '#e8eff3' }}
                 >
-                  <StyledView className="flex-row items-center justify-between mb-2">
-                    <StyledView className="flex-row items-center">
-                      <StyledView className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${getTransactionBgColor(tx.type || 'unknown')}`}>
+                  <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-row items-center">
+                      <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${getTransactionBgColor(tx.type || 'unknown')}`}>
                         <Ionicons 
                           name={getTransactionIcon(tx.type || 'unknown') as any} 
                           size={16} 
                           color={(tx.type || 'unknown') === 'send' ? '#dc2626' : (tx.type || 'unknown') === 'receive' ? '#16a34a' : '#2563eb'} 
                         />
-                      </StyledView>
-                      <StyledView>
-                                              <StyledText className="text-slate-900 font-medium capitalize">
+                      </View>
+                      <View>
+                                              <Text className="text-slate-900 font-medium capitalize">
                         {tx.type || 'Unknown'}
-                      </StyledText>
-                      <StyledText className="text-xs text-slate-500">
+                      </Text>
+                      <Text className="text-xs text-slate-500">
                         {tx.timestamp ? formatTransactionDate(tx.timestamp) : 'Unknown time'}
-                      </StyledText>
-                      </StyledView>
-                    </StyledView>
-                    <StyledView className="items-end">
-                                              <StyledText className={`font-semibold ${getTransactionColor(tx.type || 'unknown')}`}>
+                      </Text>
+                      </View>
+                    </View>
+                    <View className="items-end">
+                                              <Text className={`font-semibold ${getTransactionColor(tx.type || 'unknown')}`}>
                           {(tx.type || 'unknown') === 'send' ? '-' : '+'}
                           {formatTransactionAmount(tx.amount || '0', tx.token?.decimals || 18)} {tx.token?.symbol || 'Unknown'}
-                        </StyledText>
-                      <StyledView className={`px-2 py-1 rounded-full ${
+                        </Text>
+                      <View className={`px-2 py-1 rounded-full ${
                         (tx.status || 'unknown') === 'confirmed' ? 'bg-green-100' : 
                         (tx.status || 'unknown') === 'pending' ? 'bg-yellow-100' : 'bg-red-100'
                       }`}>
-                        <StyledText className={`text-xs font-medium ${
+                        <Text className={`text-xs font-medium ${
                           (tx.status || 'unknown') === 'confirmed' ? 'text-green-700' : 
                           (tx.status || 'unknown') === 'pending' ? 'text-yellow-700' : 'text-red-700'
                         }`}>
                           {tx.status || 'Unknown'}
-                        </StyledText>
-                      </StyledView>
-                    </StyledView>
-                  </StyledView>
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
                   
-                  <StyledView className="flex-row justify-between items-center">
-                    <StyledText className="text-xs text-slate-500">
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-xs text-slate-500">
                       {(tx.type || 'unknown') === 'send' ? 'To:' : 'From:'} {(tx.type || 'unknown') === 'send' ? (tx.to || 'Unknown') : (tx.from || 'Unknown')}
-                    </StyledText>
-                    <StyledText className="text-xs text-slate-500">
+                    </Text>
+                    <Text className="text-xs text-slate-500">
                       {tx.hash && tx.hash.length > 14 ? `${tx.hash.substring(0, 8)}...${tx.hash.substring(tx.hash.length - 6)}` : 'Unknown hash'}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
+                    </Text>
+                  </View>
+                </View>
               ))}
-            </StyledView>
+            </View>
           ) : (
-            <StyledView className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl items-center" style={{ backgroundColor: '#e8eff3' }}>
+            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl items-center" style={{ backgroundColor: '#e8eff3' }}>
               <Ionicons name="receipt-outline" size={48} color="#64748b" />
-              <StyledText className="text-slate-500 mt-2 text-center">
+              <Text className="text-slate-500 mt-2 text-center">
                 No transactions found for {token.symbol || 'Unknown'}
-              </StyledText>
-              <StyledText className="text-slate-400 text-sm text-center mt-1">
+              </Text>
+              <Text className="text-slate-400 text-sm text-center mt-1">
                 Your transaction history for this token will appear here
-              </StyledText>
-            </StyledView>
+              </Text>
+            </View>
           )}
-        </StyledView>
+        </View>
 
         {/* Additional Space */}
-        <StyledView className="h-6" />
-      </StyledScrollView>
+        <View className="h-6" />
+      </ScrollView>
     </StyledSafeAreaView>
   );
 }; 

@@ -1,16 +1,11 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { styled } from 'nativewind';
 import { logger } from '../../utils/logger';
-
-const StyledView = styled(View);
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 interface CardProps {
   children: React.ReactNode;
   onPress?: () => void;
   variant?: 'default' | 'outlined' | 'elevated' | 'glass' | 'frost' | 'ice';
-  className?: string;
   disabled?: boolean;
 }
 
@@ -18,37 +13,69 @@ export const Card: React.FC<CardProps> = ({
   children,
   onPress,
   variant = 'default',
-  className = '',
   disabled = false,
 }) => {
-  const getCardClasses = () => {
-    let classes = 'rounded-xl p-4';
+  const getCardStyle = () => {
+    const baseStyle = {
+      borderRadius: 16,
+      padding: 16,
+    };
 
     switch (variant) {
       case 'glass':
-        classes += ' bg-glass-white dark:bg-glass-dark border border-glass-white dark:border-glass-light';
-        break;
+        return {
+          ...baseStyle,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(10px)',
+        };
       case 'frost':
-        classes += ' bg-glass-blue-light border border-glass-frost';
-        break;
+        return {
+          ...baseStyle,
+          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          borderWidth: 1,
+          borderColor: 'rgba(186, 230, 253, 0.3)',
+          shadowColor: '#38bdf8',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 4,
+        };
       case 'ice':
-        classes += ' bg-ice-200/10 dark:bg-ice-950/10 border border-ice-300/30 dark:border-ice-700/30';
-        break;
+        return {
+          ...baseStyle,
+          backgroundColor: 'rgba(186, 230, 253, 0.05)',
+          borderWidth: 1,
+          borderColor: 'rgba(186, 230, 253, 0.2)',
+        };
       case 'outlined':
-        classes += ' border border-glass-frost dark:border-ice-700/50 bg-glass-white dark:bg-glass-dark';
-        break;
+        return {
+          ...baseStyle,
+          backgroundColor: 'rgba(30, 41, 59, 0.8)',
+          borderWidth: 1,
+          borderColor: 'rgba(186, 230, 253, 0.3)',
+        };
       case 'elevated':
-        classes += ' bg-white/90 dark:bg-gray-800/90 border border-glass-white dark:border-glass-light shadow-lg';
-        break;
+        return {
+          ...baseStyle,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.15,
+          shadowRadius: 16,
+          elevation: 8,
+        };
       default:
-        classes += ' bg-glass-blue-light dark:bg-glass-dark border border-glass-blue dark:border-ice-700/40';
+        return {
+          ...baseStyle,
+          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          borderWidth: 1,
+          borderColor: 'rgba(56, 189, 248, 0.2)',
+        };
     }
-
-    if (disabled) {
-      classes += ' opacity-60';
-    }
-
-    return classes;
   };
 
   if (onPress) {
@@ -58,20 +85,20 @@ export const Card: React.FC<CardProps> = ({
     };
 
     return (
-      <StyledTouchableOpacity
-        className={`${getCardClasses()} ${className}`}
+      <TouchableOpacity
+        style={[getCardStyle(), { opacity: disabled ? 0.6 : 1 }]}
         onPress={handlePress}
         disabled={disabled}
         activeOpacity={0.8}
       >
         {children}
-      </StyledTouchableOpacity>
+      </TouchableOpacity>
     );
   }
 
   return (
-    <StyledView className={`${getCardClasses()} ${className}`}>
+    <View style={[getCardStyle(), { opacity: disabled ? 0.6 : 1 }]}>
       {children}
-    </StyledView>
+    </View>
   );
 };

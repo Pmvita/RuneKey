@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Text } from 'react-native';
-import { styled } from 'nativewind';
 import { logger } from '../../utils/logger';
-
-const StyledText = styled(Text);
 
 interface AnimatedNumberProps {
   value: number;
@@ -66,11 +63,11 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   };
 
   return (
-    <StyledText
+    <Text
       className={className}
       style={style}
     >
       {formatValue(displayValue)}
-    </StyledText>
+    </Text>
   );
 }; 

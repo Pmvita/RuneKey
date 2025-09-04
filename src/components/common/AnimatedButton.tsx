@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
-import { styled } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
-
-const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledView = styled(View);
-const StyledText = styled(Text);
 
 interface AnimatedButtonProps {
   title: string;
@@ -89,7 +84,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   };
 
   return (
-    <StyledTouchableOpacity
+    <TouchableOpacity
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
@@ -101,25 +96,25 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         transform: [{ scale }],
       }}
     >
-      <StyledView className="flex-row items-center justify-center">
+      <View className="flex-row items-center justify-center">
         {loading ? (
-          <StyledView 
+          <View 
             className="mr-2"
             style={{ transform: [{ rotate: `${rotation}deg` }] }}
           >
             <Ionicons name="refresh" size={16} color="white" />
-          </StyledView>
+          </View>
         ) : icon ? (
           <Ionicons name={icon as any} size={16} color="white" className="mr-2" />
         ) : null}
-        <StyledText className="text-white font-semibold">
+        <Text className="text-white font-semibold">
           {loading ? 'Loading...' : title}
-        </StyledText>
-      </StyledView>
+        </Text>
+      </View>
       
       {/* Ripple effect */}
       {ripple.active && (
-        <StyledView
+        <View
           className="absolute bg-white opacity-30 rounded-full"
           style={{
             left: ripple.x,
@@ -130,6 +125,6 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
           }}
         />
       )}
-    </StyledTouchableOpacity>
+    </TouchableOpacity>
   );
 }; 
