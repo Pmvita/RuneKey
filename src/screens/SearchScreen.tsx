@@ -15,7 +15,7 @@ import Animated, {
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
-import { LiquidGlass } from '../components';
+import { LiquidGlass, LoadingSpinner } from '../components';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -401,12 +401,17 @@ export const SearchScreen: React.FC = () => {
 
             {/* Trending Tokens List */}
             {isLoadingTrending ? (
-              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                <Ionicons name="refresh" size={24} color="#3b82f6" />
+              <View style={{ 
+                paddingVertical: 40, 
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <LoadingSpinner size={32} color="#3B82F6" />
                 <Text style={{
                   color: '#64748b',
-                  marginTop: 8,
+                  marginTop: 16,
                   fontSize: 14,
+                  fontWeight: '500',
                 }}>
                   Loading trending tokens...
                 </Text>
