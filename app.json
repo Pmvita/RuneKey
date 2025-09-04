@@ -37,11 +37,6 @@
         "android.permission.CAMERA"
       ]
     },
-    "extra": {
-      "eas": {
-        "projectId": "1b94cc14-eacf-4030-9168-e1527070761b"
-      }
-    },
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
@@ -55,11 +50,16 @@
       ]
     ],
     "owner": "pmvita",
+    "extra": {
+      "eas": {
+        "projectId": "4059bf7d-45bf-45b3-921e-ebac7e7d2a01"
+      }
+    },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/1b94cc14-eacf-4030-9168-e1527070761b"
+      "url": "https://u.expo.dev/4059bf7d-45bf-45b3-921e-ebac7e7d2a01"
     }
   }
 }
