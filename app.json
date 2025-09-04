@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.runekey.app",
-      "buildNumber": "1.0.0",
+      "buildNumber": "1",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow RuneKey to access camera to scan QR codes for wallet addresses.",
@@ -33,8 +33,6 @@
         "backgroundColor": "#3B82F6"
       },
       "permissions": [
-        "CAMERA",
-        "android.permission.CAMERA",
         "CAMERA",
         "android.permission.CAMERA"
       ]
@@ -56,12 +54,6 @@
         }
       ]
     ],
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/1b94cc14-eacf-4030-9168-e1527070761b"
-    },
     "owner": "pmvita"
   }
 }
