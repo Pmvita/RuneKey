@@ -16,7 +16,7 @@ import { priceService, CoinInfo } from '../services/api/priceService';
 import { dappService, DApp } from '../services/api/dappService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
-import { LiquidGlass, LoadingSpinner } from '../components';
+import { LiquidGlass, LoadingSpinner, UniversalBackground } from '../components';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -742,22 +742,8 @@ export const SearchScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      {/* Enhanced background gradient */}
-      <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#f8fafc',
-      }} />
-
-      {/* Subtle background pattern */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03 }}>
-        <View style={{ position: 'absolute', top: 50, right: 40, width: 150, height: 150, backgroundColor: '#3b82f6', borderRadius: 75 }} />
-        <View style={{ position: 'absolute', bottom: 100, left: 60, width: 100, height: 100, backgroundColor: '#10b981', borderRadius: 50 }} />
-      </View>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
 
       <ScrollView 
         style={{ flex: 1 }}
@@ -1144,6 +1130,7 @@ export const SearchScreen: React.FC = () => {
           </Animated.View>
         )}
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </UniversalBackground>
   );
 };

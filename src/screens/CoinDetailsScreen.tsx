@@ -46,7 +46,8 @@ export const CoinDetailsScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f9ff' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       {/* Icy blue background overlay */}
       <View 
         style={{
@@ -167,5 +168,6 @@ export const CoinDetailsScreen: React.FC = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </UniversalBackground>
   );
-}; 
+};

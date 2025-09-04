@@ -17,7 +17,8 @@ export const InitializingScreen: React.FC<InitializingScreenProps> = ({ onComple
   }, [onComplete]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       {/* Animated background elements */}
       <View 
         style={{
@@ -80,5 +81,6 @@ export const InitializingScreen: React.FC<InitializingScreenProps> = ({ onComple
         </View>
       </View>
     </SafeAreaView>
+    </UniversalBackground>
   );
 };

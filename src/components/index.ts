@@ -12,6 +12,7 @@ export { LoadingSpinner } from './common/LoadingSpinner';
 export { LoadingOverlay } from './common/LoadingOverlay';
 export { TabSelector } from './common/TabSelector';
 export { default as BubbleBackground } from './common/BubbleBackground';
+export { UniversalBackground } from './common/UniversalBackground';
 
 // New animated components
 export { AnimatedButton } from './common/AnimatedButton';

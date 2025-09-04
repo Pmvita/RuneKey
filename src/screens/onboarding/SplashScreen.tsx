@@ -31,7 +31,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   }, [isFirstLaunch, isConnected, onComplete]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       {/* Icy Blue Gradient Background */}
       <View 
         style={{
@@ -125,5 +126,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         </View>
       </View>
     </SafeAreaView>
+    </UniversalBackground>
   );
 };

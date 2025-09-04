@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
-import { LiquidGlass } from '../components';
+import { LiquidGlass, UniversalBackground } from '../components';
 
 type SendScreenRouteProp = RouteProp<RootStackParamList, 'Send'>;
 

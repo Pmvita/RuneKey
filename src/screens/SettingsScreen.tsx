@@ -14,7 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { LiquidGlass } from '../components';
+import { LiquidGlass, UniversalBackground } from '../components';
 import { useAppStore } from '../stores/app/useAppStore';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useWallet } from '../hooks/wallet/useWallet';
@@ -283,7 +283,8 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       {/* Enhanced background gradient */}
       <View style={{
         position: 'absolute',
@@ -739,5 +740,6 @@ export const SettingsScreen: React.FC = () => {
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
+    </UniversalBackground>
   );
 };

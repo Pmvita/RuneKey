@@ -26,7 +26,7 @@ import {
   SparklineChart,
   LoadingOverlay,
   TabSelector,
-  BubbleBackground,
+  UniversalBackground,
 } from '../components';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
@@ -588,28 +588,26 @@ export const HomeScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      {/* Loading Overlay */}
-      <LoadingOverlay 
-        visible={loadingData || isConnectingWallet || loadingMarketData}
-        message={
-          isConnectingWallet ? "Connecting Wallet..." : 
-          loadingMarketData ? "Loading Market Data..." : 
-          "Loading Data..."
-        }
-        spinnerSize={80}
-        spinnerColor="#3B82F6"
-      />
-      
-      {/* Particle Effects */}
-      <ParticleEffect 
-        type="confetti" 
-        active={showParticles} 
-        onComplete={() => setShowParticles(false)}
-      />
-      
-      {/* Animated Bubble Background */}
-      <BubbleBackground />
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Loading Overlay */}
+        <LoadingOverlay 
+          visible={loadingData || isConnectingWallet || loadingMarketData}
+          message={
+            isConnectingWallet ? "Connecting Wallet..." : 
+            loadingMarketData ? "Loading Market Data..." : 
+            "Loading Data..."
+          }
+          spinnerSize={80}
+          spinnerColor="#3B82F6"
+        />
+        
+        {/* Particle Effects */}
+        <ParticleEffect 
+          type="confetti" 
+          active={showParticles} 
+          onComplete={() => setShowParticles(false)}
+        />
 
       <ScrollView 
         style={{ flex: 1 }}
@@ -1080,6 +1078,7 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </UniversalBackground>
   );
 };

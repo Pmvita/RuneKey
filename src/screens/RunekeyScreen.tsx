@@ -14,7 +14,8 @@ export const RunekeyScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       {/* Background overlay */}
       <View 
         className="absolute inset-0"
@@ -157,5 +158,6 @@ export const RunekeyScreen: React.FC = () => {
         <View className="h-6" />
       </ScrollView>
     </SafeAreaView>
+    </UniversalBackground>
   );
-}; 
+};

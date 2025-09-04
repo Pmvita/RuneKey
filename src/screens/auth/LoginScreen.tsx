@@ -242,7 +242,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   }));
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       {/* Enhanced background gradient */}
       <View style={{
         position: 'absolute',
@@ -548,5 +549,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </UniversalBackground>
   );
 };

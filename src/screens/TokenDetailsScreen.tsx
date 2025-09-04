@@ -6,7 +6,7 @@ import { priceService, CoinInfo, ChartData } from '../services/api/priceService'
 import { priceCacheService } from '../services/priceCacheService';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
-import { SparklineChart } from '../components';
+import { SparklineChart, UniversalBackground } from '../components';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 
@@ -23,13 +23,15 @@ export const TokenDetailsScreen: React.FC = () => {
   // Validate token object
   if (!token || !token.symbol) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <Text style={{ fontSize: 18, color: '#64748b', textAlign: 'center' }}>
-            Invalid token data. Please try again.
-          </Text>
-        </View>
-      </SafeAreaView>
+      <UniversalBackground>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <Text style={{ fontSize: 18, color: '#64748b', textAlign: 'center' }}>
+              Invalid token data. Please try again.
+            </Text>
+          </View>
+        </SafeAreaView>
+      </UniversalBackground>
     );
   }
   
@@ -427,14 +429,15 @@ export const TokenDetailsScreen: React.FC = () => {
   const priceChangeValue = getPriceChangeValue();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      >
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        >
         {/* Header */}
         <View style={{
           flexDirection: 'row',
@@ -789,7 +792,8 @@ export const TokenDetailsScreen: React.FC = () => {
 
         {/* Bottom Spacing */}
         <View style={{ height: 32 }} />
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </UniversalBackground>
   );
 }; 

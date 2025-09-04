@@ -20,7 +20,7 @@ import { Token, SwapParams, SwapQuote } from '../types';
 import { logger } from '../utils/logger';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { COMMON_TOKENS } from '../constants';
-import { LiquidGlass, LoadingSpinner } from '../components';
+import { LiquidGlass, LoadingSpinner, UniversalBackground } from '../components';
 import { useNavigation } from '@react-navigation/native';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -400,7 +400,8 @@ export const SwapScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <UniversalBackground>
+      <SafeAreaView style={{ flex: 1 }}>
       <ScrollView 
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
@@ -912,5 +913,6 @@ export const SwapScreen: React.FC = () => {
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
+    </UniversalBackground>
   );
 };
