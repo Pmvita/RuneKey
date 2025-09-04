@@ -234,6 +234,15 @@ export const SwapScreen: React.FC = () => {
     }, [])
   );
 
+  // Handle settings toggle
+  useEffect(() => {
+    if (showSettings) {
+      settingsOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) });
+    } else {
+      settingsOpacity.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+    }
+  }, [showSettings]);
+
   // Filter tokens based on search query
   const filteredTokens = allTokens.filter(token =>
     token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -430,7 +439,9 @@ export const SwapScreen: React.FC = () => {
         <Animated.View style={[settingsStyle, { 
           marginHorizontal: 20, 
           marginBottom: 16,
-          display: showSettings ? 'flex' : 'none'
+          opacity: showSettings ? 1 : 0,
+          height: showSettings ? 'auto' : 0,
+          overflow: 'hidden',
         }]}>
           <View style={{
             backgroundColor: '#ffffff',
