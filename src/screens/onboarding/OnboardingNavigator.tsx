@@ -13,6 +13,7 @@ import { useWallet } from '../../hooks/wallet/useWallet';
 import { generateSeedPhrase, seedPhraseToEntropy } from '../../utils/seedPhrase';
 import { DEFAULT_NETWORK } from '../../constants';
 import { logger } from '../../utils/logger';
+import { useAppStore } from '../../stores/app/useAppStore';
 
 export type OnboardingStep = 
   | 'splash'
@@ -35,6 +36,7 @@ export const OnboardingNavigator: React.FC<OnboardingNavigatorProps> = ({ onComp
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('splash');
   const [seedPhrase, setSeedPhrase] = useState<string[]>([]);
   const { generateWallet, importWallet } = useWallet();
+  const { setFirstLaunch } = useAppStore();
 
   const handleSplashComplete = (destination: 'onboarding' | 'auth' | 'main') => {
     logger.logNavigation('SplashScreen', { destination });
@@ -57,6 +59,7 @@ export const OnboardingNavigator: React.FC<OnboardingNavigatorProps> = ({ onComp
   const handleLoginSuccess = () => {
     console.log('Login success callback triggered');
     logger.logNavigation('LoginScreen', { action: 'login_success' });
+    setFirstLaunch(false); // Mark that this is no longer the first launch
     onComplete();
   };
 

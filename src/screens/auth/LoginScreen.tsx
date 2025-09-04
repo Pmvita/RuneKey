@@ -191,10 +191,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const handleDeveloperLogin = () => {
     console.log('Developer mode button pressed');
-    logger.logButtonPress('Developer Mode Enter', 'connect developer wallet');
-    connectDeveloperWallet();
-    console.log('Developer wallet connected, calling onLoginSuccess');
-    onLoginSuccess();
+    try {
+      logger.logButtonPress('Developer Mode Enter', 'connect developer wallet');
+      connectDeveloperWallet();
+      console.log('Developer wallet connected, calling onLoginSuccess');
+      onLoginSuccess();
+    } catch (error) {
+      console.error('Error in developer login:', error);
+      Alert.alert('Error', 'Failed to connect developer wallet. Please try again.');
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -522,14 +527,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    opacity: 0.5,
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 20,
+                    opacity: 0.7,
+                    paddingHorizontal: 20,
+                    paddingVertical: 12,
+                    borderRadius: 24,
                     borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   }}
-                  activeOpacity={0.6}
+                  activeOpacity={0.5}
                 >
                   <Ionicons name="code-slash" size={16} color="#94a3b8" />
                   <Text style={{ color: '#cbd5e1', fontSize: 14, fontWeight: '500', marginLeft: 8 }}>
