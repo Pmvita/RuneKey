@@ -5,26 +5,13 @@
   },
   "build": {
     "development": {
-      "distribution": "internal",
-      "ios": {
-        "simulator": true,
-        "resourceClass": "m-medium"
-      }
+      "developmentClient": true,
+      "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "ios": {
-        "resourceClass": "m-medium",
-        "simulator": true
-      }
+      "distribution": "internal"
     },
-    "production": {
-      "autoIncrement": true,
-      "distribution": "store",
-      "ios": {
-        "resourceClass": "m-medium"
-      }
-    }
+    "production": {}
   },
   "submit": {
     "production": {}
