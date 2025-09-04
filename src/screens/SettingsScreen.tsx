@@ -137,7 +137,7 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
 };
 
 export const SettingsScreen: React.FC = () => {
-  const { theme, setTheme, developerMode, setDeveloperMode } = useAppStore();
+  const { theme, setTheme, developerMode, setDeveloperMode, logout } = useAppStore();
   const { isConnected, currentWallet, activeNetwork, disconnectWallet } = useWalletStore();
   const { switchNetwork } = useWallet();
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
@@ -241,6 +241,27 @@ export const SettingsScreen: React.FC = () => {
           onPress: () => {
             disconnectWallet();
             logger.logButtonPress('Disconnect Wallet', 'wallet disconnected');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout? This will take you back to the login screen.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            // Disconnect wallet first
+            disconnectWallet();
+            // Then logout from app
+            logout();
+            logger.logButtonPress('Logout', 'user logged out');
           },
         },
       ]
@@ -658,6 +679,62 @@ export const SettingsScreen: React.FC = () => {
                 thumbColor="#ffffff"
               />
             </View>
+          </View>
+        </Animated.View>
+
+        {/* Logout Section */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginTop: 32 }, preferencesAnimatedStyle]}>
+          <View style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 20,
+            overflow: 'hidden',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.8)',
+          }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 20,
+                paddingHorizontal: 20,
+              }}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+            >
+              <View style={{
+                width: 40,
+                height: 40,
+                backgroundColor: '#fef2f2',
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 16,
+              }}>
+                <Ionicons name="log-out" size={20} color="#dc2626" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: '#dc2626',
+                  marginBottom: 4,
+                }}>
+                  Logout
+                </Text>
+                <Text style={{
+                  fontSize: 14,
+                  color: '#ef4444',
+                }}>
+                  Sign out and return to login screen
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#dc2626" />
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </ScrollView>

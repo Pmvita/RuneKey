@@ -46,11 +46,15 @@ export const CoinDetailsScreen: React.FC = () => {
   ];
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-ice-200 dark:bg-ice-950">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f9ff' }}>
       {/* Icy blue background overlay */}
       <View 
-        className="absolute inset-0"
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           backgroundColor: 'rgba(56, 189, 248, 0.03)',
         }}
       />
@@ -162,6 +166,6 @@ export const CoinDetailsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 }; 

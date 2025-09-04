@@ -150,7 +150,7 @@ export const useWalletStore = create<WalletState & WalletActions>()(
         }
       },
 
-      connectDeveloperWallet: () => {
+      connectDeveloperWallet: (liveData?: any) => {
         console.log('Connecting developer wallet...');
         
         try {
@@ -165,15 +165,25 @@ export const useWalletStore = create<WalletState & WalletActions>()(
             publicKey: devWalletData.wallet.publicKey,
             network: devWalletData.wallet.network,
             balance: devWalletData.wallet.balance,
-            tokens: devWalletData.wallet.tokens.map((token: any) => ({
-              address: token.address,
-              symbol: token.symbol,
-              name: token.name,
-              decimals: token.decimals,
-              balance: token.balance.toString(),
-              logoURI: token.logoURI,
-              coinId: token.coinId,
-            }))
+            tokens: devWalletData.wallet.tokens.map((token: any) => {
+              // Use live data if available, otherwise use basic data
+              const liveToken = liveData?.tokens?.find((t: any) => t.symbol === token.symbol);
+              
+              return {
+                address: token.address,
+                symbol: token.symbol,
+                name: token.name,
+                decimals: token.decimals,
+                balance: token.balance.toString(),
+                logoURI: token.logoURI,
+                coinId: token.coinId,
+                // Add live price data if available
+                currentPrice: liveToken?.currentPrice || 0,
+                priceChange24h: liveToken?.priceChange24h || 0,
+                marketCap: liveToken?.marketCap || 0,
+                usdValue: liveToken?.usdValue || 0,
+              };
+            })
           };
 
           // Mock transactions from dev wallet data

@@ -3,10 +3,9 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image, Dimens
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { priceService, CoinInfo, ChartData } from '../services/api/priceService';
-import { useWallet } from '../hooks/wallet/useWallet';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
-import { LiquidGlass } from '../components';
+import { SparklineChart } from '../components';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 
@@ -18,19 +17,18 @@ export const TokenDetailsScreen: React.FC = () => {
   const route = useRoute<TokenDetailsRouteProp>();
   const navigation = useNavigation();
   const { token } = route.params;
-  const { currentWallet } = useWallet();
-  const { transactions } = useWalletStore();
+  const { currentWallet } = useWalletStore();
   
   // Validate token object
   if (!token || !token.symbol) {
     return (
-      <StyledSafeAreaView className="flex-1" style={{ backgroundColor: '#f8fafc' }}>
-        <View className="flex-1 items-center justify-center p-6">
-          <Text className="text-lg text-slate-600 text-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 18, color: '#64748b', textAlign: 'center' }}>
             Invalid token data. Please try again.
           </Text>
         </View>
-      </StyledSafeAreaView>
+      </SafeAreaView>
     );
   }
   
@@ -39,11 +37,241 @@ export const TokenDetailsScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d'>('30d');
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isLoadingChart, setIsLoadingChart] = useState(true);
+
+  // Get token logo URI from current wallet
+  const getTokenLogoURI = () => {
+    if (!currentWallet || !currentWallet.tokens) return null;
+    
+    const tokenData = currentWallet.tokens.find(t => 
+      t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
+    );
+    
+    return tokenData?.logoURI || null;
+  };
+
+  // Get token balance from current wallet
+  const getTokenBalance = () => {
+    if (!currentWallet || !currentWallet.tokens) {
+      console.log('🔍 TokenDetails: No currentWallet or tokens');
+      return '0.00';
+    }
+    
+    const tokenData = currentWallet.tokens.find(t => 
+      t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
+    );
+    
+    console.log('🔍 TokenDetails: Looking for token:', token.symbol?.toLowerCase());
+    console.log('🔍 TokenDetails: Available tokens:', currentWallet.tokens.map(t => t.symbol));
+    console.log('🔍 TokenDetails: Found tokenData:', tokenData);
+    
+    if (!tokenData || !tokenData.balance) {
+      console.log('🔍 TokenDetails: No tokenData or balance found');
+      return '0.00';
+    }
+    
+    // Handle balance as number (from dev-wallet.json format)
+    const balance = typeof tokenData.balance === 'number' 
+      ? tokenData.balance 
+      : parseFloat(tokenData.balance);
+    
+    if (isNaN(balance)) return '0.00';
+    
+    // For small balances, show more decimal places
+    if (balance < 1) {
+      return balance.toFixed(6);
+    }
+    
+    // For larger balances, show fewer decimal places
+    if (balance < 1000) {
+      return balance.toFixed(4);
+    }
+    
+    return balance.toFixed(2);
+  };
+
+  // Get token USD value
+  const getTokenUSDValue = () => {
+    if (!currentWallet || !currentWallet.tokens) return 0;
+    
+    const tokenData = currentWallet.tokens.find(t => 
+      t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
+    );
+    
+    if (!tokenData || !tokenData.balance) return 0;
+    
+    // Calculate USD value: balance × current price
+    const balance = typeof tokenData.balance === 'number' 
+      ? tokenData.balance 
+      : parseFloat(tokenData.balance);
+    
+    if (isNaN(balance)) return 0;
+    
+    const currentPrice = getCurrentPrice();
+    const usdValue = balance * currentPrice;
+    
+    console.log('🔍 TokenDetails: USD Value Calculation:', {
+      balance,
+      currentPrice,
+      usdValue,
+      symbol: token.symbol
+    });
+    
+    return usdValue;
+  };
+
+  // Get current price
+  const getCurrentPrice = () => {
+    // First try to get price from dev wallet live data
+    if (currentWallet && currentWallet.tokens) {
+      const tokenData = currentWallet.tokens.find(t => 
+        t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
+      );
+      
+      if (tokenData?.currentPrice && tokenData.currentPrice > 0) {
+        console.log('🔍 TokenDetails: Using dev wallet live price:', tokenData.currentPrice);
+        return tokenData.currentPrice;
+      }
+    }
+    
+    // Fallback to API data
+    let price = coinInfo?.current_price || token.current_price || 0;
+    
+    // If no price from API, use mock prices from priceService
+    if (!price) {
+      const symbolMap: Record<string, string> = {
+        'btc': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+        'eth': '0x0000000000000000000000000000000000000000',
+        'usdc': '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
+        'usdt': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+        'bnb': '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
+      };
+      
+      const address = symbolMap[token.symbol?.toLowerCase() || ''];
+      if (address) {
+        price = priceService.getTokenPrice(address);
+      }
+    }
+    
+    console.log('🔍 TokenDetails: Current Price:', {
+      coinInfoPrice: coinInfo?.current_price,
+      tokenPrice: token.current_price,
+      fallbackPrice: price,
+      symbol: token.symbol
+    });
+    
+    return price;
+  };
+
+  // Get price change percentage
+  const getPriceChangePercentage = () => {
+    // First try to get price change from dev wallet live data
+    if (currentWallet && currentWallet.tokens) {
+      const tokenData = currentWallet.tokens.find(t => 
+        t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
+      );
+      
+      if (tokenData?.priceChange24h !== undefined) {
+        console.log('🔍 TokenDetails: Using dev wallet price change:', tokenData.priceChange24h);
+        return tokenData.priceChange24h;
+      }
+    }
+    
+    // Fallback to API data
+    return coinInfo?.price_change_percentage_24h || token.price_change_percentage_24h || 0;
+  };
+
+  // Get price change value
+  const getPriceChangeValue = () => {
+    const currentPrice = getCurrentPrice();
+    const percentage = getPriceChangePercentage();
+    return (currentPrice * percentage) / 100;
+  };
+
+  // Format currency
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    }).format(value);
+  };
+
+  // Get chart data based on selected timeframe
+  const getChartData = () => {
+    if (!chartData || !chartData.prices || chartData.prices.length === 0) {
+      // Fallback to basic chart data if API fails
+      return generateFallbackChartData();
+    }
+
+    // Filter data based on selected timeframe
+    const now = Date.now();
+    let cutoffTime = now;
+    
+    switch (selectedTimeframe) {
+      case '1h':
+        cutoffTime = now - (60 * 60 * 1000); // 1 hour ago
+        break;
+      case '24h':
+        cutoffTime = now - (24 * 60 * 60 * 1000); // 24 hours ago
+        break;
+      case '7d':
+        cutoffTime = now - (7 * 24 * 60 * 60 * 1000); // 7 days ago
+        break;
+      case '30d':
+        cutoffTime = now - (30 * 24 * 60 * 60 * 1000); // 30 days ago
+        break;
+    }
+
+    // Filter prices within the timeframe and extract just the price values
+    const filteredPrices = chartData.prices
+      .filter(([timestamp, price]) => timestamp >= cutoffTime && price > 0)
+      .map(([timestamp, price]) => price);
+
+    return filteredPrices.length > 0 ? filteredPrices : chartData.prices.map(([timestamp, price]) => price);
+  };
+
+  // Generate fallback chart data when API is unavailable
+  const generateFallbackChartData = () => {
+    const dataPoints = 50;
+    const data = [];
+    const basePrice = getCurrentPrice() || 1000; // Use last live price or fallback
+    const volatility = 0.02; // 2% volatility
+    
+    // Generate realistic price movement based on the current price
+    let currentPrice = basePrice;
+    
+    for (let i = 0; i < dataPoints; i++) {
+      // Add some trend based on price change percentage
+      const trend = getPriceChangePercentage() > 0 ? 0.001 : -0.001;
+      const randomChange = (Math.random() - 0.5) * volatility + trend;
+      currentPrice = currentPrice * (1 + randomChange);
+      data.push(currentPrice);
+    }
+    
+    console.log('📊 TokenDetails: Generated fallback chart data with base price:', basePrice);
+    
+    return data;
+  };
+
+  // Get timeframe label for display
+  const getTimeframeLabel = () => {
+    switch (selectedTimeframe) {
+      case '1h': return '1H';
+      case '24h': return '24H';
+      case '7d': return '1W';
+      case '30d': return '1M';
+      default: return '24H';
+    }
+  };
 
   const loadTokenData = async () => {
     try {
       setIsLoading(true);
+      setIsLoadingChart(true);
       setError(null);
 
       // Map symbol to CoinGecko coin ID
@@ -62,19 +290,17 @@ export const TokenDetailsScreen: React.FC = () => {
 
       // Fetch comprehensive token data
       const [coinInfoResult, chartDataResult] = await Promise.all([
-        priceService.fetchCoinInfo(coinGeckoId),
+        priceService.fetchTopCoins(1).then(result => {
+          if (result.success && result.data.length > 0) {
+            return { success: true, data: result.data[0] };
+          }
+          return { success: false, data: null };
+        }),
         priceService.fetchChartData(coinGeckoId, 30)
       ]);
 
       if (coinInfoResult.success && coinInfoResult.data) {
-        // Validate that the coinInfo has required fields
-        const validatedCoinInfo = coinInfoResult.data;
-        if (validatedCoinInfo.id && validatedCoinInfo.symbol && validatedCoinInfo.name) {
-          setCoinInfo(validatedCoinInfo);
-        } else {
-          console.log('Invalid coin info received:', validatedCoinInfo);
-          setError('Invalid coin data received');
-        }
+        setCoinInfo(coinInfoResult.data);
       }
 
       if (chartDataResult.success && chartDataResult.data) {
@@ -85,6 +311,7 @@ export const TokenDetailsScreen: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Failed to load token data');
     } finally {
       setIsLoading(false);
+      setIsLoadingChart(false);
     }
   };
 
@@ -98,527 +325,392 @@ export const TokenDetailsScreen: React.FC = () => {
     loadTokenData();
   }, [token]);
 
-  const formatBalance = (balance: string, decimals: number) => {
-    const num = parseFloat(balance);
-    if (isNaN(num)) return '0';
-    if (num === 0) return '0';
-    if (num < 0.001) return '<0.001';
-    if (num < 1) return num.toFixed(6);
-    return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
-  };
-
-  const formatUSDValue = (value: number) => {
-    if (!value || isNaN(value)) return '$0.00';
-    return `$${value.toLocaleString(undefined, { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2 
-    })}`;
-  };
-
-  const formatMarketCap = (marketCap: number) => {
-    if (marketCap >= 1e12) return `$${(marketCap / 1e12).toFixed(2)}T`;
-    if (marketCap >= 1e9) return `$${(marketCap / 1e9).toFixed(2)}B`;
-    if (marketCap >= 1e6) return `$${(marketCap / 1e6).toFixed(2)}M`;
-    return `$${marketCap.toLocaleString()}`;
-  };
-
-  const formatVolume = (volume: number) => {
-    if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
-    if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
-    return `$${volume.toLocaleString()}`;
-  };
-
-  const getPriceChangeColor = (change: number) => {
-    return change >= 0 ? 'text-green-600' : 'text-red-600';
-  };
-
-  const getPriceChangeIcon = (change: number) => {
-    return change >= 0 ? 'trending-up' : 'trending-down';
-  };
-
-  const calculatePortfolioAllocation = () => {
-    if (!currentWallet || !coinInfo) return 0;
-    
-    const totalPortfolioValue = currentWallet.tokens.reduce((total, token) => {
-      return total + (token.usdValue || 0);
-    }, 0);
-    
-    const tokenValue = parseFloat(token.balance || '0') * (coinInfo.current_price || 0);
-    return totalPortfolioValue > 0 ? (tokenValue / totalPortfolioValue) * 100 : 0;
-  };
-
-  const renderChart = () => {
-    if (!chartData || !chartData.prices || !Array.isArray(chartData.prices) || chartData.prices.length === 0) {
-      return (
-        <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-          <Text className="text-slate-500">Chart data unavailable</Text>
-        </View>
-      );
+  // Reload chart data when timeframe changes
+  useEffect(() => {
+    if (chartData && selectedTimeframe) {
+      // Chart data is already loaded, just update the view
+      // The getChartData function will filter based on selectedTimeframe
     }
+  }, [selectedTimeframe, chartData]);
 
-    // Simple fallback chart implementation
-    const prices = chartData.prices
-      .map(([timestamp, price]) => price)
-      .filter(price => price !== null && price !== undefined && !isNaN(price) && isFinite(price) && price > 0);
+  const timeframes = [
+    { key: '1h', label: '1H' },
+    { key: '24h', label: '24H' },
+    { key: '7d', label: '1W' },
+    { key: '30d', label: '1M' },
+  ];
 
-    if (prices.length === 0) {
-      return (
-        <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-          <Text className="text-slate-500">No valid price data</Text>
+  const chartDataPoints = getChartData();
+  const isPositive = getPriceChangePercentage() >= 0;
+  const tokenBalance = getTokenBalance();
+  const tokenUSDValue = getTokenUSDValue();
+  const currentPrice = getCurrentPrice();
+  const priceChangeValue = getPriceChangeValue();
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+          backgroundColor: '#ffffff',
+          borderBottomWidth: 1,
+          borderBottomColor: '#e2e8f0',
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: '#f1f5f9',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12,
+              }}
+            >
+              <Ionicons name="arrow-back" size={20} color="#64748b" />
+            </TouchableOpacity>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              {getTokenLogoURI() ? (
+                <Image 
+                  source={{ uri: getTokenLogoURI() }} 
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    marginRight: 12,
+                  }}
+                  onError={() => {
+                    // Fallback to placeholder if image fails to load
+                    console.log('Failed to load logo for', token.symbol);
+                  }}
+                />
+              ) : (
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: '#f59e0b',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}>
+                  <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 16 }}>
+                    {token.symbol?.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: '#1e293b' }}>
+                  {token.name || token.symbol}
+                </Text>
+                <Text style={{ fontSize: 14, color: '#64748b' }}>
+                  {token.symbol?.toUpperCase()}
+                </Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity
+              onPress={() => setIsFavorite(!isFavorite)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12,
+              }}
+            >
+              <Ionicons 
+                name={isFavorite ? "star" : "star-outline"} 
+                size={20} 
+                color={isFavorite ? "#f59e0b" : "#64748b"} 
+              />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#3b82f6',
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 20,
+              }}
+            >
+              <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>
+                Exchange
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      );
-    }
 
-    const maxPrice = Math.max(...prices);
-    const minPrice = Math.min(...prices);
-    const priceRange = maxPrice - minPrice;
-
-    if (priceRange <= 0) {
-      return (
-        <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-          <Text className="text-slate-500">No price variation</Text>
+        {/* Price Section */}
+        <View style={{
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+          backgroundColor: '#ffffff',
+        }}>
+          <Text style={{
+            fontSize: 32,
+            fontWeight: 'bold',
+            color: '#1e293b',
+            marginBottom: 8,
+          }}>
+            {formatCurrency(currentPrice)}
+          </Text>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons 
+              name={isPositive ? "trending-up" : "trending-down"} 
+              size={16} 
+              color={isPositive ? "#22c55e" : "#ef4444"} 
+              style={{ marginRight: 4 }}
+            />
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: isPositive ? '#22c55e' : '#ef4444',
+            }}>
+              {isPositive ? '+' : ''}{formatCurrency(priceChangeValue)} ({getPriceChangePercentage().toFixed(2)}%)
+            </Text>
+          </View>
         </View>
-      );
-    }
 
-    return (
-      <View className="bg-white rounded-lg p-4 border border-gray-200">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-lg font-semibold text-slate-900">Price Chart</Text>
-          <View className="flex-row space-x-2">
-            {(['1d', '7d', '30d'] as const).map((timeframe) => (
+        {/* Chart Section */}
+        <View style={{
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+          backgroundColor: '#ffffff',
+          marginBottom: 8,
+        }}>
+          <View style={{
+            height: 200,
+            backgroundColor: '#f8fafc',
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            {isLoadingChart ? (
+              <View style={{ alignItems: 'center' }}>
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  borderWidth: 3,
+                  borderColor: '#3b82f6',
+                  borderTopColor: 'transparent',
+                  animation: 'spin 1s linear infinite',
+                }} />
+                <Text style={{
+                  marginTop: 12,
+                  fontSize: 14,
+                  color: '#64748b',
+                  fontWeight: '500',
+                }}>
+                  Loading chart data...
+                </Text>
+              </View>
+            ) : chartDataPoints.length > 0 ? (
+              <SparklineChart
+                data={chartDataPoints}
+                width={screenWidth - 72}
+                height={168}
+                color={isPositive ? '#22c55e' : '#ef4444'}
+                strokeWidth={2}
+              />
+            ) : (
+              <View style={{ alignItems: 'center' }}>
+                <Ionicons name="trending-up" size={48} color="#64748b" />
+                <Text style={{
+                  marginTop: 12,
+                  fontSize: 14,
+                  color: '#64748b',
+                  fontWeight: '500',
+                }}>
+                  Chart data unavailable
+                </Text>
+              </View>
+            )}
+          </View>
+          
+          {/* Timeframe Selector */}
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: '#f1f5f9',
+            borderRadius: 8,
+            padding: 4,
+          }}>
+            {timeframes.map((timeframe) => (
               <TouchableOpacity
-                key={timeframe}
-                onPress={() => setSelectedTimeframe(timeframe)}
-                className={`px-3 py-1 rounded ${
-                  selectedTimeframe === timeframe 
-                    ? 'bg-blue-600' 
-                    : 'bg-gray-200'
-                }`}
+                key={timeframe.key}
+                style={{
+                  flex: 1,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 6,
+                  backgroundColor: selectedTimeframe === timeframe.key ? '#3b82f6' : 'transparent',
+                  alignItems: 'center',
+                }}
+                onPress={() => setSelectedTimeframe(timeframe.key as any)}
               >
-                <Text className={`text-sm font-medium ${
-                  selectedTimeframe === timeframe 
-                    ? 'text-white' 
-                    : 'text-slate-600'
-                }`}>
-                  {timeframe.toUpperCase()}
+                <Text style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: selectedTimeframe === timeframe.key ? '#ffffff' : '#64748b',
+                }}>
+                  {timeframe.label}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
-        
-        {/* Simple Bar Chart */}
-        <View className="flex-1">
-          <View className="flex-row items-end justify-between h-32">
-            {prices.slice(-20).map((price, index) => {
-              const height = priceRange > 0 ? ((price - minPrice) / priceRange) * 100 : 50;
-              return (
-                <View
-                  key={index}
-                  className="bg-blue-500 rounded-sm"
-                  style={{
-                    width: (screenWidth - 80) / 20,
-                    height: Math.max(2, height),
-                    minHeight: 2,
-                  }}
-                />
-              );
-            })}
-          </View>
-          <View className="flex-row justify-between mt-2">
-            <Text className="text-xs text-slate-500">
-              ${minPrice.toFixed(2)}
-            </Text>
-            <Text className="text-xs text-slate-500">
-              ${maxPrice.toFixed(2)}
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
 
-  // Filter transactions for this specific token
-  const tokenTransactions = transactions.filter(tx => 
-    tx && tx.token && (
-      (tx.token.symbol && token.symbol && tx.token.symbol.toLowerCase() === token.symbol.toLowerCase()) ||
-      (tx.token.address && token.address && tx.token.address.toLowerCase() === token.address.toLowerCase())
-    )
-  ).slice(0, 5); // Show only last 5 transactions
-
-  const formatTransactionAmount = (amount: string, decimals: number) => {
-    const num = parseFloat(amount);
-    if (isNaN(num)) return '0';
-    if (num === 0) return '0';
-    if (num < 0.001) return '<0.001';
-    if (num < 1) return num.toFixed(6);
-    return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
-  };
-
-  const formatTransactionDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return 'Just now';
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else if (diffInHours < 168) { // 7 days
-      return `${Math.floor(diffInHours / 24)}d ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
-  };
-
-  const getTransactionIcon = (type: 'send' | 'receive' | 'swap' | string) => {
-    switch (type) {
-      case 'send':
-        return 'arrow-up';
-      case 'receive':
-        return 'arrow-down';
-      case 'swap':
-        return 'swap-horizontal';
-      default:
-        return 'arrow-forward';
-    }
-  };
-
-  const getTransactionColor = (type: 'send' | 'receive' | 'swap' | string) => {
-    switch (type) {
-      case 'send':
-        return 'text-red-600';
-      case 'receive':
-        return 'text-green-600';
-      case 'swap':
-        return 'text-blue-600';
-      default:
-        return 'text-slate-600';
-    }
-  };
-
-  const getTransactionBgColor = (type: 'send' | 'receive' | 'swap' | string) => {
-    switch (type) {
-      case 'send':
-        return 'bg-red-100';
-      case 'receive':
-        return 'bg-green-100';
-      case 'swap':
-        return 'bg-blue-100';
-      default:
-        return 'bg-gray-100';
-    }
-  };
-
-  return (
-    <StyledSafeAreaView className="flex-1" style={{ backgroundColor: '#f8fafc' }}>
-      {/* Background overlay */}
-      <View 
-        className="absolute inset-0"
-        style={{ backgroundColor: 'rgb(93,138,168)' }}
-      />
-      
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* Header */}
-        <View className="p-6">
-          <View className="flex-row items-center mb-4">
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              className="mr-4 p-2 bg-white rounded-full shadow-sm"
-            >
-              <Ionicons name="arrow-back" size={24} color="#64748b" />
-            </TouchableOpacity>
-            <View className="flex-row items-center flex-1">
-              {coinInfo?.image && typeof coinInfo.image === 'string' && coinInfo.image.trim() !== '' ? (
-                <Image 
-                  source={{ uri: coinInfo.image }} 
-                  style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
-                  onError={() => {
-                    // Fallback to placeholder if image fails to load
-                    console.log('Failed to load image for', token.symbol);
-                  }}
-                />
-              ) : (
-                <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
-                  <Text className="text-gray-600 font-bold text-sm">
-                    {token.symbol && token.symbol.length > 0 ? token.symbol.charAt(0).toUpperCase() : '?'}
-                  </Text>
-                </View>
-              )}
-              <View>
-                <Text className="text-2xl font-bold text-slate-900">
-                  {token.symbol || 'Unknown'}
-                </Text>
-                <Text className="text-slate-600">
-                  {token.name || 'Unknown Token'}
+        {/* Holdings Section */}
+        <View style={{
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+          backgroundColor: '#ffffff',
+          marginBottom: 8,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}>
+            {getTokenLogoURI() ? (
+              <Image 
+                source={{ uri: getTokenLogoURI() }} 
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  marginRight: 16,
+                }}
+                onError={() => {
+                  // Fallback to placeholder if image fails to load
+                  console.log('Failed to load logo for', token.symbol);
+                }}
+              />
+            ) : (
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: '#f59e0b',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 16,
+              }}>
+                <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 18 }}>
+                  {token.symbol?.charAt(0).toUpperCase()}
                 </Text>
               </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Price and Change Section */}
-        {coinInfo && (
-          <View className="px-6 mb-6">
-            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-3xl font-bold text-slate-900">
-                  ${coinInfo.current_price && !isNaN(coinInfo.current_price) ? coinInfo.current_price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 6,
-                  }) : '0.00'}
-                </Text>
-                <View className={`flex-row items-center px-3 py-2 rounded-lg ${
-                  (coinInfo.price_change_percentage_24h || 0) >= 0 
-                    ? 'bg-green-100' 
-                    : 'bg-red-100'
-                }`}>
-                  <Ionicons 
-                    name={getPriceChangeIcon(coinInfo.price_change_percentage_24h || 0)} 
-                    size={16} 
-                    color={(coinInfo.price_change_percentage_24h || 0) >= 0 ? '#16a34a' : '#dc2626'} 
-                  />
-                  <Text className={`ml-1 font-semibold ${
-                    getPriceChangeColor(coinInfo.price_change_percentage_24h || 0)
-                  }`}>
-                    {(coinInfo.price_change_percentage_24h || 0) >= 0 ? '+' : ''}
-                    {(coinInfo.price_change_percentage_24h || 0).toFixed(2)}%
-                  </Text>
-                </View>
-              </View>
-
-              {/* Portfolio Allocation */}
-              {currentWallet && (
-                <View className="mb-4 p-4 bg-white rounded-lg">
-                  <Text className="text-sm text-slate-600 mb-2">Portfolio Allocation</Text>
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-lg font-semibold text-slate-900">
-                      {formatBalance(token.balance || '0', token.decimals)} {token.symbol || 'Unknown'}
-                    </Text>
-                    <Text className="text-sm text-slate-500">
-                      {calculatePortfolioAllocation().toFixed(2)}% of portfolio
-                    </Text>
-                  </View>
-                  {token.usdValue && (
-                    <Text className="text-sm text-slate-600 mt-1">
-                      {formatUSDValue(token.usdValue)}
-                    </Text>
-                  )}
-                </View>
-              )}
-
-              {/* Live Balance Display */}
-              <View className="p-4 bg-white rounded-lg">
-                <Text className="text-sm text-slate-600 mb-2">Your Balance</Text>
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-lg font-semibold text-slate-900">
-                    {formatBalance(token.balance || '0', token.decimals)} {token.symbol || 'Unknown'}
-                  </Text>
-                  <Text className="text-sm text-slate-500">
-                    ≈ {formatUSDValue(token.usdValue || 0)}
-                  </Text>
-                </View>
-                {coinInfo?.current_price && !isNaN(coinInfo.current_price) && (
-                  <Text className="text-xs text-slate-500">
-                    @ ${coinInfo.current_price.toFixed(6)} per {token.symbol || 'Unknown'}
-                  </Text>
-                )}
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Chart Section */}
-        <View className="px-6 mb-6">
-          {renderChart()}
-        </View>
-
-        {/* Market Statistics */}
-        {coinInfo && (
-          <View className="px-6 mb-6">
-            <Text className="text-lg font-semibold text-slate-900 mb-4">
-              Market Statistics
-            </Text>
+            )}
             
-            <View className="space-y-3">
-              {coinInfo.market_cap && !isNaN(coinInfo.market_cap) && coinInfo.market_cap > 0 && (
-                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-slate-600">Market Cap</Text>
-                    <Text className="text-slate-900 font-semibold">
-                      {formatMarketCap(coinInfo.market_cap)}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {coinInfo.total_volume && !isNaN(coinInfo.total_volume) && coinInfo.total_volume > 0 && (
-                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-slate-600">24h Volume</Text>
-                    <Text className="text-slate-900 font-semibold">
-                      {formatUSDValue(coinInfo.total_volume)}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {coinInfo.circulating_supply && !isNaN(coinInfo.circulating_supply) && coinInfo.circulating_supply > 0 && (
-                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-slate-600">Circulating Supply</Text>
-                    <Text className="text-slate-900 font-semibold">
-                      {coinInfo.circulating_supply.toLocaleString()}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {coinInfo.market_cap_rank && !isNaN(coinInfo.market_cap_rank) && coinInfo.market_cap_rank > 0 && (
-                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-slate-600">Market Rank</Text>
-                    <Text className="text-slate-900 font-semibold">
-                      #{coinInfo.market_cap_rank}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {coinInfo.ath && !isNaN(coinInfo.ath) && coinInfo.ath > 0 && (
-                <View className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-slate-600">All Time High</Text>
-                    <Text className="text-slate-900 font-semibold">
-                      ${coinInfo.ath.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 6,
-                      })}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Actions */}
-        <View className="px-6 mb-6">
-          <Text className="text-lg font-semibold text-slate-900 mb-4">
-            Actions
-          </Text>
-          
-          <View className="space-y-3">
-            <TouchableOpacity
-              onPress={() => {
-                logger.logButtonPress('Send Token', 'navigate to send screen');
-                // Navigate to send screen
-              }}
-              className="w-full py-4 bg-blue-600 rounded-xl items-center"
-            >
-              <Text className="text-white font-semibold text-base">
-                Send
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#1e293b' }}>
+                {token.name || token.symbol}
               </Text>
-            </TouchableOpacity>
+              <Text style={{ fontSize: 14, color: '#64748b' }}>
+                {tokenBalance} {token.symbol?.toUpperCase()}
+              </Text>
+            </View>
             
-            <TouchableOpacity
-              onPress={() => {
-                logger.logButtonPress('Swap Token', 'navigate to swap screen');
-                navigation.goBack();
-              }}
-              className="w-full py-4 bg-white border border-blue-600 rounded-xl items-center"
-            >
-              <Text className="text-blue-600 font-semibold text-base">
-                Swap
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#1e293b' }}>
+                {formatCurrency(tokenUSDValue)}
               </Text>
-            </TouchableOpacity>
+              <Text style={{ fontSize: 14, color: '#64748b' }}>
+                {getPriceChangePercentage().toFixed(2)}%
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Recent Transactions */}
-        <View className="px-6 mb-6">
-          <Text className="text-lg font-semibold text-slate-900 mb-4">
-            Recent Transactions
+        {/* Transactions Section */}
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            backgroundColor: '#ffffff',
+            marginBottom: 8,
+          }}
+          onPress={() => {
+            logger.logButtonPress('Transactions', 'view transaction history');
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+            Transactions
           </Text>
+          <Ionicons name="chevron-forward" size={20} color="#64748b" />
+        </TouchableOpacity>
+
+        {/* Action Buttons */}
+        <View style={{
+          flexDirection: 'row',
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+          backgroundColor: '#ffffff',
+          gap: 12,
+        }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: '#3b82f6',
+              paddingVertical: 16,
+              borderRadius: 12,
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              logger.logButtonPress('Buy', `buy ${token.symbol}`);
+            }}
+          >
+            <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16 }}>
+              BUY
+            </Text>
+          </TouchableOpacity>
           
-          {tokenTransactions.length > 0 ? (
-            <View className="space-y-3">
-              {tokenTransactions.map((tx, index) => (
-                <View 
-                  key={`${tx.hash}-${index}`}
-                  className="p-4 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" 
-                  style={{ backgroundColor: '#e8eff3' }}
-                >
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
-                      <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${getTransactionBgColor(tx.type || 'unknown')}`}>
-                        <Ionicons 
-                          name={getTransactionIcon(tx.type || 'unknown') as any} 
-                          size={16} 
-                          color={(tx.type || 'unknown') === 'send' ? '#dc2626' : (tx.type || 'unknown') === 'receive' ? '#16a34a' : '#2563eb'} 
-                        />
-                      </View>
-                      <View>
-                                              <Text className="text-slate-900 font-medium capitalize">
-                        {tx.type || 'Unknown'}
-                      </Text>
-                      <Text className="text-xs text-slate-500">
-                        {tx.timestamp ? formatTransactionDate(tx.timestamp) : 'Unknown time'}
-                      </Text>
-                      </View>
-                    </View>
-                    <View className="items-end">
-                                              <Text className={`font-semibold ${getTransactionColor(tx.type || 'unknown')}`}>
-                          {(tx.type || 'unknown') === 'send' ? '-' : '+'}
-                          {formatTransactionAmount(tx.amount || '0', tx.token?.decimals || 18)} {tx.token?.symbol || 'Unknown'}
-                        </Text>
-                      <View className={`px-2 py-1 rounded-full ${
-                        (tx.status || 'unknown') === 'confirmed' ? 'bg-green-100' : 
-                        (tx.status || 'unknown') === 'pending' ? 'bg-yellow-100' : 'bg-red-100'
-                      }`}>
-                        <Text className={`text-xs font-medium ${
-                          (tx.status || 'unknown') === 'confirmed' ? 'text-green-700' : 
-                          (tx.status || 'unknown') === 'pending' ? 'text-yellow-700' : 'text-red-700'
-                        }`}>
-                          {tx.status || 'Unknown'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-xs text-slate-500">
-                      {(tx.type || 'unknown') === 'send' ? 'To:' : 'From:'} {(tx.type || 'unknown') === 'send' ? (tx.to || 'Unknown') : (tx.from || 'Unknown')}
-                    </Text>
-                    <Text className="text-xs text-slate-500">
-                      {tx.hash && tx.hash.length > 14 ? `${tx.hash.substring(0, 8)}...${tx.hash.substring(tx.hash.length - 6)}` : 'Unknown hash'}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl items-center" style={{ backgroundColor: '#e8eff3' }}>
-              <Ionicons name="receipt-outline" size={48} color="#64748b" />
-              <Text className="text-slate-500 mt-2 text-center">
-                No transactions found for {token.symbol || 'Unknown'}
-              </Text>
-              <Text className="text-slate-400 text-sm text-center mt-1">
-                Your transaction history for this token will appear here
-              </Text>
-            </View>
-          )}
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: '#ef4444',
+              paddingVertical: 16,
+              borderRadius: 12,
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              logger.logButtonPress('Sell', `sell ${token.symbol}`);
+            }}
+          >
+            <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16 }}>
+              SELL
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Additional Space */}
-        <View className="h-6" />
+        {/* Bottom Spacing */}
+        <View style={{ height: 32 }} />
       </ScrollView>
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 }; 

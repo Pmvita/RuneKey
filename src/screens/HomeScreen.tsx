@@ -42,7 +42,7 @@ type AssetFilter = 'all' | 'gainer' | 'loser';
 
 export const HomeScreen: React.FC = () => {
   const { isConnected, currentWallet, activeNetwork } = useWalletStore();
-  const { connectDevWallet } = useDevWallet();
+  const { connectDevWallet, refreshDevWallet } = useDevWallet();
   const { 
     fetchPrices, 
     startPriceRefresh, 
@@ -60,6 +60,7 @@ export const HomeScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<AssetFilter>('all');
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [animationsTriggered, setAnimationsTriggered] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const navigation = useNavigation<any>();
 
   // Animation values
@@ -328,6 +329,19 @@ export const HomeScreen: React.FC = () => {
     }
   }, [currentWallet, connectDevWallet, isConnectingWallet, loadingData]);
 
+  // Refresh dev wallet data when screen focuses to get latest live prices
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('👁️ SCREEN: HomeScreen screen focused');
+      if (currentWallet?.id === 'developer-wallet') {
+        console.log('🔄 Refreshing dev wallet data for latest live prices...');
+        refreshDevWallet();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, currentWallet, refreshDevWallet]);
+
   // Start live price updates when wallet data is loaded
   useEffect(() => {
     if (currentWallet && currentWallet.tokens) {
@@ -343,15 +357,24 @@ export const HomeScreen: React.FC = () => {
         // Set up interval for price updates (respecting API rate limits)
         const interval = setInterval(() => {
           fetchPrices(tokenAddresses);
-        }, 60000); // Update every 60 seconds to respect API limits
+        }, 120000); // Update every 2 minutes to respect API limits
+        
+        // Also refresh dev wallet data periodically for consistency
+        const devWalletInterval = setInterval(() => {
+          if (currentWallet?.id === 'developer-wallet') {
+            console.log('🔄 Periodic dev wallet refresh for consistency...');
+            refreshDevWallet();
+          }
+        }, 180000); // Update every 3 minutes
         
         return () => {
           clearInterval(interval);
+          clearInterval(devWalletInterval);
           stopPriceRefresh();
         };
       }
     }
-  }, [currentWallet, fetchPrices, stopPriceRefresh]);
+  }, [currentWallet, fetchPrices, stopPriceRefresh, refreshDevWallet]);
 
   // Animated styles
   const headerAnimatedStyle = useAnimatedStyle(() => ({
@@ -472,7 +495,8 @@ export const HomeScreen: React.FC = () => {
     if (!currentWallet || !currentWallet.tokens) return 0;
     
     return currentWallet.tokens.reduce((total: number, token: any) => {
-      const livePrice = getTokenPrice(token.address) || 0;
+      // Use live price from dev wallet if available, otherwise fallback to mock prices
+      const livePrice = token.currentPrice || getTokenPrice(token.address) || 0;
       const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
       const tokenValue = tokenBalance * livePrice;
       
@@ -483,7 +507,27 @@ export const HomeScreen: React.FC = () => {
   };
 
   const onRefresh = async () => {
-    await loadMarketData();
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshTime;
+    
+    // Prevent refreshing more than once every 60 seconds
+    if (timeSinceLastRefresh < 60000) {
+      console.log('⚠️ Refresh blocked - too soon since last refresh');
+      Alert.alert(
+        'Refresh Rate Limited',
+        'Please wait 60 seconds between refreshes to avoid API rate limits.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
+    setLastRefreshTime(now);
+    
+    // Refresh both market data and dev wallet data for consistency
+    await Promise.all([
+      loadMarketData(),
+      currentWallet?.id === 'developer-wallet' ? refreshDevWallet() : Promise.resolve()
+    ]);
   };
 
   const handleFilterPress = (filter: AssetFilter) => {
@@ -499,13 +543,13 @@ export const HomeScreen: React.FC = () => {
       switch (selectedFilter) {
         case 'gainer':
           return currentWallet.tokens.filter((token: any) => {
-            const priceChange = getTokenPriceChange(token.address);
-            return priceChange !== null && priceChange > 0;
+            const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
+            return priceChange > 0;
           });
         case 'loser':
           return currentWallet.tokens.filter((token: any) => {
-            const priceChange = getTokenPriceChange(token.address);
-            return priceChange !== null && priceChange < 0;
+            const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
+            return priceChange < 0;
           });
         default:
           return currentWallet.tokens;
@@ -516,8 +560,8 @@ export const HomeScreen: React.FC = () => {
     if (selectedFilter === 'gainer') {
       console.log('🔍 Gainer filter - Total tokens:', currentWallet.tokens.length);
       console.log('🔍 Gainer filter - Positive changes:', currentWallet.tokens.filter((token: any) => {
-        const priceChange = getTokenPriceChange(token.address);
-        return priceChange !== null && priceChange > 0;
+        const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
+        return priceChange > 0;
       }).length);
       console.log('🔍 Gainer filter - Filtered result:', filtered.length);
     }
@@ -910,6 +954,30 @@ export const HomeScreen: React.FC = () => {
               </Text>
             </View>
           )}
+
+          {/* Fallback Data Indicator */}
+          {!isLoadingPrices && !loadingMarketData && marketData.length === 0 && (
+            <View style={{
+              backgroundColor: '#fef3c7',
+              borderWidth: 1,
+              borderColor: '#fbbf24',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Ionicons name="warning" size={16} color="#d97706" style={{ marginRight: 8 }} />
+              <Text style={{
+                fontSize: 14,
+                color: '#92400e',
+                fontWeight: '500',
+              }}>
+                Using fallback data - API rate limited
+              </Text>
+            </View>
+          )}
           
           {/* Market Data List */}
           <View style={{
@@ -925,8 +993,9 @@ export const HomeScreen: React.FC = () => {
             borderColor: 'rgba(255, 255, 255, 0.8)',
           }}>
             {getFilteredMarketData().map((token: any, index: number) => {
-              const currentPrice = getTokenPrice(token.address) || 0;
-              const priceChange = getTokenPriceChange(token.address) || 0;
+              // Use live prices from dev wallet if available, otherwise fallback to mock prices
+              const currentPrice = token.currentPrice || getTokenPrice(token.address) || 0;
+              const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
               const isPositive = priceChange >= 0;
               const sparklineData = generateSparklineData(priceChange);
               

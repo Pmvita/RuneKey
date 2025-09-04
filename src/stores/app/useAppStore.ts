@@ -22,6 +22,9 @@ interface AppActions {
   // Developer mode
   setDeveloperMode: (enabled: boolean) => void;
   
+  // Authentication
+  logout: () => void;
+  
   // Utilities
   reset: () => void;
 }
@@ -76,6 +79,11 @@ export const useAppStore = create<AppState & AppActions>()(
 
       setDeveloperMode: (enabled) => {
         set({ developerMode: enabled });
+      },
+
+      logout: () => {
+        // Reset app state to show login/onboarding
+        set({ isFirstLaunch: true });
       },
 
       reset: () => {

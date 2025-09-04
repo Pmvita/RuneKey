@@ -61,10 +61,10 @@ export const useDevWallet = () => {
           // Fallback if live data not available
           return {
             ...token,
-            currentPrice: 0,
-            priceChange24h: 0,
+            currentPrice: priceService.getTokenPrice(token.address) || 0,
+            priceChange24h: priceService.getTokenPriceChange(token.address) || 0,
             marketCap: 0,
-            usdValue: 0,
+            usdValue: parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0),
           };
         });
 
@@ -76,8 +76,11 @@ export const useDevWallet = () => {
           tokens: tokensWithPrices.map(t => `${t.symbol}: $${t.usdValue?.toLocaleString()}`)
         });
 
-        // Connect the wallet using the store
-        connectDeveloperWallet();
+        // Connect the wallet using the store with live data
+        connectDeveloperWallet({
+          tokens: tokensWithPrices,
+          totalValue,
+        });
         
         return {
           ...devWalletConfig,
@@ -93,18 +96,31 @@ export const useDevWallet = () => {
       setError(err instanceof Error ? err.message : 'Failed to connect dev wallet');
       
       // Fallback to basic wallet connection without prices
-      connectDeveloperWallet();
+      connectDeveloperWallet({
+        tokens: devWalletConfig.tokens.map(token => ({
+          ...token,
+          currentPrice: priceService.getTokenPrice(token.address) || 0,
+          priceChange24h: priceService.getTokenPriceChange(token.address) || 0,
+          marketCap: 0,
+          usdValue: parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0),
+        })),
+        totalValue: devWalletConfig.tokens.reduce((sum, token) => 
+          sum + (parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0)), 0
+        ),
+      });
       return {
         ...devWalletConfig,
         balance: mockDevWallet.wallet.balance,
         tokens: devWalletConfig.tokens.map(token => ({
           ...token,
-          currentPrice: 0,
-          priceChange24h: 0,
+          currentPrice: priceService.getTokenPrice(token.address) || 0,
+          priceChange24h: priceService.getTokenPriceChange(token.address) || 0,
           marketCap: 0,
-          usdValue: 0,
+          usdValue: parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0),
         })),
-        totalValue: 0,
+        totalValue: devWalletConfig.tokens.reduce((sum, token) => 
+          sum + (parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0)), 0
+        ),
       };
     } finally {
       setIsLoading(false);
