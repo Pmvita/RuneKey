@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming,
+  withSequence,
+  withDelay,
+  Easing
+} from 'react-native-reanimated';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
 import { LiquidGlass } from '../components';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface SearchResult {
   id: string;
@@ -37,12 +48,61 @@ export const SearchScreen: React.FC = () => {
   const [showTrendingModal, setShowTrendingModal] = useState(false);
   const navigation = useNavigation<any>();
 
+  // Animation values
+  const headerOpacity = useSharedValue(0);
+  const headerTranslateY = useSharedValue(-30);
+  const searchBarScale = useSharedValue(0.9);
+  const searchBarOpacity = useSharedValue(0);
+  const categoriesTranslateY = useSharedValue(30);
+  const categoriesOpacity = useSharedValue(0);
+  const trendingTranslateY = useSharedValue(30);
+  const trendingOpacity = useSharedValue(0);
+
   // Log screen focus
   useFocusEffect(
     React.useCallback(() => {
       logger.logScreenFocus('SearchScreen');
+      // Start animations
+      headerOpacity.value = withTiming(1, { duration: 600 });
+      headerTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+      
+      setTimeout(() => {
+        searchBarOpacity.value = withTiming(1, { duration: 600 });
+        searchBarScale.value = withSpring(1, { damping: 12, stiffness: 120 });
+      }, 200);
+
+      setTimeout(() => {
+        categoriesOpacity.value = withTiming(1, { duration: 600 });
+        categoriesTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+      }, 400);
+
+      setTimeout(() => {
+        trendingOpacity.value = withTiming(1, { duration: 600 });
+        trendingTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+      }, 600);
     }, [])
   );
+
+  // Animated styles
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
+    transform: [{ translateY: headerTranslateY.value }],
+  }));
+
+  const searchBarAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: searchBarOpacity.value,
+    transform: [{ scale: searchBarScale.value }],
+  }));
+
+  const categoriesAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: categoriesOpacity.value,
+    transform: [{ translateY: categoriesTranslateY.value }],
+  }));
+
+  const trendingAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: trendingOpacity.value,
+    transform: [{ translateY: trendingTranslateY.value }],
+  }));
 
   // Fetch trending tokens from API
   const fetchTrendingTokens = async () => {
@@ -99,478 +159,352 @@ export const SearchScreen: React.FC = () => {
   // Fetch trending tokens on mount
   useEffect(() => {
     fetchTrendingTokens();
-    startAutoRefresh(); // Start auto-refresh on mount
-    return () => stopAutoRefresh(); // Clean up on unmount
+    startAutoRefresh();
+    
+    return () => {
+      stopAutoRefresh();
+    };
   }, []);
 
-  // Mock search results
-  const searchResults: SearchResult[] = [
-    {
-      id: '1',
-      type: 'token',
-      name: 'Ethereum',
-      symbol: 'ETH',
-      description: 'Decentralized platform for smart contracts',
-      icon: 'star',
-      trending: true
-    },
-    {
-      id: '2',
-      type: 'token',
-      name: 'Bitcoin',
-      symbol: 'BTC',
-      description: 'The first cryptocurrency',
-      icon: 'cash',
-      trending: true
-    },
-    {
-      id: '3',
-      type: 'token',
-      name: 'USD Coin',
-      symbol: 'USDC',
-      description: 'Stablecoin pegged to the US Dollar',
-      icon: 'cash-outline'
-    },
-    {
-      id: '4',
-      type: 'dapp',
-      name: 'Uniswap',
-      description: 'Decentralized exchange protocol',
-      icon: 'swap-horizontal-outline',
-      trending: true
-    },
-    {
-      id: '5',
-      type: 'collection',
-      name: 'Bored Ape Yacht Club',
-      description: 'Popular NFT collection',
-      icon: 'image-outline'
-    }
-  ];
+  const handleRefresh = () => {
+    fetchTrendingTokens();
+  };
 
-  const categories = [
-    { id: 'all', label: 'All', icon: 'grid-outline' },
-    { id: 'tokens', label: 'Tokens', icon: 'cash' },
-    { id: 'dapps', label: 'DApps', icon: 'apps-outline' },
-    { id: 'collections', label: 'NFTs', icon: 'image-outline' }
-  ];
+  const handleCategoryPress = (category: 'all' | 'tokens' | 'dapps' | 'collections') => {
+    setSelectedCategory(category);
+    logger.logButtonPress('Search Category', `switch to ${category}`);
+  };
 
-  const filteredResults = searchQuery 
-    ? searchResults.filter(item => 
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
+  const handleTokenPress = (token: TrendingToken) => {
+    logger.logButtonPress('Trending Token', `view ${token.symbol} details`);
+    navigation.navigate('TokenDetails', { 
+      token: {
+        id: token.id,
+        symbol: token.symbol,
+        name: token.name,
+        image: token.image,
+        current_price: token.current_price,
+        price_change_percentage_24h: token.price_change_percentage_24h,
+      }
+    });
+  };
 
-  const categoryResults = selectedCategory === 'all' 
-    ? searchResults 
-    : searchResults.filter(item => 
-        selectedCategory === 'tokens' ? item.type === 'token' :
-        selectedCategory === 'dapps' ? item.type === 'dapp' :
-        selectedCategory === 'collections' ? item.type === 'collection' :
-        true
-      );
+  const formatPriceChange = (change: number) => {
+    const isPositive = change >= 0;
+    const color = isPositive ? '#22c55e' : '#ef4444';
+    const icon = isPositive ? 'trending-up' : 'trending-down';
+    return { color, icon, value: Math.abs(change).toFixed(2) };
+  };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'token':
-        return 'text-blue-600';
-      case 'dapp':
-        return 'text-purple-600';
-      case 'collection':
-        return 'text-pink-600';
-      default:
-        return 'text-slate-600';
-    }
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      {/* Background overlay */}
-      <View 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: 'rgb(93,138,168)',
-        }}
-      />
-      
-      <ScrollView className="flex-1">
-        {/* Header */}
-        <View className="p-6">
-          <Text className="text-2xl font-bold text-slate-900 mb-4 text-center">
+      {/* Enhanced background gradient */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#f8fafc',
+      }} />
+
+      {/* Subtle background pattern */}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03 }}>
+        <View style={{ position: 'absolute', top: 50, right: 40, width: 150, height: 150, backgroundColor: '#3b82f6', borderRadius: 75 }} />
+        <View style={{ position: 'absolute', bottom: 100, left: 60, width: 100, height: 100, backgroundColor: '#10b981', borderRadius: 50 }} />
+      </View>
+
+      <ScrollView 
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        {/* Enhanced Header */}
+        <Animated.View style={[{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }, headerAnimatedStyle]}>
+          <Text style={{
+            fontSize: 32,
+            fontWeight: 'bold',
+            color: '#1e293b',
+            textAlign: 'center',
+            marginBottom: 8,
+            letterSpacing: -0.5,
+          }}>
             Search
           </Text>
-          
-          {/* Search Input */}
-          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
-              <Ionicons name="search-outline" size={20} color="#6B7280" />
-              <TextInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Search tokens, DApps, NFTs..."
-                placeholderTextColor="#6B7280"
-                style={{ flex: 1, marginLeft: 12, color: '#374151' }}
-              />
-            </View>
+        </Animated.View>
+
+        {/* Enhanced Search Bar */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, searchBarAnimatedStyle]}>
+          <View style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.8)',
+          }}>
+            <Ionicons name="search" size={20} color="#64748b" style={{ marginRight: 12 }} />
+            <TextInput
+              style={{
+                flex: 1,
+                fontSize: 16,
+                color: '#1e293b',
+                backgroundColor: 'transparent',
+              }}
+              placeholder="Search tokens, DApps, NFTs..."
+              placeholderTextColor="#94a3b8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Categories */}
-        <View className="px-6 mb-6">
-          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row" style={{ gap: 12 }}>
-                {categories.map((category) => (
-                  <TouchableOpacity
-                    key={category.id}
-                    className={`flex-row items-center px-4 py-2 rounded-full border ${
-                      selectedCategory === category.id
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'bg-white border-gray-200'
-                    }`}
-                    onPress={() => setSelectedCategory(category.id as any)}
-                  >
-                    <Ionicons 
-                      name={category.icon as any} 
-                      size={16} 
-                      color={selectedCategory === category.id ? '#ffffff' : '#6b7280'} 
-                    />
-                    <Text 
-                      className={`ml-2 font-medium ${
-                        selectedCategory === category.id
-                          ? 'text-white'
-                          : 'text-slate-600'
-                      }`}
-                    >
-                      {category.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* Search Results or Default Content */}
-        <View className="px-6">
-          {searchQuery ? (
-            // Search Results
-            <>
-              <Text className="text-lg font-semibold text-slate-900 mb-4">
-                Results for "{searchQuery}"
-              </Text>
-              {filteredResults.length > 0 ? (
-                <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  {filteredResults.map((item, index) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      className={`p-4 flex-row items-center ${
-                        index !== filteredResults.length - 1 ? 'border-b border-gray-200' : ''
-                      }`}
-                    >
-                      <View className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
-                        <Ionicons name={item.icon as any} size={24} color="#6b7280" />
-                      </View>
-                      <View className="flex-1">
-                        <View className="flex-row items-center">
-                          <Text className="text-base font-semibold text-slate-900">
-                            {item.name}
-                          </Text>
-                          {item.symbol && (
-                            <Text className="text-sm text-slate-600 ml-2">
-                              {item.symbol}
-                            </Text>
-                          )}
-                          {item.trending && (
-                            <View className="ml-2 px-2 py-1 bg-orange-100 rounded">
-                              <Text className="text-xs text-orange-600 font-medium">
-                                Trending
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text className="text-sm text-slate-600 mt-1">
-                          {item.description}
-                        </Text>
-                        <Text className={`text-xs font-medium mt-1 ${getTypeColor(item.type)}`}>
-                          {item.type.toUpperCase()}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ) : (
-                <View className="p-8 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  <View className="items-center">
-                    <Ionicons name="search-outline" size={48} color="#6b7280" />
-                    <Text className="text-lg font-semibold text-slate-700 mt-4 mb-2">
-                      No Results Found
-                    </Text>
-                    <Text className="text-slate-600 text-center">
-                      Try adjusting your search terms or browse categories below.
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </>
-          ) : (
-            // Default Content
-            <>
-              {/* Trending Tokens */}
-              <View className="mb-6">
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-lg font-semibold text-slate-900">
-                    Trending Tokens
-                  </Text>
-                  <TouchableOpacity
-                    onPress={fetchTrendingTokens}
-                    className="flex-row items-center px-3 py-1 bg-blue-100 rounded-full"
-                  >
-                    <Ionicons name="refresh" size={16} color="#3b82f6" />
-                    <Text className="text-xs text-blue-600 ml-1 font-medium">
-                      Refresh
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                {lastUpdated && (
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-xs text-slate-500">
-                      Last updated: {lastUpdated.toLocaleTimeString()}
-                    </Text>
-                    <View className="flex-row items-center ml-2">
-                      <View className="w-2 h-2 bg-green-500 rounded-full mr-1" />
-                      <Text className="text-xs text-green-600 font-medium">
-                        Live
-                      </Text>
-                    </View>
-                  </View>
-                )}
-                <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  {isLoadingTrending ? (
-                    <View className="items-center py-8">
-                      <Text className="text-slate-600">Loading trending tokens...</Text>
-                    </View>
-                  ) : apiTrendingTokens.length > 0 ? (
-                    <>
-                      {apiTrendingTokens.slice(0, 3).map((token, index) => (
-                        <TouchableOpacity
-                          key={`${token.symbol}-${index}`}
-                          className={`p-4 flex-row items-center ${
-                            index !== Math.min(apiTrendingTokens.length, 3) - 1 ? 'border-b border-gray-200' : ''
-                          }`}
-                        >
-                          {token.image ? (
-                            <Image 
-                              source={{ uri: token.image }} 
-                              style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
-                              onError={() => {
-                                console.log('Failed to load image for trending token:', token.symbol);
-                              }}
-                            />
-                          ) : (
-                            <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
-                              <Ionicons name="cash" size={20} color="#6b7280" />
-                            </View>
-                          )}
-                          <View className="flex-1">
-                            <View className="flex-row items-center justify-between">
-                              <Text className="text-base font-semibold text-slate-900">
-                                {token.name}
-                              </Text>
-                              <Text className="text-sm text-slate-600">
-                                {token.symbol?.toUpperCase()}
-                              </Text>
-                            </View>
-                            {token.price_change_percentage_24h && (
-                              <View className="flex-row items-center mt-1">
-                                <Text className={`text-xs font-medium ${
-                                  token.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                  {`${token.price_change_percentage_24h > 0 ? '+' : ''}${token.price_change_percentage_24h.toFixed(2)}%`}
-                                </Text>
-                                <Ionicons 
-                                  name={token.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
-                                  size={12} 
-                                  color={token.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
-                                  style={{ marginLeft: 4 }}
-                                />
-                              </View>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                      
-                      {apiTrendingTokens.length > 3 && (
-                        <TouchableOpacity
-                          onPress={() => setShowTrendingModal(true)}
-                          className="p-4 border-t border-gray-200"
-                        >
-                          <View className="flex-row items-center justify-center">
-                            <Text className="text-blue-600 font-medium mr-2">
-                              See More ({apiTrendingTokens.length - 3} more)
-                            </Text>
-                            <Ionicons name="chevron-forward" size={16} color="#2563eb" />
-                          </View>
-                        </TouchableOpacity>
-                      )}
-                    </>
-                  ) : (
-                    <View className="items-center py-8">
-                      <Text className="text-slate-600">No trending tokens available</Text>
-                      <Text className="text-xs text-slate-500 mt-2 text-center">
-                        API rate limit reached. Try again later.
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              {/* Browse Categories */}
-              <View>
-                <Text className="text-lg font-semibold text-slate-900 mb-4">
-                  Browse by Category
-                </Text>
-                <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-                  {categoryResults.slice(0, 5).map((item, index) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      className={`p-4 flex-row items-center ${
-                        index !== Math.min(categoryResults.length, 5) - 1 ? 'border-b border-gray-200' : ''
-                      }`}
-                    >
-                      <View className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
-                        <Ionicons name={item.icon as any} size={24} color="#6b7280" />
-                      </View>
-                      <View className="flex-1">
-                        <View className="flex-row items-center">
-                          <Text className="text-base font-semibold text-slate-900">
-                            {item.name}
-                          </Text>
-                          {item.symbol && (
-                            <Text className="text-sm text-slate-600 ml-2">
-                              {item.symbol}
-                            </Text>
-                          )}
-                        </View>
-                        <Text className="text-sm text-slate-600 mt-1">
-                          {item.description}
-                        </Text>
-                        <Text className={`text-xs font-medium mt-1 ${getTypeColor(item.type)}`}>
-                          {item.type.toUpperCase()}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </>
-          )}
-        </View>
-
-        {/* Additional Space */}
-        <View className="h-6" />
-      </ScrollView>
-
-      {/* Trending Tokens Modal */}
-      <Modal
-        visible={showTrendingModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-          {/* Modal Header */}
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <Text className="text-lg font-semibold text-slate-900">
-              All Trending Tokens
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowTrendingModal(false)}
-              className="p-2"
-            >
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Token List */}
-          <FlatList
-            data={apiTrendingTokens}
-            keyExtractor={(item) => `${item.symbol}-${item.id}`}
-            renderItem={({ item }: { item: TrendingToken }) => (
+        {/* Enhanced Category Filters */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, categoriesAnimatedStyle]}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingRight: 24 }}
+          >
+            {[
+              { key: 'all', label: 'All', icon: 'grid-outline' },
+              { key: 'tokens', label: 'Tokens', icon: 'ellipse-outline' },
+              { key: 'dapps', label: 'DApps', icon: 'apps-outline' },
+              { key: 'collections', label: 'Collections', icon: 'images-outline' },
+              { key: 'nfts', label: 'NFTs', icon: 'diamond-outline' },
+            ].map((category) => (
               <TouchableOpacity
-                className="flex-row items-center p-4 border-b border-gray-100"
-                onPress={() => {
-                  setShowTrendingModal(false);
-                  navigation.navigate('TokenDetails', { 
-                    token: {
-                      id: item.id,
-                      symbol: item.symbol,
-                      name: item.name,
-                      image: item.image,
-                      current_price: item.current_price,
-                      price_change_percentage_24h: item.price_change_percentage_24h,
-                      balance: '0', // No balance for trending tokens
-                      decimals: 18,
-                      usdValue: 0
-                    }
-                  });
+                key={category.key}
+                style={{
+                  backgroundColor: selectedCategory === category.key ? '#3b82f6' : 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 24,
+                  paddingHorizontal: 20,
+                  paddingVertical: 12,
+                  marginRight: 12,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                  borderWidth: 1,
+                  borderColor: selectedCategory === category.key ? '#3b82f6' : 'rgba(255, 255, 255, 0.8)',
                 }}
+                onPress={() => handleCategoryPress(category.key as any)}
+                activeOpacity={0.7}
               >
-                {item.image ? (
-                  <Image 
-                    source={{ uri: item.image }} 
-                    style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12 }}
-                    onError={() => {
-                      console.log('Failed to load image for trending token:', item.symbol);
-                    }}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons 
+                    name={category.icon as any} 
+                    size={16} 
+                    color={selectedCategory === category.key ? '#ffffff' : '#64748b'} 
+                    style={{ marginRight: 8 }}
                   />
-                ) : (
-                  <View className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
-                )}
-                <View className="flex-1">
-                  <Text className="font-medium text-slate-900">{item.symbol?.toUpperCase()}</Text>
-                  <Text className="text-sm text-slate-500">{item.name}</Text>
-                  {item.current_price && (
-                    <Text className="text-xs text-slate-400">
-                      ${item.current_price.toFixed(2)}
-                    </Text>
-                  )}
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: selectedCategory === category.key ? '#ffffff' : '#374151',
+                  }}>
+                    {category.label}
+                  </Text>
                 </View>
-                {item.price_change_percentage_24h && (
-                  <View className="items-end">
-                    <Text className={`text-sm font-medium ${
-                      item.price_change_percentage_24h > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {`${item.price_change_percentage_24h > 0 ? '+' : ''}${item.price_change_percentage_24h.toFixed(2)}%`}
-                    </Text>
-                    <Ionicons 
-                      name={item.price_change_percentage_24h > 0 ? 'trending-up' : 'trending-down'} 
-                      size={12} 
-                      color={item.price_change_percentage_24h > 0 ? '#16a34a' : '#dc2626'} 
-                      style={{ marginTop: 2 }}
-                    />
-                  </View>
-                )}
               </TouchableOpacity>
-            )}
-            style={{ flex: 1 }}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <View className="p-8 items-center">
-                {isLoadingTrending ? (
-                  <Text className="text-slate-500 text-center">
-                    Loading trending tokens...
-                  </Text>
-                ) : (
-                  <Text className="text-slate-500 text-center">
-                    No trending tokens available
-                  </Text>
-                )}
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Enhanced Trending Tokens Section */}
+        <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
+          <View style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 20,
+            padding: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.8)',
+          }}>
+            {/* Section Header */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <Text style={{
+                fontSize: 20,
+                fontWeight: 'bold',
+                color: '#1e293b',
+              }}>
+                Trending Tokens
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#3b82f6',
+                  borderRadius: 20,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+                onPress={handleRefresh}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                <Text style={{
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: '#ffffff',
+                }}>
+                  Refresh
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Last Updated Info */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{
+                fontSize: 12,
+                color: '#64748b',
+                marginRight: 8,
+              }}>
+                Last updated: {lastUpdated ? formatTime(lastUpdated) : 'Never'}
+              </Text>
+              <View style={{
+                width: 6,
+                height: 6,
+                backgroundColor: '#22c55e',
+                borderRadius: 3,
+                marginRight: 6,
+              }} />
+              <Text style={{
+                fontSize: 12,
+                color: '#22c55e',
+                fontWeight: '600',
+              }}>
+                Live
+              </Text>
+            </View>
+
+            {/* Trending Tokens List */}
+            {isLoadingTrending ? (
+              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                <Ionicons name="refresh" size={24} color="#3b82f6" />
+                <Text style={{
+                  color: '#64748b',
+                  marginTop: 8,
+                  fontSize: 14,
+                }}>
+                  Loading trending tokens...
+                </Text>
               </View>
-            }
-          />
-        </SafeAreaView>
-      </Modal>
+            ) : apiTrendingTokens.length > 0 ? (
+              <View>
+                {apiTrendingTokens.slice(0, 5).map((token, index) => {
+                  const priceChange = formatPriceChange(token.price_change_percentage_24h);
+                  return (
+                    <TouchableOpacity
+                      key={token.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: 16,
+                        borderBottomWidth: index < apiTrendingTokens.length - 1 ? 1 : 0,
+                        borderBottomColor: 'rgba(148, 163, 184, 0.2)',
+                      }}
+                      onPress={() => handleTokenPress(token)}
+                      activeOpacity={0.7}
+                    >
+                      {/* Token Icon */}
+                      <View style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: '#f1f5f9',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 16,
+                      }}>
+                        {token.image ? (
+                          <Image 
+                            source={{ uri: token.image }} 
+                            style={{ width: 32, height: 32, borderRadius: 16 }}
+                          />
+                        ) : (
+                          <Ionicons name="ellipse" size={24} color="#94a3b8" />
+                        )}
+                      </View>
+
+                      {/* Token Info */}
+                      <View style={{ flex: 1 }}>
+                        <Text style={{
+                          fontSize: 16,
+                          fontWeight: '600',
+                          color: '#1e293b',
+                          marginBottom: 4,
+                        }}>
+                          {token.name}
+                        </Text>
+                      </View>
+
+                      {/* Price Change */}
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: 4,
+                        }}>
+                          <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
+                          <Text style={{
+                            fontSize: 12,
+                            fontWeight: '600',
+                            color: priceChange.color,
+                            marginLeft: 4,
+                          }}>
+                            {priceChange.value}%
+                          </Text>
+                        </View>
+                        <Text style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#64748b',
+                        }}>
+                          {token.symbol}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                <Ionicons name="trending-down" size={48} color="#94a3b8" />
+                <Text style={{
+                  color: '#64748b',
+                  textAlign: 'center',
+                  marginTop: 16,
+                  fontSize: 16,
+                }}>
+                  No trending tokens available
+                </Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

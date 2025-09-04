@@ -7,6 +7,7 @@ export { Card } from './common/Card';
 export { AnimatedNumber } from './common/AnimatedNumber';
 export { AnimatedPriceChange } from './common/AnimatedPriceChange';
 export { SkeletonLoader, TokenSkeleton, PortfolioSkeleton } from './common/SkeletonLoader';
+export { SparklineChart } from './common/SparklineChart';
 
 // New animated components
 export { AnimatedButton } from './common/AnimatedButton';

@@ -41,6 +41,11 @@ export interface ChartData {
   total_volumes: [number, number][];
 }
 
+export interface SparklineData {
+  prices: number[];
+  price_change_percentage_24h: number;
+}
+
 class PriceService {
   private baseURL = API_ENDPOINTS.COINGECKO;
   private requestQueue: Array<() => Promise<any>> = [];
@@ -102,118 +107,82 @@ class PriceService {
               ids: formattedAddresses,
               vs_currencies: 'usd',
               include_24hr_change: true,
-              include_last_updated_at: true,
+              include_24hr_vol: true,
+              include_market_cap: true,
             },
-            timeout: 10000,
           }
         );
 
-        // Transform response to match our PriceData interface
-        const transformedData: PriceData = {};
-        
-        Object.entries(response.data).forEach(([coinId, priceInfo]: [string, any]) => {
-          const originalAddress = this.getOriginalAddress(coinId, tokenAddresses);
-          if (originalAddress) {
-            transformedData[originalAddress] = {
-              usd: priceInfo.usd || 0,
-              usd_24h_change: priceInfo.usd_24h_change || 0,
-              last_updated_at: priceInfo.last_updated_at || Date.now(),
-            };
-          }
+        const priceData: PriceData = {};
+        Object.keys(response.data).forEach(coinId => {
+          const coinData = response.data[coinId];
+          priceData[coinId] = {
+            usd: coinData.usd,
+            usd_24h_change: coinData.usd_24h_change,
+            usd_24h_vol: coinData.usd_24h_vol,
+            usd_market_cap: coinData.usd_market_cap,
+          };
         });
 
-        return {
-          data: transformedData,
-          success: true,
-        };
+        return { data: priceData, success: true };
       });
-    } catch (error) {
-      console.error('Failed to fetch token prices:', error);
-      return {
-        data: {},
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+    } catch (error: any) {
+      console.error('Error fetching token prices:', error);
+      return { data: {}, success: false, error: error.message };
     }
   }
 
   /**
-   * Fetch detailed coin information
+   * Fetch trending tokens from CoinGecko
    */
-  async fetchCoinInfo(coinId: string): Promise<ApiResponse<CoinInfo>> {
+  async fetchTrendingTokens(): Promise<ApiResponse<any[]>> {
     try {
       return await this.makeRateLimitedRequest(async () => {
-        const response = await axios.get(
-          `${this.baseURL}/coins/${coinId}`,
-          {
-            params: {
-              localization: false,
-              tickers: false,
-              market_data: true,
-              community_data: false,
-              developer_data: false,
-              sparkline: false,
-            },
-            timeout: 10000,
-          }
-        );
-
-        return {
-          data: response.data,
-          success: true,
-        };
+        const response = await axios.get(`${this.baseURL}/search/trending`);
+        return { data: response.data.coins, success: true };
       });
-    } catch (error) {
-      console.error('Failed to fetch coin info:', error);
-      return {
-        data: {} as CoinInfo,
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+    } catch (error: any) {
+      console.error('Error fetching trending tokens:', error);
+      return { data: [], success: false, error: error.message };
     }
   }
 
   /**
-   * Fetch chart data for a coin
+   * Fetch sparkline chart data for a token
    */
-  async fetchChartData(
-    coinId: string, 
-    days: number = 30, 
-    currency: string = 'usd'
-  ): Promise<ApiResponse<ChartData>> {
+  async fetchSparklineData(coinId: string, days: number = 7): Promise<ApiResponse<SparklineData>> {
     try {
       return await this.makeRateLimitedRequest(async () => {
         const response = await axios.get(
           `${this.baseURL}/coins/${coinId}/market_chart`,
           {
             params: {
-              vs_currency: currency,
+              vs_currency: 'usd',
               days: days,
-              interval: days <= 1 ? 'hourly' : 'daily',
             },
-            timeout: 15000,
           }
         );
 
+        const prices = response.data.prices.map((price: [number, number]) => price[1]);
+        
         return {
-          data: response.data,
+          data: {
+            prices: prices,
+            price_change_percentage_24h: 0, // Will be updated separately
+          },
           success: true,
         };
       });
-    } catch (error) {
-      console.error('Failed to fetch chart data:', error);
-      return {
-        data: { prices: [], market_caps: [], total_volumes: [] },
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+    } catch (error: any) {
+      console.error('Error fetching sparkline data:', error);
+      return { data: { prices: [], price_change_percentage_24h: 0 }, success: false, error: error.message };
     }
   }
 
   /**
-   * Fetch top coins by market cap
+   * Fetch market data for top coins (for the assets list)
    */
-  async fetchTopCoins(limit: number = 100): Promise<ApiResponse<CoinInfo[]>> {
+  async fetchMarketData(limit: number = 50): Promise<ApiResponse<CoinInfo[]>> {
     try {
       return await this.makeRateLimitedRequest(async () => {
         const response = await axios.get(
@@ -224,171 +193,57 @@ class PriceService {
               order: 'market_cap_desc',
               per_page: limit,
               page: 1,
-              sparkline: false,
-              price_change_percentage: '24h,7d,30d',
+              sparkline: true,
+              price_change_percentage: '24h',
             },
-            timeout: 10000,
           }
         );
 
-        return {
-          data: response.data,
-          success: true,
-        };
+        return { data: response.data, success: true };
       });
-    } catch (error) {
-      console.error('Failed to fetch top coins:', error);
-      return {
-        data: [],
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+    } catch (error: any) {
+      console.error('Error fetching market data:', error);
+      return { data: [], success: false, error: error.message };
     }
   }
 
   /**
-   * Search for coins
+   * Convert Ethereum address to CoinGecko format
    */
-  async searchCoins(query: string): Promise<ApiResponse<any[]>> {
-    try {
-      return await this.makeRateLimitedRequest(async () => {
-        const response = await axios.get(
-          `${this.baseURL}/search`,
-          {
-            params: {
-              query: query,
-            },
-            timeout: 10000,
-          }
-        );
-
-        return {
-          data: response.data.coins || [],
-          success: true,
-        };
-      });
-    } catch (error) {
-      console.error('Failed to search coins:', error);
-      return {
-        data: [],
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
-
-  /**
-   * Fetch single token price
-   */
-  async fetchTokenPrice(tokenAddress: string): Promise<ApiResponse<number>> {
-    try {
-      const result = await this.fetchTokenPrices([tokenAddress]);
-      
-      if (!result.success) {
-        return {
-          data: 0,
-          success: false,
-          error: result.error,
-        };
-      }
-
-      const price = result.data[tokenAddress]?.usd || 0;
-      
-      return {
-        data: price,
-        success: true,
-      };
-    } catch (error) {
-      return {
-        data: 0,
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
-
-  /**
-   * Format token address for CoinGecko API
-   */
-  private formatAddressForCoingecko(address: string): string {
-    // Handle native tokens
-    const nativeTokenMap: Record<string, string> = {
-      '0x0000000000000000000000000000000000000000': 'bitcoin',
-      '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': 'ethereum',
-      'So11111111111111111111111111111111111111112': 'solana',
-      // Add more native token mappings as needed
+  private formatAddressForCoingecko(address: string): string | null {
+    // Map common token addresses to CoinGecko IDs
+    const addressMap: { [key: string]: string } = {
+      '0x0000000000000000000000000000000000000000': 'ethereum',
+      '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 'wrapped-bitcoin',
+      '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91': 'usd-coin',
+      '0xdAC17F958D2ee523a2206206994597C13D831ec7': 'tether',
+      '0xB8c77482e45F1F44dE1745F52C74426C631bDD52': 'binancecoin',
     };
 
-    if (nativeTokenMap[address]) {
-      return nativeTokenMap[address];
-    }
-
-    // For ERC-20 tokens, use the contract address
-    if (address.startsWith('0x')) {
-      return `ethereum:${address}`;
-    }
-
-    // For Solana tokens, use the mint address
-    return `solana:${address}`;
+    const lowerAddress = address.toLowerCase();
+    return addressMap[lowerAddress] || null;
   }
 
   /**
-   * Get original address from CoinGecko coin ID
+   * Get token price by address
    */
-  private getOriginalAddress(coinId: string, originalAddresses: string[]): string | null {
-    // Handle direct matches
-    if (originalAddresses.includes(coinId)) {
-      return coinId;
-    }
-
-    // Handle native tokens
-    const nativeTokenMap: Record<string, string> = {
-      'bitcoin': '0x0000000000000000000000000000000000000000',
-      'ethereum': '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-      'solana': 'So11111111111111111111111111111111111111112',
-    };
-
-    if (nativeTokenMap[coinId]) {
-      return nativeTokenMap[coinId];
-    }
-
-    // Handle prefixed addresses
-    if (coinId.startsWith('ethereum:')) {
-      const address = coinId.replace('ethereum:', '');
-      return originalAddresses.find(addr => addr.toLowerCase() === address.toLowerCase()) || null;
-    }
-
-    if (coinId.startsWith('solana:')) {
-      const address = coinId.replace('solana:', '');
-      return originalAddresses.find(addr => addr === address) || null;
-    }
-
-    return null;
+  getTokenPrice(address: string): number {
+    const coinId = this.formatAddressForCoingecko(address);
+    if (!coinId) return 0;
+    
+    // This would need to be implemented with cached data
+    return 0;
   }
 
   /**
-   * Get trending tokens
+   * Get token price change by address
    */
-  async fetchTrendingTokens(): Promise<ApiResponse<any[]>> {
-    try {
-      return await this.makeRateLimitedRequest(async () => {
-        const response = await axios.get(`${this.baseURL}/search/trending`, {
-          timeout: 10000,
-        });
-
-        return {
-          data: response.data.coins || [],
-          success: true,
-        };
-      });
-    } catch (error) {
-      console.error('Failed to fetch trending tokens:', error);
-      return {
-        data: [],
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
+  getTokenPriceChange(address: string): number {
+    const coinId = this.formatAddressForCoingecko(address);
+    if (!coinId) return 0;
+    
+    // This would need to be implemented with cached data
+    return 0;
   }
 }
 
