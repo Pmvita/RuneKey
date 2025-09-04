@@ -54,6 +54,12 @@
         }
       ]
     ],
-    "owner": "pmvita"
+    "owner": "pmvita",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1b94cc14-eacf-4030-9168-e1527070761b"
+    }
   }
 }
