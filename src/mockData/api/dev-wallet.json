@@ -30,7 +30,7 @@
         "name": "USD Coin",
         "decimals": 6,
         "balance": 5000000.00,
-        "logoURI": "https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png"
+        "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fnigeriabitcoincommunity.com%2Fwp-content%2Fuploads%2F2019%2F08%2Fusd-coin-usdc-logo.png&f=1&nofb=1&ipt=efc283d6d6a4077e99bd18a1d106575e22c05d0352ffcf26c75486bcf4fda545"
       },
       {"coinId": "tether",
         "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
@@ -45,8 +45,8 @@
         "symbol": "BNB",
         "name": "BNB",
         "decimals": 18,
-        "balance": 1000,
-        "logoURI": "https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png"
+        "balance": 3000,
+        "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngset.com%2Fimages%2Fbinance-coin-logo-svg-binance-coin-bnb-gold-cross-symbol-electronic-chip-transparent-png-2923825.png&f=1&nofb=1&ipt=196c3bc324f322d03603d6d3e9f8d1bf89f3a4784a7a984248e3f46c2a02806f"
       }
     ],
 

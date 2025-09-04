@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, FlatList, TouchableOpacity, Alert, ScrollView, TextInput, Image } from 'react-native';
+import { View, Text, Modal, FlatList, TouchableOpacity, Alert, ScrollView, TextInput, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useWallet } from '../hooks/wallet/useWallet';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming,
+  Easing,
+  withSequence
+} from 'react-native-reanimated';
+import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useSwap } from '../hooks/swap/useSwap';
 import { usePrices } from '../hooks/token/usePrices';
 import { walletService } from '../services/blockchain/walletService';
@@ -12,7 +20,10 @@ import { Token, SwapParams, SwapQuote } from '../types';
 import { logger } from '../utils/logger';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { COMMON_TOKENS } from '../constants';
-import { LiquidGlass } from '../components';
+import { LiquidGlass, LoadingSpinner } from '../components';
+import { useNavigation } from '@react-navigation/native';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export const SwapScreen: React.FC = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -25,10 +36,15 @@ export const SwapScreen: React.FC = () => {
   const [allTokens, setAllTokens] = useState<Token[]>([]);
   const [isLoadingTokens, setIsLoadingTokens] = useState(false);
   const [cryptoCoins, setCryptoCoins] = useState<CoinInfo[]>([]);
+  const [exchangeRate, setExchangeRate] = useState<string>('');
+  const [rateTimer, setRateTimer] = useState(60);
+  const [showSettings, setShowSettings] = useState(false);
 
-  const { currentWallet, activeNetwork, isConnected } = useWallet();
+  const { currentWallet, activeNetwork, isConnected } = useWalletStore();
   const { connectDevWallet } = useDevWallet();
   const { calculateUSDValue } = usePrices();
+  const navigation = useNavigation<any>();
+  
   const {
     isLoading,
     currentQuote,
@@ -39,6 +55,31 @@ export const SwapScreen: React.FC = () => {
     getPriceImpactLevel,
     clearError,
   } = useSwap();
+
+  // Animation values
+  const swapButtonScale = useSharedValue(1);
+  const inputCardOpacity = useSharedValue(0);
+  const outputCardOpacity = useSharedValue(0);
+  const settingsOpacity = useSharedValue(0);
+
+  // Animated styles
+  const swapButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: swapButtonScale.value }],
+  }));
+
+  const inputCardStyle = useAnimatedStyle(() => ({
+    opacity: inputCardOpacity.value,
+    transform: [{ translateY: withSpring(inputCardOpacity.value * 20) }],
+  }));
+
+  const outputCardStyle = useAnimatedStyle(() => ({
+    opacity: outputCardOpacity.value,
+    transform: [{ translateY: withSpring(outputCardOpacity.value * 20) }],
+  }));
+
+  const settingsStyle = useAnimatedStyle(() => ({
+    opacity: settingsOpacity.value,
+  }));
 
   // Define getAvailableTokens function before it's used
   const getAvailableTokens = (): Token[] => {
@@ -99,15 +140,73 @@ export const SwapScreen: React.FC = () => {
           
           // Combine with wallet tokens and common tokens
           const walletTokens = getAvailableTokens();
-          const commonTokens = (COMMON_TOKENS as any)[activeNetwork] || [];
+          const commonTokens = COMMON_TOKENS[activeNetwork as keyof typeof COMMON_TOKENS] || [];
+          
+          // Fallback tokens for development
+          const fallbackTokens: Token[] = [
+            {
+              address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+              symbol: 'BTC',
+              name: 'Bitcoin',
+              decimals: 8,
+              balance: '0',
+              logoURI: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
+              currentPrice: 51200,
+              priceChange24h: 2.4,
+              marketCap: 1000000000000,
+            },
+            {
+              address: '0x0000000000000000000000000000000000000000',
+              symbol: 'ETH',
+              name: 'Ethereum',
+              decimals: 18,
+              balance: '0',
+              logoURI: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
+              currentPrice: 3200,
+              priceChange24h: 1.8,
+              marketCap: 400000000000,
+            },
+            {
+              address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
+              symbol: 'USDC',
+              name: 'USD Coin',
+              decimals: 6,
+              balance: '0',
+              logoURI: 'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png',
+              currentPrice: 1.00,
+              priceChange24h: 0.00,
+              marketCap: 25000000000,
+            },
+            {
+              address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+              symbol: 'USDT',
+              name: 'Tether USD',
+              decimals: 6,
+              balance: '0',
+              logoURI: 'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+              currentPrice: 1.00,
+              priceChange24h: 0.00,
+              marketCap: 80000000000,
+            },
+            {
+              address: '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
+              symbol: 'BNB',
+              name: 'BNB',
+              decimals: 18,
+              balance: '0',
+              logoURI: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
+              currentPrice: 312.45,
+              priceChange24h: 0.79,
+              marketCap: 48123456789,
+            },
+          ];
           
           const allTokensCombined = [
             ...walletTokens,
             ...commonTokens,
-            ...tokensFromAPI
+            ...fallbackTokens
           ];
           
-          // Remove duplicates based on symbol
           const uniqueTokens = allTokensCombined.filter((token, index, self) => 
             index === self.findIndex(t => t.symbol === token.symbol)
           );
@@ -116,58 +215,6 @@ export const SwapScreen: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to fetch crypto tokens:', error);
-        // Fallback to wallet tokens and common tokens only
-        const walletTokens = getAvailableTokens();
-        const commonTokens = (COMMON_TOKENS as any)[activeNetwork] || [];
-        
-        // Add some popular tokens as fallback
-        const fallbackTokens: Token[] = [
-          {
-            address: 'bitcoin',
-            symbol: 'BTC',
-            name: 'Bitcoin',
-            decimals: 8,
-            balance: '0',
-            logoURI: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
-            currentPrice: 43250.12,
-            priceChange24h: 2.98,
-            marketCap: 847123456789,
-          },
-          {
-            address: 'ethereum',
-            symbol: 'ETH',
-            name: 'Ethereum',
-            decimals: 18,
-            balance: '0',
-            logoURI: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
-            currentPrice: 2650.45,
-            priceChange24h: 1.94,
-            marketCap: 318765432109,
-          },
-          {
-            address: 'binancecoin',
-            symbol: 'BNB',
-            name: 'BNB',
-            decimals: 18,
-            balance: '0',
-            logoURI: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
-            currentPrice: 312.45,
-            priceChange24h: 0.79,
-            marketCap: 48123456789,
-          },
-        ];
-        
-        const allTokensCombined = [
-          ...walletTokens,
-          ...commonTokens,
-          ...fallbackTokens
-        ];
-        
-        const uniqueTokens = allTokensCombined.filter((token, index, self) => 
-          index === self.findIndex(t => t.symbol === token.symbol)
-        );
-        
-        setAllTokens(uniqueTokens);
       } finally {
         setIsLoadingTokens(false);
       }
@@ -180,6 +227,10 @@ export const SwapScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       logger.logScreenFocus('SwapScreen');
+      
+      // Animate cards on focus
+      inputCardOpacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
+      outputCardOpacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
     }, [])
   );
 
@@ -216,6 +267,15 @@ export const SwapScreen: React.FC = () => {
     feeUSD: '0.10',
   };
 
+  // Calculate USD values
+  const inputUSDValue = inputAmount && selectedInputToken?.currentPrice 
+    ? parseFloat(inputAmount) * selectedInputToken.currentPrice 
+    : 0;
+  
+  const outputUSDValue = outputAmount && selectedOutputToken?.currentPrice 
+    ? parseFloat(outputAmount) * selectedOutputToken.currentPrice 
+    : 0;
+
   const handleTokenSelect = (type: 'input' | 'output') => {
     logger.logButtonPress(`${type} Token Select`, 'open token selection modal');
     setTokenSelectionType(type);
@@ -242,329 +302,486 @@ export const SwapScreen: React.FC = () => {
   };
 
   const handleSwapTokens = () => {
+    // Animate swap button
+    swapButtonScale.value = withSequence(
+      withTiming(0.9, { duration: 100 }),
+      withTiming(1, { duration: 100 })
+    );
+
     const tempToken = selectedInputToken;
     const tempAmount = inputAmount;
     setSelectedInputToken(selectedOutputToken);
     setSelectedOutputToken(tempToken);
     setInputAmount(outputAmount);
     setOutputAmount(tempAmount);
-    clearError();
   };
 
   const handleMaxAmount = () => {
-    if (!selectedInputToken || !currentWallet) return;
-
-    let maxAmount = '0';
-    
-    // Check if it's native token
-    if (selectedInputToken.address === '0x0000000000000000000000000000000000000000' || 
-        selectedInputToken.address === 'So11111111111111111111111111111111111111112') {
-      maxAmount = currentWallet.balance;
-    } else {
-      const tokenBalance = currentWallet.tokens.find(t => t.address === selectedInputToken.address);
-      maxAmount = tokenBalance?.balance || '0';
-    }
-
-    setInputAmount(maxAmount);
+    if (!selectedInputToken?.balance) return;
+    setInputAmount(selectedInputToken.balance);
   };
 
-  const handleExecuteSwap = async () => {
+  const handleContinue = () => {
     if (!selectedInputToken || !selectedOutputToken || !inputAmount) {
-      Alert.alert('Error', 'Please select tokens and enter an amount');
+      Alert.alert('Invalid Swap', 'Please select tokens and enter an amount');
       return;
     }
 
-    try {
-      // For development mode, we'll use a mock quote
-      const mockSwapQuote: SwapQuote = {
-        inputToken: selectedInputToken,
-        outputToken: selectedOutputToken,
-        inputAmount,
-        outputAmount,
-        priceImpact: mockQuote.priceImpact,
-        route: [],
-        slippage,
-        exchangeRate: mockQuote.exchangeRate,
-      };
-
-      const result = await executeSwap(mockSwapQuote);
-      
-      // executeSwap returns the transaction hash on success
-      if (result) {
-        Alert.alert('Success', 'Swap executed successfully!');
-        setInputAmount('');
-        setOutputAmount('');
-      }
-    } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to execute swap');
+    if (parseFloat(inputAmount) <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid amount to swap');
+      return;
     }
+
+    // Mock swap execution
+    Alert.alert(
+      'Swap Confirmation',
+      `Swap ${inputAmount} ${selectedInputToken.symbol} for ${outputAmount} ${selectedOutputToken.symbol}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Confirm', 
+          onPress: () => {
+            Alert.alert('Success', 'Swap executed successfully!');
+            setInputAmount('');
+            setOutputAmount('');
+          }
+        }
+      ]
+    );
   };
 
-  const inputUSDValue = selectedInputToken && inputAmount 
-    ? calculateUSDValue(selectedInputToken.address, inputAmount) 
-    : null;
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
 
-  const outputUSDValue = selectedOutputToken && outputAmount 
-    ? calculateUSDValue(selectedOutputToken.address, outputAmount) 
-    : null;
-
-  // For development mode, always show the swap interface
-  // In production, you would check: if (!currentWallet && !isConnected) { ... }
+  const getTokenLogo = (token: Token) => {
+    if (token.logoURI) {
+      return (
+        <Image 
+          source={{ uri: token.logoURI }} 
+          style={{ width: 32, height: 32, borderRadius: 16 }}
+          onError={() => console.log('Failed to load image for token:', token.symbol)}
+        />
+      );
+    }
+    
+    // Fallback to colored circle with first letter
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+    const colorIndex = token.symbol.charCodeAt(0) % colors.length;
+    
+    return (
+      <View style={{
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: colors[colorIndex],
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 14 }}>
+          {token.symbol.charAt(0)}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      {/* Background overlay */}
-      <View 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: 'rgb(93,138,168)',
-        }}
-      />
-
-      <ScrollView className="flex-1">
+      <ScrollView 
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         {/* Header */}
-        <View className="px-6 pt-6 pb-4">
-          <Text className="text-2xl font-bold text-slate-900 mb-2 text-center">
-            Swap Tokens
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+          backgroundColor: '#f8fafc',
+        }}>
+          <Text style={{ fontSize: 24, fontWeight: '700', color: '#1e293b' }}>
+            Swap
           </Text>
-          <Text className="text-sm text-slate-600 text-center">
-            Exchange tokens at the best rates
-          </Text>
+          <TouchableOpacity
+            onPress={() => setShowSettings(!showSettings)}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: '#ffffff',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: '#e2e8f0',
+            }}
+          >
+            <Ionicons name="settings-outline" size={20} color="#64748b" />
+          </TouchableOpacity>
         </View>
 
-        {/* Swap Form */}
-        <View className="px-6 mb-6">
-          <View className="p-6 border border-gray-200 shadow-lg backdrop-blur-sm rounded-xl" style={{ backgroundColor: '#e8eff3' }}>
-            {/* Input Token */}
-            <View className="mb-4">
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-sm text-slate-600">
-                  From
-                </Text>
-                {selectedInputToken && (
-                  <TouchableOpacity onPress={handleMaxAmount}>
-                    <Text className="text-sm text-blue-600 font-medium">
-                      MAX
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+        {/* Settings Panel */}
+        <Animated.View style={[settingsStyle, { 
+          marginHorizontal: 20, 
+          marginBottom: 16,
+          display: showSettings ? 'flex' : 'none'
+        }]}>
+          <View style={{
+            backgroundColor: '#ffffff',
+            borderRadius: 12,
+            padding: 16,
+            borderWidth: 1,
+            borderColor: '#e2e8f0',
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 12,
+            }}>
+              <Text style={{ fontSize: 14, color: '#64748b' }}>
+                Slippage Tolerance
+              </Text>
+              <Text style={{ fontSize: 14, color: '#1e293b', fontWeight: '600' }}>
+                {slippage}%
+              </Text>
+            </View>
+            <View style={{
+              flexDirection: 'row',
+              gap: 8,
+            }}>
+              {[0.1, 0.5, 1.0].map((value) => (
+                <TouchableOpacity
+                  key={value}
+                  onPress={() => setSlippage(value)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 8,
+                    backgroundColor: slippage === value ? '#3B82F6' : '#f1f5f9',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: slippage === value ? '#3B82F6' : '#e2e8f0',
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 12,
+                    color: slippage === value ? '#ffffff' : '#64748b',
+                    fontWeight: '600',
+                  }}>
+                    {value}%
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Animated.View>
 
-              <View className="flex-row items-center space-x-3">
-                <View className="flex-1">
-                  <View className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
+        {/* Main Swap Container */}
+        <View style={{ marginHorizontal: 20 }}>
+          <View style={{
+            backgroundColor: '#ffffff',
+            borderRadius: 20,
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#e2e8f0',
+          }}>
+            {/* Input Token Card */}
+            <Animated.View style={[inputCardStyle]}>
+              <View style={{ marginBottom: 16 }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 8,
+                }}>
+                  <Text style={{ fontSize: 14, color: '#64748b' }}>
+                    You Pay
+                  </Text>
+                  {selectedInputToken?.balance && (
+                    <TouchableOpacity onPress={handleMaxAmount}>
+                      <Text style={{ fontSize: 12, color: '#3B82F6', fontWeight: '500' }}>
+                        Balance: {parseFloat(selectedInputToken.balance).toFixed(4)}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#f8fafc',
+                  borderRadius: 16,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#e2e8f0',
+                }}>
+                  <View style={{ flex: 1 }}>
                     <TextInput
                       placeholder="0.0"
                       value={inputAmount}
                       onChangeText={setInputAmount}
                       keyboardType="numeric"
-                      className="text-xl text-slate-900"
-                      placeholderTextColor="#9CA3AF"
+                      style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: '#1e293b',
+                        paddingVertical: 8,
+                      }}
+                      placeholderTextColor="#64748b"
                     />
-                  </View>
-                  {inputUSDValue && (
-                    <Text className="text-sm text-slate-500 mt-1">
-                      ~${inputUSDValue.toFixed(2)}
-                    </Text>
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => handleTokenSelect('input')}
-                  className="flex-row items-center bg-white px-3 py-2 rounded-lg border border-gray-200"
-                >
-                  {selectedInputToken ? (
-                    <>
-                      <Text className="font-medium text-slate-900 mr-1">
-                        {selectedInputToken.symbol}
+                    {inputUSDValue > 0 && (
+                      <Text style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
+                        {formatCurrency(inputUSDValue)}
                       </Text>
-                      <Ionicons name="chevron-down" size={16} color="#6B7280" />
-                    </>
-                  ) : (
-                    <Text className="text-slate-500">
-                      Select Token
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => handleTokenSelect('input')}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: '#f1f5f9',
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 12,
+                      minWidth: 100,
+                      borderWidth: 1,
+                      borderColor: '#e2e8f0',
+                    }}
+                  >
+                    {selectedInputToken ? (
+                      <>
+                        {getTokenLogo(selectedInputToken)}
+                        <Text style={{ 
+                          fontWeight: '600', 
+                          color: '#1e293b', 
+                          marginLeft: 8,
+                          marginRight: 4,
+                        }}>
+                          {selectedInputToken.symbol}
+                        </Text>
+                        <Ionicons name="chevron-down" size={16} color="#64748b" />
+                      </>
+                    ) : (
+                      <Text style={{ color: '#64748b' }}>
+                        Select Token
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Swap Button */}
-            <View className="items-center my-2">
-              <LiquidGlass
-                className="p-2"
-                cornerRadius={100}
-                elasticity={0.3}
-                onPress={handleSwapTokens}
-                disabled={!selectedInputToken || !selectedOutputToken}
-              >
-                <Ionicons 
-                  name="swap-vertical" 
-                  size={20} 
-                  color={selectedInputToken && selectedOutputToken ? "#3B82F6" : "#9CA3AF"} 
-                />
-              </LiquidGlass>
+            <View style={{ alignItems: 'center', marginVertical: 8 }}>
+              <Animated.View style={swapButtonStyle}>
+                <TouchableOpacity
+                  onPress={handleSwapTokens}
+                  disabled={!selectedInputToken || !selectedOutputToken}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: '#f1f5f9',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                  }}
+                >
+                  <Ionicons 
+                    name="swap-vertical" 
+                    size={20} 
+                    color={selectedInputToken && selectedOutputToken ? "#3B82F6" : "#64748b"} 
+                  />
+                </TouchableOpacity>
+              </Animated.View>
             </View>
 
-            {/* Output Token */}
-            <View className="mb-4">
-              <Text className="text-sm text-slate-600 mb-2">
-                To
-              </Text>
+            {/* Output Token Card */}
+            <Animated.View style={[outputCardStyle]}>
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>
+                  You Receive
+                </Text>
 
-              <View className="flex-row items-center space-x-3">
-                <View className="flex-1">
-                  <View className="border border-gray-200 rounded-lg px-3 py-3 bg-white">
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#f8fafc',
+                  borderRadius: 16,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#e2e8f0',
+                }}>
+                  <View style={{ flex: 1 }}>
                     <TextInput
                       placeholder="0.0"
                       value={outputAmount}
                       onChangeText={() => {}} // Read-only
                       editable={false}
-                      className="text-xl text-slate-900"
-                      placeholderTextColor="#9CA3AF"
+                      style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: '#1e293b',
+                        paddingVertical: 8,
+                      }}
+                      placeholderTextColor="#64748b"
                     />
-                  </View>
-                  {outputUSDValue && (
-                    <Text className="text-sm text-slate-500 mt-1">
-                      ~${outputUSDValue.toFixed(2)}
-                    </Text>
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => handleTokenSelect('output')}
-                  className="flex-row items-center bg-white px-3 py-2 rounded-lg border border-gray-200"
-                >
-                  {selectedOutputToken ? (
-                    <>
-                      <Text className="font-medium text-slate-900 mr-1">
-                        {selectedOutputToken.symbol}
+                    {outputUSDValue > 0 && (
+                      <Text style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
+                        {formatCurrency(outputUSDValue)}
                       </Text>
-                      <Ionicons name="chevron-down" size={16} color="#6B7280" />
-                    </>
-                  ) : (
-                    <Text className="text-slate-500">
-                      Select Token
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
+                    )}
+                  </View>
 
-            {/* Quote Info */}
-            {inputAmount && selectedInputToken && selectedOutputToken && (
-              <LiquidGlass
-                className="mb-4 p-4"
-                cornerRadius={16}
-                elasticity={0.15}
-                blurAmount={0.6}
-              >
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-sm text-slate-600">
-                    Exchange Rate
-                  </Text>
-                  <Text className="text-sm font-medium text-slate-900">
-                    1 {selectedInputToken.symbol} = {parseFloat(mockQuote.exchangeRate).toFixed(6)} {selectedOutputToken.symbol}
-                  </Text>
-                </View>
-
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-sm text-slate-600">
-                    Price Impact
-                  </Text>
-                  <Text className="text-sm font-medium text-green-600">
-                    {mockQuote.priceImpact.toFixed(2)}%
-                  </Text>
-                </View>
-
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-sm text-slate-600">
-                    Network Fee
-                  </Text>
-                  <Text className="text-sm font-medium text-slate-900">
-                    ~${mockQuote.feeUSD}
-                  </Text>
-                </View>
-
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm text-slate-600">
-                    Slippage Tolerance
-                  </Text>
-                  <TouchableOpacity onPress={() => setShowSlippageSettings(true)}>
-                    <Text className="text-sm font-medium text-blue-600">
-                      {slippage}%
-                    </Text>
+                  <TouchableOpacity
+                    onPress={() => handleTokenSelect('output')}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: '#f1f5f9',
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 12,
+                      minWidth: 100,
+                      borderWidth: 1,
+                      borderColor: '#e2e8f0',
+                    }}
+                  >
+                    {selectedOutputToken ? (
+                      <>
+                        {getTokenLogo(selectedOutputToken)}
+                        <Text style={{ 
+                          fontWeight: '600', 
+                          color: '#1e293b', 
+                          marginLeft: 8,
+                          marginRight: 4,
+                        }}>
+                          {selectedOutputToken.symbol}
+                        </Text>
+                        <Ionicons name="chevron-down" size={16} color="#64748b" />
+                      </>
+                    ) : (
+                      <Text style={{ color: '#64748b' }}>
+                        Select Token
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </View>
-              </LiquidGlass>
+              </View>
+            </Animated.View>
+
+            {/* Exchange Rate Info */}
+            {selectedInputToken && selectedOutputToken && (
+                             <View style={{
+                 flexDirection: 'row',
+                 alignItems: 'center',
+                 justifyContent: 'space-between',
+                 paddingVertical: 12,
+                 borderTopWidth: 1,
+                 borderTopColor: '#e2e8f0',
+                 marginTop: 8,
+               }}>
+                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                   <Ionicons name="time-outline" size={16} color="#64748b" />
+                   <Text style={{ fontSize: 12, color: '#64748b', marginLeft: 4 }}>
+                     Rate expires in {rateTimer.toString().padStart(2, '0')}:00s
+                   </Text>
+                 </View>
+                 <Text style={{ fontSize: 12, color: '#64748b' }}>
+                   1 {selectedInputToken.symbol} = {((selectedOutputToken.currentPrice || 0) / (selectedInputToken.currentPrice || 1)).toFixed(6)} {selectedOutputToken.symbol}
+                 </Text>
+               </View>
             )}
 
-            {/* Swap Button */}
-            <LiquidGlass
-              className={`w-full py-3 px-4 rounded-lg ${
-                selectedInputToken && selectedOutputToken && inputAmount
-                  ? 'bg-blue-600/20'
-                  : 'bg-gray-300/20'
-              }`}
-              cornerRadius={16}
-              elasticity={0.2}
-              onPress={handleExecuteSwap}
-              disabled={!selectedInputToken || !selectedOutputToken || !inputAmount}
-            >
-              <Text className={`text-center font-semibold ${
-                selectedInputToken && selectedOutputToken && inputAmount
-                  ? 'text-blue-700'
-                  : 'text-gray-500'
-              }`}>
-                {isLoading ? 'Getting Quote...' : 'Swap'}
-              </Text>
-            </LiquidGlass>
+                         {/* Swap Details */}
+             {inputAmount && selectedInputToken && selectedOutputToken && (
+               <View style={{
+                 backgroundColor: '#f8fafc',
+                 borderRadius: 12,
+                 padding: 16,
+                 marginTop: 16,
+                 borderWidth: 1,
+                 borderColor: '#e2e8f0',
+               }}>
+                 <View style={{
+                   flexDirection: 'row',
+                   alignItems: 'center',
+                   justifyContent: 'space-between',
+                   marginBottom: 12,
+                 }}>
+                   <Text style={{ fontSize: 14, color: '#64748b' }}>
+                     Price Impact
+                   </Text>
+                   <Text style={{ fontSize: 14, color: '#10B981', fontWeight: '600' }}>
+                     {mockQuote.priceImpact.toFixed(2)}%
+                   </Text>
+                 </View>
+                 <View style={{
+                   flexDirection: 'row',
+                   alignItems: 'center',
+                   justifyContent: 'space-between',
+                   marginBottom: 12,
+                 }}>
+                   <Text style={{ fontSize: 14, color: '#64748b' }}>
+                     Network Fee
+                   </Text>
+                   <Text style={{ fontSize: 14, color: '#1e293b', fontWeight: '600' }}>
+                     ~{formatCurrency(parseFloat(mockQuote.feeUSD))}
+                   </Text>
+                 </View>
+                 <View style={{
+                   flexDirection: 'row',
+                   alignItems: 'center',
+                   justifyContent: 'space-between',
+                 }}>
+                   <Text style={{ fontSize: 14, color: '#64748b' }}>
+                     Minimum Received
+                   </Text>
+                   <Text style={{ fontSize: 14, color: '#1e293b', fontWeight: '600' }}>
+                     {outputAmount} {selectedOutputToken.symbol}
+                   </Text>
+                 </View>
+               </View>
+             )}
           </View>
         </View>
 
-        {/* Recent Swaps */}
-        <View className="px-6 mb-6">
-          <Text className="text-lg font-semibold text-slate-900 mb-4">
-            Recent Swaps
-          </Text>
-          
-          <LiquidGlass
-            className="p-6"
-            cornerRadius={20}
-            elasticity={0.1}
-            blurAmount={0.6}
-          >
-            <View className="space-y-3">
-              <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 bg-blue-100 rounded-full mr-3" />
-                  <View>
-                    <Text className="font-medium text-slate-900">ETH → USDC</Text>
-                    <Text className="text-sm text-slate-500">2 hours ago</Text>
-                  </View>
-                </View>
-                <View className="items-end">
-                  <Text className="font-medium text-slate-900">+2,650.45 USDC</Text>
-                  <Text className="text-sm text-green-600">+$2,650.45</Text>
-                </View>
-              </View>
-
-              <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 bg-green-100 rounded-full mr-3" />
-                  <View>
-                    <Text className="font-medium text-slate-900">USDC → ETH</Text>
-                    <Text className="text-sm text-slate-500">1 day ago</Text>
-                  </View>
-                </View>
-                <View className="items-end">
-                  <Text className="font-medium text-slate-900">+0.95 ETH</Text>
-                  <Text className="text-sm text-red-600">-$2,517.93</Text>
-                </View>
-              </View>
-            </View>
-          </LiquidGlass>
-        </View>
+                 {/* Swap Button */}
+         <View style={{ marginHorizontal: 20, marginTop: 24 }}>
+           <TouchableOpacity
+             onPress={handleContinue}
+             disabled={!selectedInputToken || !selectedOutputToken || !inputAmount}
+             style={{
+               backgroundColor: (!selectedInputToken || !selectedOutputToken || !inputAmount) ? '#f1f5f9' : '#3B82F6',
+               borderRadius: 16,
+               paddingVertical: 16,
+               alignItems: 'center',
+               opacity: (!selectedInputToken || !selectedOutputToken || !inputAmount) ? 0.5 : 1,
+               borderWidth: 1,
+               borderColor: (!selectedInputToken || !selectedOutputToken || !inputAmount) ? '#e2e8f0' : '#3B82F6',
+             }}
+           >
+             <Text style={{
+               fontSize: 16,
+               fontWeight: '700',
+               color: (!selectedInputToken || !selectedOutputToken || !inputAmount) ? '#64748b' : '#ffffff',
+             }}>
+               {!selectedInputToken || !selectedOutputToken ? 'Select Tokens' : 
+                !inputAmount ? 'Enter Amount' : 'Swap'}
+             </Text>
+           </TouchableOpacity>
+         </View>
       </ScrollView>
 
       {/* Token Selection Modal */}
@@ -573,30 +790,61 @@ export const SwapScreen: React.FC = () => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
           {/* Modal Header */}
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <Text className="text-lg font-semibold text-slate-900">
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: '#e2e8f0',
+          }}>
+            <Text style={{ fontSize: 20, fontWeight: '600', color: '#1e293b' }}>
               Select Token
             </Text>
             <TouchableOpacity
               onPress={() => setShowTokenModal(false)}
-              className="p-2"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: '#ffffff',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+              }}
             >
-              <Ionicons name="close" size={24} color="#6B7280" />
+              <Ionicons name="close" size={20} color="#64748b" />
             </TouchableOpacity>
           </View>
 
           {/* Search Input */}
-          <View className="p-4">
-            <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
-              <Ionicons name="search" size={20} color="#6B7280" />
+          <View style={{ padding: 20 }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: '#ffffff',
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderWidth: 1,
+              borderColor: '#e2e8f0',
+            }}>
+              <Ionicons name="search" size={20} color="#64748b" />
               <TextInput
                 placeholder="Search tokens..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                className="flex-1 ml-3 text-slate-900"
-                placeholderTextColor="#9CA3AF"
+                style={{
+                  flex: 1,
+                  marginLeft: 12,
+                  fontSize: 16,
+                  color: '#1e293b',
+                }}
+                placeholderTextColor="#64748b"
               />
             </View>
           </View>
@@ -608,37 +856,39 @@ export const SwapScreen: React.FC = () => {
             renderItem={({ item }: { item: Token }) => (
               <TouchableOpacity
                 onPress={() => handleTokenSelection(item)}
-                className="flex-row items-center p-4 border-b border-gray-100"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 20,
+                  paddingVertical: 16,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#f1f5f9',
+                }}
               >
-                {item.logoURI ? (
-                  <Image 
-                    source={{ uri: item.logoURI }} 
-                    style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12 }}
-                    onError={() => {
-                      // Handle image loading errors silently
-                      console.log('Failed to load image for token:', item.symbol);
-                    }}
-                  />
-                ) : (
-                  <View className="w-8 h-8 bg-gray-200 rounded-full mr-3" />
-                )}
-                <View className="flex-1">
-                  <Text className="font-medium text-slate-900">{item.symbol}</Text>
-                  <Text className="text-sm text-slate-500">{item.name}</Text>
+                <View style={{ marginRight: 12 }}>
+                  {getTokenLogo(item)}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                    {item.symbol}
+                  </Text>
+                  <Text style={{ fontSize: 14, color: '#64748b' }}>
+                    {item.name}
+                  </Text>
                   {item.currentPrice && (
-                    <Text className="text-xs text-slate-400">
-                      ${item.currentPrice.toFixed(2)}
+                    <Text style={{ fontSize: 12, color: '#94a3b8' }}>
+                      {formatCurrency(item.currentPrice)}
                     </Text>
                   )}
                 </View>
                 {tokenSelectionType === 'input' && item.balance && parseFloat(item.balance) > 0 && (
-                  <View className="items-end">
-                    <Text className="text-sm text-slate-600">
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontSize: 14, color: '#64748b' }}>
                       {parseFloat(item.balance).toFixed(4)}
                     </Text>
                     {item.currentPrice && (
-                      <Text className="text-xs text-slate-400">
-                        ~${(parseFloat(item.balance) * item.currentPrice).toFixed(2)}
+                      <Text style={{ fontSize: 12, color: '#94a3b8' }}>
+                        ~{formatCurrency(parseFloat(item.balance) * item.currentPrice)}
                       </Text>
                     )}
                   </View>
@@ -647,125 +897,7 @@ export const SwapScreen: React.FC = () => {
             )}
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <View className="p-8 items-center">
-                {isLoadingTokens ? (
-                  <Text className="text-slate-500 text-center">
-                    Loading tokens...
-                  </Text>
-                ) : (
-                  <Text className="text-slate-500 text-center">
-                    No tokens found
-                  </Text>
-                )}
-              </View>
-            }
           />
-
-          {/* Popular Tokens */}
-          {searchQuery === '' && (
-            <View className="p-4 border-t border-gray-200">
-              <Text className="text-sm font-medium text-slate-600 mb-3">
-                Popular Tokens
-              </Text>
-              <View className="flex-row flex-wrap">
-                {allTokens.slice(0, 6).map((token) => (
-                  <TouchableOpacity
-                    key={token.address}
-                    onPress={() => handleTokenSelection(token)}
-                    className="bg-gray-100 px-3 py-2 rounded-lg mr-2 mb-2 flex-row items-center"
-                  >
-                    {token.logoURI ? (
-                      <Image 
-                        source={{ uri: token.logoURI }} 
-                        style={{ width: 16, height: 16, borderRadius: 8, marginRight: 4 }}
-                        onError={() => {
-                          // Handle image loading errors silently
-                          console.log('Failed to load image for popular token:', token.symbol);
-                        }}
-                      />
-                    ) : (
-                      <View className="w-4 h-4 bg-gray-300 rounded-full mr-1" />
-                    )}
-                    <Text className="text-sm font-medium text-slate-900">
-                      {token.symbol}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-        </SafeAreaView>
-      </Modal>
-
-      {/* Slippage Settings Modal */}
-      <Modal
-        visible={showSlippageSettings}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <Text className="text-lg font-semibold text-slate-900">
-              Slippage Tolerance
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowSlippageSettings(false)}
-              className="p-2"
-            >
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-
-          <View className="p-4">
-            <Text className="text-sm text-slate-600 mb-4">
-              Your transaction will revert if the price changes unfavorably by more than this percentage.
-            </Text>
-
-            <View className="flex-row space-x-2 mb-4">
-              {[0.1, 0.5, 1.0].map((value) => (
-                <TouchableOpacity
-                  key={value}
-                  onPress={() => setSlippage(value)}
-                  className={`flex-1 py-2 px-4 rounded-lg border ${
-                    slippage === value
-                      ? 'bg-blue-600 border-blue-600'
-                      : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <Text className={`text-center font-medium ${
-                    slippage === value ? 'text-white' : 'text-slate-900'
-                  }`}>
-                    {value}%
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View className="mb-4">
-              <Text className="text-sm text-slate-600 mb-2">Custom</Text>
-              <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-white">
-                <TextInput
-                  placeholder="0.5"
-                  value={slippage.toString()}
-                  onChangeText={(text) => setSlippage(parseFloat(text) || 0.5)}
-                  keyboardType="numeric"
-                  className="flex-1 text-slate-900"
-                  placeholderTextColor="#9CA3AF"
-                />
-                <Text className="text-slate-500 mr-3">%</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => setShowSlippageSettings(false)}
-              className="w-full py-3 px-4 bg-blue-600 rounded-lg"
-            >
-              <Text className="text-center font-semibold text-white">
-                Confirm
-              </Text>
-            </TouchableOpacity>
-          </View>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>

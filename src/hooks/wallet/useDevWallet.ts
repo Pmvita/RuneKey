@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWalletStore } from '../../stores/wallet/useWalletStore';
 import { useCoinData } from '../token/useCoinData';
 import { priceService } from '../../services/api/priceService';
+import { priceCacheService } from '../../services/priceCacheService';
 
 // Import mock wallet structure (without prices)
 import mockDevWallet from '../../mockData/api/dev-wallet.json';
@@ -42,13 +43,17 @@ export const useDevWallet = () => {
       const livePrices = await priceService.fetchTopCoins(100);
       
       if (livePrices.success && livePrices.data) {
-        const tokensWithPrices = devWalletConfig.tokens.map((token) => {
+        const tokensWithPrices = await Promise.all(devWalletConfig.tokens.map(async (token) => {
           const livePriceData = livePrices.data.find(coin => 
             coin.id === token.coinId || coin.symbol.toLowerCase() === token.symbol.toLowerCase()
           );
           
           if (livePriceData) {
             const tokenValue = parseFloat(token.balance) * livePriceData.current_price;
+            
+            // Save the last live price to cache for fallback
+            await priceCacheService.saveLastLivePrice(token.symbol, livePriceData.current_price);
+            
             return {
               ...token,
               currentPrice: livePriceData.current_price,
@@ -58,15 +63,18 @@ export const useDevWallet = () => {
             };
           }
           
-          // Fallback if live data not available
+          // Fallback to last live price from cache, then to mock prices
+          const lastLivePrice = await priceCacheService.getLastLivePrice(token.symbol);
+          const fallbackPrice = lastLivePrice || priceService.getTokenPrice(token.address) || 0;
+          
           return {
             ...token,
-            currentPrice: priceService.getTokenPrice(token.address) || 0,
+            currentPrice: fallbackPrice,
             priceChange24h: priceService.getTokenPriceChange(token.address) || 0,
             marketCap: 0,
-            usdValue: parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0),
+            usdValue: parseFloat(token.balance) * fallbackPrice,
           };
-        });
+        }));
 
         // Calculate total portfolio value
         const totalValue = tokensWithPrices.reduce((sum, token) => sum + (token.usdValue || 0), 0);
@@ -96,31 +104,31 @@ export const useDevWallet = () => {
       setError(err instanceof Error ? err.message : 'Failed to connect dev wallet');
       
       // Fallback to basic wallet connection without prices
-      connectDeveloperWallet({
-        tokens: devWalletConfig.tokens.map(token => ({
+      const fallbackTokens = await Promise.all(devWalletConfig.tokens.map(async token => {
+        // Try to get last live price from cache first
+        const lastLivePrice = await priceCacheService.getLastLivePrice(token.symbol);
+        const fallbackPrice = lastLivePrice || priceService.getTokenPrice(token.address) || 0;
+        
+        return {
           ...token,
-          currentPrice: priceService.getTokenPrice(token.address) || 0,
+          currentPrice: fallbackPrice,
           priceChange24h: priceService.getTokenPriceChange(token.address) || 0,
           marketCap: 0,
-          usdValue: parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0),
-        })),
-        totalValue: devWalletConfig.tokens.reduce((sum, token) => 
-          sum + (parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0)), 0
-        ),
+          usdValue: parseFloat(token.balance) * fallbackPrice,
+        };
+      }));
+      
+      const fallbackTotalValue = fallbackTokens.reduce((sum, token) => sum + (token.usdValue || 0), 0);
+      
+      connectDeveloperWallet({
+        tokens: fallbackTokens,
+        totalValue: fallbackTotalValue,
       });
       return {
         ...devWalletConfig,
         balance: mockDevWallet.wallet.balance,
-        tokens: devWalletConfig.tokens.map(token => ({
-          ...token,
-          currentPrice: priceService.getTokenPrice(token.address) || 0,
-          priceChange24h: priceService.getTokenPriceChange(token.address) || 0,
-          marketCap: 0,
-          usdValue: parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0),
-        })),
-        totalValue: devWalletConfig.tokens.reduce((sum, token) => 
-          sum + (parseFloat(token.balance) * (priceService.getTokenPrice(token.address) || 0)), 0
-        ),
+        tokens: fallbackTokens,
+        totalValue: fallbackTotalValue,
       };
     } finally {
       setIsLoading(false);

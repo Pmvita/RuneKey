@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image, Dimens
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { priceService, CoinInfo, ChartData } from '../services/api/priceService';
+import { priceCacheService } from '../services/priceCacheService';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
 import { SparklineChart } from '../components';
@@ -40,6 +41,9 @@ export const TokenDetailsScreen: React.FC = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoadingChart, setIsLoadingChart] = useState(true);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [priceSource, setPriceSource] = useState<string>('none');
+  const [priceChangePercentage, setPriceChangePercentage] = useState<number>(0);
 
   // Get token logo URI from current wallet
   const getTokenLogoURI = () => {
@@ -92,6 +96,21 @@ export const TokenDetailsScreen: React.FC = () => {
     return balance.toFixed(2);
   };
 
+  // Load current price when component mounts or data changes
+  useEffect(() => {
+    const loadCurrentPrice = async () => {
+      const { price, priceSource: source } = await getCurrentPrice();
+      setCurrentPrice(price);
+      setPriceSource(source);
+      
+      // Also load price change percentage
+      const changePercentage = getPriceChangePercentage();
+      setPriceChangePercentage(changePercentage);
+    };
+    
+    loadCurrentPrice();
+  }, [currentWallet, coinInfo, token]);
+
   // Get token USD value
   const getTokenUSDValue = () => {
     if (!currentWallet || !currentWallet.tokens) return 0;
@@ -109,7 +128,7 @@ export const TokenDetailsScreen: React.FC = () => {
     
     if (isNaN(balance)) return 0;
     
-    const currentPrice = getCurrentPrice();
+    // Use current price from state (which includes fallback logic)
     const usdValue = balance * currentPrice;
     
     console.log('🔍 TokenDetails: USD Value Calculation:', {
@@ -123,24 +142,45 @@ export const TokenDetailsScreen: React.FC = () => {
   };
 
   // Get current price
-  const getCurrentPrice = () => {
-    // First try to get price from dev wallet live data
+  const getCurrentPrice = async () => {
+    let price = 0;
+    let priceSource = 'none';
+    
+    // 1. First try to get price from dev wallet live data
     if (currentWallet && currentWallet.tokens) {
       const tokenData = currentWallet.tokens.find(t => 
         t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
       );
       
       if (tokenData?.currentPrice && tokenData.currentPrice > 0) {
-        console.log('🔍 TokenDetails: Using dev wallet live price:', tokenData.currentPrice);
-        return tokenData.currentPrice;
+        price = tokenData.currentPrice;
+        priceSource = 'dev_wallet_live';
+        console.log('🔍 TokenDetails: Using dev wallet live price:', price);
+        return { price, priceSource };
       }
     }
     
-    // Fallback to API data
-    let price = coinInfo?.current_price || token.current_price || 0;
+    // 2. Fallback to API data
+    if (coinInfo?.current_price && coinInfo.current_price > 0) {
+      price = coinInfo.current_price;
+      priceSource = 'api_live';
+    } else if (token.current_price && token.current_price > 0) {
+      price = token.current_price;
+      priceSource = 'token_param';
+    }
     
-    // If no price from API, use mock prices from priceService
-    if (!price) {
+    // 3. If still no price, try last live price from cache
+    if (!price || price === 0) {
+      const lastLivePrice = await priceCacheService.getLastLivePrice(token.symbol);
+      if (lastLivePrice) {
+        price = lastLivePrice;
+        priceSource = 'last_live_cache';
+        console.log('🔍 TokenDetails: Using last live price from cache:', price);
+      }
+    }
+    
+    // 4. Final fallback to mock prices
+    if (!price || price === 0) {
       const symbolMap: Record<string, string> = {
         'btc': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
         'eth': '0x0000000000000000000000000000000000000000',
@@ -152,35 +192,75 @@ export const TokenDetailsScreen: React.FC = () => {
       const address = symbolMap[token.symbol?.toLowerCase() || ''];
       if (address) {
         price = priceService.getTokenPrice(address);
+        priceSource = 'mock_fallback';
       }
     }
     
     console.log('🔍 TokenDetails: Current Price:', {
+      price,
+      priceSource,
       coinInfoPrice: coinInfo?.current_price,
       tokenPrice: token.current_price,
-      fallbackPrice: price,
       symbol: token.symbol
     });
     
-    return price;
+    return { price, priceSource };
   };
 
   // Get price change percentage
   const getPriceChangePercentage = () => {
-    // First try to get price change from dev wallet live data
+    let priceChange = 0;
+    let changeSource = 'none';
+    
+    // 1. First try to get price change from dev wallet live data
     if (currentWallet && currentWallet.tokens) {
       const tokenData = currentWallet.tokens.find(t => 
         t.symbol?.toLowerCase() === token.symbol?.toLowerCase()
       );
       
       if (tokenData?.priceChange24h !== undefined) {
-        console.log('🔍 TokenDetails: Using dev wallet price change:', tokenData.priceChange24h);
-        return tokenData.priceChange24h;
+        priceChange = tokenData.priceChange24h;
+        changeSource = 'dev_wallet_live';
+        console.log('🔍 TokenDetails: Using dev wallet price change:', priceChange);
+        return priceChange;
       }
     }
     
-    // Fallback to API data
-    return coinInfo?.price_change_percentage_24h || token.price_change_percentage_24h || 0;
+    // 2. Fallback to API data
+    if (coinInfo?.price_change_percentage_24h !== undefined) {
+      priceChange = coinInfo.price_change_percentage_24h;
+      changeSource = 'api_live';
+    } else if (token.price_change_percentage_24h !== undefined) {
+      priceChange = token.price_change_percentage_24h;
+      changeSource = 'token_param';
+    }
+    
+    // 3. If still no price change, use mock price changes
+    if (priceChange === 0) {
+      const symbolMap: Record<string, string> = {
+        'btc': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+        'eth': '0x0000000000000000000000000000000000000000',
+        'usdc': '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
+        'usdt': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+        'bnb': '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
+      };
+      
+      const address = symbolMap[token.symbol?.toLowerCase() || ''];
+      if (address) {
+        priceChange = priceService.getTokenPriceChange(address);
+        changeSource = 'mock_fallback';
+      }
+    }
+    
+    console.log('🔍 TokenDetails: Price Change:', {
+      priceChange,
+      changeSource,
+      coinInfoChange: coinInfo?.price_change_percentage_24h,
+      tokenChange: token.price_change_percentage_24h,
+      symbol: token.symbol
+    });
+    
+    return priceChange;
   };
 
   // Get price change value
@@ -238,15 +318,15 @@ export const TokenDetailsScreen: React.FC = () => {
   const generateFallbackChartData = () => {
     const dataPoints = 50;
     const data = [];
-    const basePrice = getCurrentPrice() || 1000; // Use last live price or fallback
+    const basePrice = currentPrice || 1000; // Use current price from state or fallback
     const volatility = 0.02; // 2% volatility
     
     // Generate realistic price movement based on the current price
     let currentPrice = basePrice;
     
     for (let i = 0; i < dataPoints; i++) {
-      // Add some trend based on price change percentage
-      const trend = getPriceChangePercentage() > 0 ? 0.001 : -0.001;
+          // Add some trend based on price change percentage
+    const trend = priceChangePercentage > 0 ? 0.001 : -0.001;
       const randomChange = (Math.random() - 0.5) * volatility + trend;
       currentPrice = currentPrice * (1 + randomChange);
       data.push(currentPrice);
@@ -341,10 +421,9 @@ export const TokenDetailsScreen: React.FC = () => {
   ];
 
   const chartDataPoints = getChartData();
-  const isPositive = getPriceChangePercentage() >= 0;
+  const isPositive = priceChangePercentage >= 0;
   const tokenBalance = getTokenBalance();
   const tokenUSDValue = getTokenUSDValue();
-  const currentPrice = getCurrentPrice();
   const priceChangeValue = getPriceChangeValue();
 
   return (
@@ -486,7 +565,7 @@ export const TokenDetailsScreen: React.FC = () => {
               fontWeight: '600',
               color: isPositive ? '#22c55e' : '#ef4444',
             }}>
-              {isPositive ? '+' : ''}{formatCurrency(priceChangeValue)} ({getPriceChangePercentage().toFixed(2)}%)
+                              {isPositive ? '+' : ''}{formatCurrency(priceChangeValue)} ({priceChangePercentage.toFixed(2)}%)
             </Text>
           </View>
         </View>
@@ -638,7 +717,7 @@ export const TokenDetailsScreen: React.FC = () => {
                 {formatCurrency(tokenUSDValue)}
               </Text>
               <Text style={{ fontSize: 14, color: '#64748b' }}>
-                {getPriceChangePercentage().toFixed(2)}%
+                {priceChangePercentage.toFixed(2)}%
               </Text>
             </View>
           </View>
