@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import Animated, {
   Easing
 } from 'react-native-reanimated';
 import { priceService, CoinInfo } from '../services/api/priceService';
+import { dappService, DApp } from '../services/api/dappService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
 import { LiquidGlass, LoadingSpinner } from '../components';
@@ -54,6 +55,12 @@ export const SearchScreen: React.FC = () => {
   const [hasMorePages, setHasMorePages] = useState(true);
   const [totalTokens, setTotalTokens] = useState(0);
   const tokensPerPage = 10;
+  
+  // New state for DApps tab
+  const [dapps, setDapps] = useState<DApp[]>([]);
+  const [isLoadingDapps, setIsLoadingDapps] = useState(false);
+  const [dappCategories, setDappCategories] = useState<string[]>([]);
+  const [selectedDappCategory, setSelectedDappCategory] = useState<string>('all');
   
   const navigation = useNavigation<any>();
 
@@ -120,13 +127,13 @@ export const SearchScreen: React.FC = () => {
       const result = await priceService.fetchTrendingTokens();
       if (result.success && result.data.length > 0) {
         // Transform the trending data to match our expected format
-        const transformedTokens = result.data.map((coin: any, index: number) => ({
-          id: coin.item?.id || `trending-${index}`,
-          symbol: coin.item?.symbol?.toUpperCase() || 'UNKNOWN',
-          name: coin.item?.name || 'Unknown Token',
-          image: coin.item?.large || coin.item?.thumb || '',
-          current_price: coin.item?.price_btc || 0,
-          price_change_percentage_24h: coin.item?.data?.price_change_percentage_24h?.usd || 0,
+        const transformedTokens: TrendingToken[] = result.data.map((token: any) => ({
+          id: token.id,
+          symbol: token.symbol,
+          name: token.name,
+          image: token.image,
+          current_price: token.current_price,
+          price_change_percentage_24h: token.price_change_percentage_24h,
         }));
         setApiTrendingTokens(transformedTokens);
         setLastUpdated(new Date());
@@ -135,14 +142,27 @@ export const SearchScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch trending tokens:', error);
-      // Set empty array on error to avoid undefined state
       setApiTrendingTokens([]);
     } finally {
       setIsLoadingTrending(false);
     }
   };
 
-  // Fetch top tokens with pagination
+  // Fetch top tokens when tokens tab is selected
+  useEffect(() => {
+    if (selectedCategory === 'tokens' && topTokens.length === 0) {
+      fetchTopTokens(1, false);
+    }
+  }, [selectedCategory]);
+
+  // Fetch DApps when dapps tab is selected
+  useEffect(() => {
+    if (selectedCategory === 'dapps' && dapps.length === 0) {
+      fetchDApps();
+    }
+  }, [selectedCategory]);
+
+  // Fetch top tokens
   const fetchTopTokens = async (page: number = 1, append: boolean = false) => {
     setIsLoadingTokens(true);
     try {
@@ -180,87 +200,117 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
-  // Start auto-refresh for trending tokens
-  const startAutoRefresh = () => {
-    // Clear existing interval
-    if (autoRefreshInterval) {
-      clearInterval(autoRefreshInterval);
+  // Fetch DApps
+  const fetchDApps = async () => {
+    setIsLoadingDapps(true);
+    try {
+      const result = await dappService.fetchDApps();
+      if (result.success && result.data.length > 0) {
+        setDapps(result.data);
+        
+        // Get unique categories
+        const categories = await dappService.getDAppCategories();
+        if (categories.success) {
+          setDappCategories(categories.data);
+        }
+      } else {
+        setDapps([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch DApps:', error);
+      setDapps([]);
+    } finally {
+      setIsLoadingDapps(false);
     }
-    
-    // Set new interval to refresh every 2 minutes
-    const interval = setInterval(() => {
-      fetchTrendingTokens();
-    }, 2 * 60 * 1000); // 2 minutes
-    
-    setAutoRefreshInterval(interval);
   };
 
-  // Stop auto-refresh
-  const stopAutoRefresh = () => {
-    if (autoRefreshInterval) {
-      clearInterval(autoRefreshInterval);
-      setAutoRefreshInterval(null);
+  // Filter DApps by category
+  const filterDAppsByCategory = async (category: string) => {
+    setSelectedDappCategory(category);
+    setIsLoadingDapps(true);
+    try {
+      if (category === 'all') {
+        const result = await dappService.fetchDApps();
+        if (result.success) {
+          setDapps(result.data);
+        }
+      } else {
+        const result = await dappService.filterDAppsByCategory(category);
+        if (result.success) {
+          setDapps(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to filter DApps:', error);
+    } finally {
+      setIsLoadingDapps(false);
     }
   };
 
-  // Fetch trending tokens on mount
-  useEffect(() => {
-    fetchTrendingTokens();
-    startAutoRefresh();
-    
-    return () => {
-      stopAutoRefresh();
-    };
-  }, []);
-
-  // Fetch top tokens when tokens tab is selected
-  useEffect(() => {
-    if (selectedCategory === 'tokens' && topTokens.length === 0) {
-      fetchTopTokens(1, false);
+  // Open DApp URL
+  const openDApp = async (dapp: DApp) => {
+    try {
+      await Linking.openURL(dapp.url);
+      logger.logButtonPress('DApp', `opened ${dapp.name}`);
+    } catch (error) {
+      console.error('Failed to open DApp:', error);
     }
-  }, [selectedCategory]);
+  };
 
   const handleRefresh = () => {
     if (selectedCategory === 'tokens') {
       fetchTopTokens(1, false);
+    } else if (selectedCategory === 'dapps') {
+      fetchDApps();
     } else {
       fetchTrendingTokens();
     }
   };
 
-  const handleCategoryPress = (category: 'all' | 'tokens' | 'dapps' | 'collections') => {
-    setSelectedCategory(category);
-    logger.logButtonPress('Search Category', `switch to ${category}`);
-  };
+  // Start auto-refresh for trending tokens
+  useEffect(() => {
+    // Initial fetch
+    fetchTrendingTokens();
 
-  const handleTokenPress = (token: TrendingToken | CoinInfo) => {
-    logger.logButtonPress('Token', `view ${token.symbol || 'unknown'} details`);
-    navigation.navigate('TokenDetails', { 
-      token: {
-        id: token.id,
-        symbol: token.symbol,
-        name: token.name,
-        image: token.image,
-        current_price: 'current_price' in token ? token.current_price : token.current_price,
-        price_change_percentage_24h: 'price_change_percentage_24h' in token ? token.price_change_percentage_24h : token.price_change_percentage_24h,
+    // Set up auto-refresh interval
+    const interval = setInterval(() => {
+      fetchTrendingTokens();
+    }, 30000); // Refresh every 30 seconds
+
+    setAutoRefreshInterval(interval);
+
+    // Cleanup on unmount
+    return () => {
+      if (interval) {
+        clearInterval(interval);
       }
-    });
+    };
+  }, []);
+
+  // Format time for last updated
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds}s ago`;
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes}m ago`;
+    } else {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours}h ago`;
+    }
   };
 
+  // Format price change
   const formatPriceChange = (change: number) => {
     const isPositive = change >= 0;
-    const color = isPositive ? '#22c55e' : '#ef4444';
-    const icon = isPositive ? 'trending-up' : 'trending-down';
-    return { color, icon, value: Math.abs(change).toFixed(2) };
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    });
+    return {
+      value: Math.abs(change).toFixed(2),
+      color: isPositive ? '#22c55e' : '#ef4444',
+      icon: isPositive ? 'trending-up' : 'trending-down',
+    };
   };
 
   const formatCurrency = (value: number) => {
@@ -272,9 +322,33 @@ export const SearchScreen: React.FC = () => {
     }).format(value);
   };
 
+  const formatNumber = (value: number) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+    return value.toString();
+  };
+
+  const formatVolume = (volume: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(volume);
+  };
+
   const renderTokenItem = (token: TrendingToken | CoinInfo, index: number) => {
-    const priceChange = formatPriceChange('price_change_percentage_24h' in token ? token.price_change_percentage_24h : token.price_change_percentage_24h);
-    const currentPrice = 'current_price' in token ? token.current_price : token.current_price;
+    const priceChange = formatPriceChange(
+      'price_change_percentage_24h' in token 
+        ? token.price_change_percentage_24h 
+        : (token as any).price_change_percentage_24h || 0
+    );
+    const currentPrice = 'current_price' in token 
+      ? token.current_price 
+      : (token as any).current_price || 0;
     
     return (
       <TouchableOpacity
@@ -324,7 +398,7 @@ export const SearchScreen: React.FC = () => {
               fontSize: 12,
               color: '#64748b',
             }}>
-              #{token.market_cap_rank || 'N/A'}
+              #{(token as CoinInfo).market_cap_rank || 'N/A'}
             </Text>
           )}
         </View>
@@ -365,6 +439,225 @@ export const SearchScreen: React.FC = () => {
           </Text>
         </View>
       </TouchableOpacity>
+    );
+  };
+
+  const renderDAppItem = (dapp: DApp, index: number) => {
+    return (
+      <TouchableOpacity
+        key={dapp.id}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: 16,
+          borderBottomWidth: index < dapps.length - 1 ? 1 : 0,
+          borderBottomColor: 'rgba(148, 163, 184, 0.2)',
+        }}
+        onPress={() => openDApp(dapp)}
+        activeOpacity={0.7}
+      >
+        {/* DApp Icon */}
+        <View style={{
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: '#f1f5f9',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 16,
+        }}>
+          {dapp.icon ? (
+            <Image 
+              source={{ uri: dapp.icon }} 
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+            />
+          ) : (
+            <Ionicons name="apps" size={24} color="#94a3b8" />
+          )}
+        </View>
+
+        {/* DApp Info */}
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: '#1e293b',
+              marginRight: 8,
+            }}>
+              {dapp.name}
+            </Text>
+            {dapp.trending && (
+              <View style={{
+                backgroundColor: '#fef3c7',
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                borderRadius: 8,
+              }}>
+                <Text style={{
+                  fontSize: 10,
+                  fontWeight: '600',
+                  color: '#d97706',
+                }}>
+                  TRENDING
+                </Text>
+              </View>
+            )}
+          </View>
+          
+          <Text style={{
+            fontSize: 14,
+            color: '#64748b',
+            marginBottom: 4,
+          }}>
+            {dapp.description}
+          </Text>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginRight: 12,
+            }}>
+              <Ionicons name="star" size={12} color="#fbbf24" />
+              <Text style={{
+                fontSize: 12,
+                color: '#64748b',
+                marginLeft: 4,
+              }}>
+                {dapp.rating}
+              </Text>
+            </View>
+            
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginRight: 12,
+            }}>
+              <Ionicons name="people" size={12} color="#64748b" />
+              <Text style={{
+                fontSize: 12,
+                color: '#64748b',
+                marginLeft: 4,
+              }}>
+                {formatNumber(dapp.users)}
+              </Text>
+            </View>
+            
+            <View style={{
+              backgroundColor: '#dbeafe',
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              borderRadius: 8,
+            }}>
+              <Text style={{
+                fontSize: 10,
+                fontWeight: '600',
+                color: '#2563eb',
+              }}>
+                {dapp.category}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* DApp Actions */}
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={{
+            fontSize: 12,
+            color: '#64748b',
+            marginBottom: 4,
+          }}>
+            {formatVolume(dapp.volume_24h)}
+          </Text>
+          
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#3b82f6',
+              borderRadius: 16,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+            }}
+            onPress={() => openDApp(dapp)}
+            activeOpacity={0.7}
+          >
+            <Text style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: '#ffffff',
+            }}>
+              Open
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderDAppCategories = () => {
+    if (dappCategories.length === 0) return null;
+
+    return (
+      <View style={{ marginBottom: 16 }}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 24 }}
+        >
+          <TouchableOpacity
+            style={{
+              backgroundColor: selectedDappCategory === 'all' ? '#3b82f6' : 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 16,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              marginRight: 12,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            onPress={() => filterDAppsByCategory('all')}
+            activeOpacity={0.7}
+          >
+            <Text style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: selectedDappCategory === 'all' ? '#ffffff' : '#374151',
+            }}>
+              All
+            </Text>
+          </TouchableOpacity>
+          
+          {dappCategories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={{
+                backgroundColor: selectedDappCategory === category ? '#3b82f6' : 'rgba(255, 255, 255, 0.9)',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                marginRight: 12,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+              onPress={() => filterDAppsByCategory(category)}
+              activeOpacity={0.7}
+            >
+              <Text style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: selectedDappCategory === category ? '#ffffff' : '#374151',
+              }}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
     );
   };
 
@@ -437,6 +730,15 @@ export const SearchScreen: React.FC = () => {
         </View>
       </View>
     );
+  };
+
+  const handleTokenPress = (token: TrendingToken | CoinInfo) => {
+    navigation.navigate('TokenDetails', { tokenId: token.id });
+  };
+
+  const handleCategoryPress = (category: 'all' | 'tokens' | 'dapps' | 'collections') => {
+    setSelectedCategory(category);
+    logger.logButtonPress('Search Category', `switch to ${category}`);
   };
 
   return (
@@ -521,7 +823,6 @@ export const SearchScreen: React.FC = () => {
               { key: 'tokens', label: 'Tokens', icon: 'ellipse-outline' },
               { key: 'dapps', label: 'DApps', icon: 'apps-outline' },
               { key: 'collections', label: 'Collections', icon: 'images-outline' },
-              { key: 'nfts', label: 'NFTs', icon: 'diamond-outline' },
             ].map((category) => (
               <TouchableOpacity
                 key={category.key}
@@ -647,6 +948,91 @@ export const SearchScreen: React.FC = () => {
             
             {/* Pagination Controls */}
             {renderPaginationControls()}
+          </Animated.View>
+        ) : selectedCategory === 'dapps' ? (
+          <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
+            <View style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 20,
+              padding: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 4,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.8)',
+            }}>
+              {/* Section Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: '#1e293b',
+                }}>
+                  Decentralized Apps
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                  onPress={handleRefresh}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#ffffff',
+                  }}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* DApp Categories */}
+              {renderDAppCategories()}
+
+              {/* DApps List */}
+              {isLoadingDapps && dapps.length === 0 ? (
+                <View style={{ 
+                  paddingVertical: 40, 
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={{
+                    color: '#64748b',
+                    marginTop: 16,
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}>
+                    Loading DApps...
+                  </Text>
+                </View>
+              ) : dapps.length > 0 ? (
+                <View>
+                  {dapps.map((dapp, index) => renderDAppItem(dapp, index))}
+                </View>
+              ) : (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <Ionicons name="apps-outline" size={48} color="#94a3b8" />
+                  <Text style={{
+                    color: '#64748b',
+                    textAlign: 'center',
+                    marginTop: 16,
+                    fontSize: 16,
+                  }}>
+                    No DApps available
+                  </Text>
+                </View>
+              )}
+            </View>
           </Animated.View>
         ) : (
           /* Enhanced Trending Tokens Section for other categories */
