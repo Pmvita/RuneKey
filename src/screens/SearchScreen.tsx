@@ -46,6 +46,15 @@ export const SearchScreen: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [showTrendingModal, setShowTrendingModal] = useState(false);
+  
+  // New state for tokens tab pagination
+  const [topTokens, setTopTokens] = useState<CoinInfo[]>([]);
+  const [isLoadingTokens, setIsLoadingTokens] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(true);
+  const [totalTokens, setTotalTokens] = useState(0);
+  const tokensPerPage = 10;
+  
   const navigation = useNavigation<any>();
 
   // Animation values
@@ -133,6 +142,44 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  // Fetch top tokens with pagination
+  const fetchTopTokens = async (page: number = 1, append: boolean = false) => {
+    setIsLoadingTokens(true);
+    try {
+      const result = await priceService.fetchTopCoins(tokensPerPage, page);
+      if (result.success && result.data.length > 0) {
+        if (append) {
+          setTopTokens(prev => [...prev, ...result.data]);
+        } else {
+          setTopTokens(result.data);
+        }
+        setCurrentPage(page);
+        setHasMorePages(result.data.length === tokensPerPage);
+        setTotalTokens(prev => Math.max(prev, (page - 1) * tokensPerPage + result.data.length));
+      } else {
+        if (!append) {
+          setTopTokens([]);
+        }
+        setHasMorePages(false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch top tokens:', error);
+      if (!append) {
+        setTopTokens([]);
+      }
+      setHasMorePages(false);
+    } finally {
+      setIsLoadingTokens(false);
+    }
+  };
+
+  // Load next page of tokens
+  const loadNextPage = () => {
+    if (!isLoadingTokens && hasMorePages) {
+      fetchTopTokens(currentPage + 1, true);
+    }
+  };
+
   // Start auto-refresh for trending tokens
   const startAutoRefresh = () => {
     // Clear existing interval
@@ -166,8 +213,19 @@ export const SearchScreen: React.FC = () => {
     };
   }, []);
 
+  // Fetch top tokens when tokens tab is selected
+  useEffect(() => {
+    if (selectedCategory === 'tokens' && topTokens.length === 0) {
+      fetchTopTokens(1, false);
+    }
+  }, [selectedCategory]);
+
   const handleRefresh = () => {
-    fetchTrendingTokens();
+    if (selectedCategory === 'tokens') {
+      fetchTopTokens(1, false);
+    } else {
+      fetchTrendingTokens();
+    }
   };
 
   const handleCategoryPress = (category: 'all' | 'tokens' | 'dapps' | 'collections') => {
@@ -175,16 +233,16 @@ export const SearchScreen: React.FC = () => {
     logger.logButtonPress('Search Category', `switch to ${category}`);
   };
 
-  const handleTokenPress = (token: TrendingToken) => {
-    logger.logButtonPress('Trending Token', `view ${token.symbol} details`);
+  const handleTokenPress = (token: TrendingToken | CoinInfo) => {
+    logger.logButtonPress('Token', `view ${token.symbol || 'unknown'} details`);
     navigation.navigate('TokenDetails', { 
       token: {
         id: token.id,
         symbol: token.symbol,
         name: token.name,
         image: token.image,
-        current_price: token.current_price,
-        price_change_percentage_24h: token.price_change_percentage_24h,
+        current_price: 'current_price' in token ? token.current_price : token.current_price,
+        price_change_percentage_24h: 'price_change_percentage_24h' in token ? token.price_change_percentage_24h : token.price_change_percentage_24h,
       }
     });
   };
@@ -203,6 +261,182 @@ export const SearchScreen: React.FC = () => {
       second: '2-digit',
       hour12: true
     });
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    }).format(value);
+  };
+
+  const renderTokenItem = (token: TrendingToken | CoinInfo, index: number) => {
+    const priceChange = formatPriceChange('price_change_percentage_24h' in token ? token.price_change_percentage_24h : token.price_change_percentage_24h);
+    const currentPrice = 'current_price' in token ? token.current_price : token.current_price;
+    
+    return (
+      <TouchableOpacity
+        key={token.id}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: 16,
+          borderBottomWidth: index < (selectedCategory === 'tokens' ? topTokens.length : apiTrendingTokens.length) - 1 ? 1 : 0,
+          borderBottomColor: 'rgba(148, 163, 184, 0.2)',
+        }}
+        onPress={() => handleTokenPress(token)}
+        activeOpacity={0.7}
+      >
+        {/* Token Icon */}
+        <View style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: '#f1f5f9',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 16,
+        }}>
+          {token.image ? (
+            <Image 
+              source={{ uri: token.image }} 
+              style={{ width: 32, height: 32, borderRadius: 16 }}
+            />
+          ) : (
+            <Ionicons name="ellipse" size={24} color="#94a3b8" />
+          )}
+        </View>
+
+        {/* Token Info */}
+        <View style={{ flex: 1 }}>
+          <Text style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#1e293b',
+            marginBottom: 4,
+          }}>
+            {token.name}
+          </Text>
+          {selectedCategory === 'tokens' && (
+            <Text style={{
+              fontSize: 12,
+              color: '#64748b',
+            }}>
+              #{token.market_cap_rank || 'N/A'}
+            </Text>
+          )}
+        </View>
+
+        {/* Price Info */}
+        <View style={{ alignItems: 'flex-end' }}>
+          {selectedCategory === 'tokens' && (
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '500',
+              color: '#1e293b',
+              marginBottom: 4,
+            }}>
+              {formatCurrency(currentPrice)}
+            </Text>
+          )}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 4,
+          }}>
+            <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
+            <Text style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: priceChange.color,
+              marginLeft: 4,
+            }}>
+              {priceChange.value}%
+            </Text>
+          </View>
+          <Text style={{
+            fontSize: 14,
+            fontWeight: '500',
+            color: '#64748b',
+          }}>
+            {token.symbol}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderPaginationControls = () => {
+    if (selectedCategory !== 'tokens' || topTokens.length === 0) return null;
+
+    return (
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        marginTop: 16,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+      }}>
+        <Text style={{
+          fontSize: 14,
+          color: '#64748b',
+        }}>
+          Showing {topTokens.length} of {hasMorePages ? 'many' : totalTokens} tokens
+        </Text>
+        
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{
+            fontSize: 14,
+            color: '#64748b',
+            marginRight: 8,
+          }}>
+            Page {currentPage}
+          </Text>
+          
+          {hasMorePages && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#3b82f6',
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+              onPress={loadNextPage}
+              disabled={isLoadingTokens}
+              activeOpacity={0.7}
+            >
+              {isLoadingTokens ? (
+                <LoadingSpinner size={16} color="#ffffff" />
+              ) : (
+                <>
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#ffffff',
+                    marginRight: 4,
+                  }}>
+                    Next
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color="#ffffff" />
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -328,187 +562,201 @@ export const SearchScreen: React.FC = () => {
           </ScrollView>
         </Animated.View>
 
-        {/* Enhanced Trending Tokens Section */}
-        <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 20,
-            padding: 24,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
-            {/* Section Header */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <Text style={{
-                fontSize: 20,
-                fontWeight: 'bold',
-                color: '#1e293b',
-              }}>
-                Trending Tokens
-              </Text>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#3b82f6',
-                  borderRadius: 20,
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  flexDirection: 'row',
+        {/* Content based on selected category */}
+        {selectedCategory === 'tokens' ? (
+          <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
+            <View style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 20,
+              padding: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 4,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.8)',
+            }}>
+              {/* Section Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: '#1e293b',
+                }}>
+                  Top Tokens
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                  onPress={handleRefresh}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#ffffff',
+                  }}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Tokens List */}
+              {isLoadingTokens && topTokens.length === 0 ? (
+                <View style={{ 
+                  paddingVertical: 40, 
                   alignItems: 'center',
-                }}
-                onPress={handleRefresh}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                  justifyContent: 'center',
+                }}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={{
+                    color: '#64748b',
+                    marginTop: 16,
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}>
+                    Loading top tokens...
+                  </Text>
+                </View>
+              ) : topTokens.length > 0 ? (
+                <View>
+                  {topTokens.map((token, index) => renderTokenItem(token, index))}
+                </View>
+              ) : (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <Ionicons name="ellipse-outline" size={48} color="#94a3b8" />
+                  <Text style={{
+                    color: '#64748b',
+                    textAlign: 'center',
+                    marginTop: 16,
+                    fontSize: 16,
+                  }}>
+                    No tokens available
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            {/* Pagination Controls */}
+            {renderPaginationControls()}
+          </Animated.View>
+        ) : (
+          /* Enhanced Trending Tokens Section for other categories */
+          <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
+            <View style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 20,
+              padding: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 4,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.8)',
+            }}>
+              {/* Section Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: '#1e293b',
+                }}>
+                  Trending Tokens
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                  onPress={handleRefresh}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: '#ffffff',
+                  }}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Last Updated Info */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={{
                   fontSize: 12,
+                  color: '#64748b',
+                  marginRight: 8,
+                }}>
+                  Last updated: {lastUpdated ? formatTime(lastUpdated) : 'Never'}
+                </Text>
+                <View style={{
+                  width: 6,
+                  height: 6,
+                  backgroundColor: '#22c55e',
+                  borderRadius: 3,
+                  marginRight: 6,
+                }} />
+                <Text style={{
+                  fontSize: 12,
+                  color: '#22c55e',
                   fontWeight: '600',
-                  color: '#ffffff',
                 }}>
-                  Refresh
+                  Live
                 </Text>
-              </TouchableOpacity>
+              </View>
+
+              {/* Trending Tokens List */}
+              {isLoadingTrending ? (
+                <View style={{ 
+                  paddingVertical: 40, 
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={{
+                    color: '#64748b',
+                    marginTop: 16,
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}>
+                    Loading trending tokens...
+                  </Text>
+                </View>
+              ) : apiTrendingTokens.length > 0 ? (
+                <View>
+                  {apiTrendingTokens.slice(0, 5).map((token, index) => renderTokenItem(token, index))}
+                </View>
+              ) : (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <Ionicons name="trending-down" size={48} color="#94a3b8" />
+                  <Text style={{
+                    color: '#64748b',
+                    textAlign: 'center',
+                    marginTop: 16,
+                    fontSize: 16,
+                  }}>
+                    No trending tokens available
+                  </Text>
+                </View>
+              )}
             </View>
-
-            {/* Last Updated Info */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{
-                fontSize: 12,
-                color: '#64748b',
-                marginRight: 8,
-              }}>
-                Last updated: {lastUpdated ? formatTime(lastUpdated) : 'Never'}
-              </Text>
-              <View style={{
-                width: 6,
-                height: 6,
-                backgroundColor: '#22c55e',
-                borderRadius: 3,
-                marginRight: 6,
-              }} />
-              <Text style={{
-                fontSize: 12,
-                color: '#22c55e',
-                fontWeight: '600',
-              }}>
-                Live
-              </Text>
-            </View>
-
-            {/* Trending Tokens List */}
-            {isLoadingTrending ? (
-              <View style={{ 
-                paddingVertical: 40, 
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <LoadingSpinner size={32} color="#3B82F6" />
-                <Text style={{
-                  color: '#64748b',
-                  marginTop: 16,
-                  fontSize: 14,
-                  fontWeight: '500',
-                }}>
-                  Loading trending tokens...
-                </Text>
-              </View>
-            ) : apiTrendingTokens.length > 0 ? (
-              <View>
-                {apiTrendingTokens.slice(0, 5).map((token, index) => {
-                  const priceChange = formatPriceChange(token.price_change_percentage_24h);
-                  return (
-                    <TouchableOpacity
-                      key={token.id}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingVertical: 16,
-                        borderBottomWidth: index < apiTrendingTokens.length - 1 ? 1 : 0,
-                        borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-                      }}
-                      onPress={() => handleTokenPress(token)}
-                      activeOpacity={0.7}
-                    >
-                      {/* Token Icon */}
-                      <View style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 20,
-                        backgroundColor: '#f1f5f9',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 16,
-                      }}>
-                        {token.image ? (
-                          <Image 
-                            source={{ uri: token.image }} 
-                            style={{ width: 32, height: 32, borderRadius: 16 }}
-                          />
-                        ) : (
-                          <Ionicons name="ellipse" size={24} color="#94a3b8" />
-                        )}
-                      </View>
-
-                      {/* Token Info */}
-                      <View style={{ flex: 1 }}>
-                        <Text style={{
-                          fontSize: 16,
-                          fontWeight: '600',
-                          color: '#1e293b',
-                          marginBottom: 4,
-                        }}>
-                          {token.name}
-                        </Text>
-                      </View>
-
-                      {/* Price Change */}
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <View style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginBottom: 4,
-                        }}>
-                          <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
-                          <Text style={{
-                            fontSize: 12,
-                            fontWeight: '600',
-                            color: priceChange.color,
-                            marginLeft: 4,
-                          }}>
-                            {priceChange.value}%
-                          </Text>
-                        </View>
-                        <Text style={{
-                          fontSize: 14,
-                          fontWeight: '500',
-                          color: '#64748b',
-                        }}>
-                          {token.symbol}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ) : (
-              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                <Ionicons name="trending-down" size={48} color="#94a3b8" />
-                <Text style={{
-                  color: '#64748b',
-                  textAlign: 'center',
-                  marginTop: 16,
-                  fontSize: 16,
-                }}>
-                  No trending tokens available
-                </Text>
-              </View>
-            )}
-          </View>
-        </Animated.View>
+          </Animated.View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

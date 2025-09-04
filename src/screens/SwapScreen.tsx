@@ -121,7 +121,7 @@ export const SwapScreen: React.FC = () => {
       setIsLoadingTokens(true);
       try {
         // Fetch top 100 coins from CoinGecko
-        const result = await priceService.fetchTopCoins(100);
+        const result = await priceService.fetchTopCoins(100, 1);
         if (result.success) {
           setCryptoCoins(result.data);
           

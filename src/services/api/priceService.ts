@@ -270,53 +270,53 @@ class PriceService {
   }
 
   /**
-   * Fetch top coins by market cap
+   * Fetch top coins by market cap with pagination
    */
-            async fetchTopCoins(limit: number = 100): Promise<ApiResponse<CoinInfo[]>> {
-            try {
-              const response = await this.makeRateLimitedRequest(() =>
-                axios.get(`${this.baseURL}/coins/markets`, {
-                  params: {
-                    vs_currency: 'usd',
-                    order: 'market_cap_desc',
-                    per_page: limit,
-                    page: 1,
-                    sparkline: false,
-                    locale: 'en'
-                  }
-                })
-              );
-
-              return {
-                data: response.data,
-                success: true
-              };
-            } catch (error: any) {
-              console.error('Failed to fetch top coins:', error);
-              
-              // If rate limited, return empty data instead of error
-              if (error.response?.status === 429) {
-                console.log('⚠️ Rate limited - returning empty market data');
-                return {
-                  data: [],
-                  success: false,
-                  error: 'Rate limited - please try again later'
-                };
-              }
-              
-              return {
-                data: [],
-                success: false,
-                error: error.message || 'Failed to fetch top coins'
-              };
-            }
+  async fetchTopCoins(limit: number = 100, page: number = 1): Promise<ApiResponse<CoinInfo[]>> {
+    try {
+      const response = await this.makeRateLimitedRequest(() =>
+        axios.get(`${this.baseURL}/coins/markets`, {
+          params: {
+            vs_currency: 'usd',
+            order: 'market_cap_desc',
+            per_page: limit,
+            page: page,
+            sparkline: false,
+            locale: 'en'
           }
+        })
+      );
+
+      return {
+        data: response.data,
+        success: true
+      };
+    } catch (error: any) {
+      console.error('Failed to fetch top coins:', error);
+      
+      // If rate limited, return empty data instead of error
+      if (error.response?.status === 429) {
+        console.log('⚠️ Rate limited - returning empty market data');
+        return {
+          data: [],
+          success: false,
+          error: 'Rate limited - please try again later'
+        };
+      }
+      
+      return {
+        data: [],
+        success: false,
+        error: error.message || 'Failed to fetch top coins'
+      };
+    }
+  }
 
   /**
    * Fetch market data (alias for fetchTopCoins)
    */
-  async fetchMarketData(limit: number = 20): Promise<ApiResponse<CoinInfo[]>> {
-    return this.fetchTopCoins(limit);
+  async fetchMarketData(limit: number = 20, page: number = 1): Promise<ApiResponse<CoinInfo[]>> {
+    return this.fetchTopCoins(limit, page);
   }
 
   /**

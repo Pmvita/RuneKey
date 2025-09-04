@@ -62,12 +62,12 @@ export const useCoinData = () => {
   /**
    * Fetch top coins by market cap
    */
-  const fetchTopCoins = useCallback(async (limit: number = 100) => {
+  const fetchTopCoins = useCallback(async (limit: number = 100, page: number = 1) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const result = await priceService.fetchTopCoins(limit);
+      const result = await priceService.fetchTopCoins(limit, page);
       
       if (result.success) {
         setTopCoins(result.data);

@@ -40,7 +40,7 @@ export const useDevWallet = () => {
 
       // Fetch live prices for all tokens
       const coinIds = devWalletConfig.tokens.map(token => token.coinId);
-      const livePrices = await priceService.fetchTopCoins(100);
+      const livePrices = await priceService.fetchTopCoins(100, 1);
       
       if (livePrices.success && livePrices.data) {
         const tokensWithPrices = await Promise.all(devWalletConfig.tokens.map(async (token) => {

@@ -370,7 +370,7 @@ export const TokenDetailsScreen: React.FC = () => {
 
       // Fetch comprehensive token data
       const [coinInfoResult, chartDataResult] = await Promise.all([
-        priceService.fetchTopCoins(1).then(result => {
+        priceService.fetchTopCoins(1, 1).then(result => {
           if (result.success && result.data.length > 0) {
             return { success: true, data: result.data[0] };
           }
