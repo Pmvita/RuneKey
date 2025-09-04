@@ -10,6 +10,7 @@ export { SkeletonLoader, TokenSkeleton, PortfolioSkeleton } from './common/Skele
 export { SparklineChart } from './common/SparklineChart';
 export { LoadingSpinner } from './common/LoadingSpinner';
 export { LoadingOverlay } from './common/LoadingOverlay';
+export { TabSelector } from './common/TabSelector';
 
 // New animated components
 export { AnimatedButton } from './common/AnimatedButton';

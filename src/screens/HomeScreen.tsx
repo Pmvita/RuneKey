@@ -25,6 +25,7 @@ import {
   LiquidGlass,
   SparklineChart,
   LoadingOverlay,
+  TabSelector,
 } from '../components';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
@@ -530,8 +531,8 @@ export const HomeScreen: React.FC = () => {
     ]);
   };
 
-  const handleFilterPress = (filter: AssetFilter) => {
-    setSelectedFilter(filter);
+  const handleFilterPress = (filter: string) => {
+    setSelectedFilter(filter as AssetFilter);
     logger.logButtonPress('Asset Filter', `switch to ${filter}`);
   };
 
@@ -868,43 +869,16 @@ export const HomeScreen: React.FC = () => {
           </Text>
 
           {/* Filter Tabs */}
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 12,
-            padding: 2,
-            marginBottom: 10,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}>
-            {(['all', 'gainer', 'loser'] as AssetFilter[]).map((filter) => (
-              <TouchableOpacity
-                key={filter}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  paddingHorizontal: 10,
-                  borderRadius: 8,
-                  backgroundColor: selectedFilter === filter ? '#3b82f6' : 'transparent',
-                  alignItems: 'center',
-                }}
-                onPress={() => handleFilterPress(filter)}
-                activeOpacity={0.7}
-              >
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: selectedFilter === filter ? '#ffffff' : '#64748b',
-                  textTransform: 'capitalize',
-                }}>
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <TabSelector
+            options={[
+              { key: 'all', label: 'All' },
+              { key: 'gainer', label: 'Gainers' },
+              { key: 'loser', label: 'Losers' }
+            ]}
+            selectedKey={selectedFilter}
+            onSelect={handleFilterPress}
+            style={{ marginBottom: 16 }}
+          />
           
           {/* Loading Indicator */}
           {loadingMarketData && (
