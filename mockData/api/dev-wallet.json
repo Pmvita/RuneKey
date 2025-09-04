@@ -5,26 +5,26 @@
     "address": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
     "publicKey": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
     "network": "ethereum",
-    "balance": "1250.875",
+    "balance": "1250",
     "totalValue": 15500000,
     "tokens": [
       { "coinId": "bitcoin",
-        "address": "0x0000000000000000000000000000000000000000",
+        "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
         "symbol": "BTC",
         "name": "Bitcoin",
         "decimals": 8,
-        "balance": "35.5",
+        "balance": "3000",
         "usdValue": 1535379.26,
-        "logoURI": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
+        "logoURI": "https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
       },
       {"coinId": "ethereum",
-        "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "address": "0x0000000000000000000000000000000000000000",
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": "1250.875",
+        "balance": "1250",
         "usdValue": 3316250.94,
-        "logoURI": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"
+        "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
       {
         "coinId": "usd-coin",
@@ -32,9 +32,9 @@
         "symbol": "USDC",
         "name": "USD Coin",
         "decimals": 6,
-        "balance": "1348052.40",
-        "usdValue": 1348052.40,
-        "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png"
+        "balance": "5000000.00",
+        "usdValue": 5000000.00,
+        "logoURI": "https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png"
       },
       {
         "coinId": "tether",
@@ -44,7 +44,7 @@
         "decimals": 6,
         "balance": "3000000.00",
         "usdValue": 3000000.00,
-        "logoURI": "https://assets.coingecko.com/coins/images/325/large/Tether.png"
+        "logoURI": "https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
       },
       {
         "coinId": "binancecoin",
@@ -52,9 +52,9 @@
         "symbol": "BNB",
         "name": "BNB",
         "decimals": 18,
-        "balance": "15000.00",
+        "balance": "1000",
         "usdValue": 4686750.00,
-        "logoURI": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png"
+        "logoURI": "https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png"
       }
     ],
     "transactions": [

@@ -191,11 +191,11 @@ export const SwapScreen: React.FC = () => {
 
   // Mock selected tokens for development
   const [selectedInputToken, setSelectedInputToken] = useState<Token | null>({
-    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    address: '0x0000000000000000000000000000000000000000',
     symbol: 'ETH',
     name: 'Ethereum',
     decimals: 18,
-    balance: '1250.875',
+    balance: '1250',
   });
   const [selectedOutputToken, setSelectedOutputToken] = useState<Token | null>({
     address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',

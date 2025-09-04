@@ -1,85 +1,61 @@
 {
-  "wallet": {
-    "id": "developer-wallet",
+  "wallet": 
+  {"id": "developer-wallet",
     "name": "Developer Wallet",
     "address": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
     "publicKey": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
     "network": "ethereum",
-    "balance": "1250.875",
-    "totalValue": 15500000,
+    "balance": "",
+    "totalValue": 0,
     "tokens": [
-      {
-        "coinId": "bitcoin",
+      {"coinId": "bitcoin",
         "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-        "symbol": "WBTC",
-        "name": "Wrapped Bitcoin",
+        "symbol": "BTC",
+        "name": "Bitcoin",
         "decimals": 8,
-        "balance": "35.5",
-        "currentPrice": 43250.12,
-        "priceChange24h": 2.98,
-        "marketCap": 847123456789,
-        "usdValue": 1535379.26,
-        "logoURI": "https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+        "balance": 7000,
+        "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fw7.pngwing.com%2Fpngs%2F152%2F545%2Fpng-transparent-bitcoin-cash-cryptocurrency-ethereum-application-specific-integrated-circuit-bitcoin-text-trademark-orange.png&f=1&nofb=1&ipt=74034d56692237b23ecc24fb98c244b6788c9af53288f955e51a5c217b4bc06b"
       },
-      {
-        "coinId": "ethereum",
+      {"coinId": "ethereum",
         "address": "0x0000000000000000000000000000000000000000",
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": "1250.875",
-        "currentPrice": 2650.45,
-        "priceChange24h": 1.94,
-        "marketCap": 318765432109,
-        "usdValue": 3316250.94,
+        "balance": 1000,
         "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
-      {
-        "coinId": "usd-coin",
+      {"coinId": "usd-coin",
         "address": "0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91",
         "symbol": "USDC",
         "name": "USD Coin",
         "decimals": 6,
-        "balance": "5000000.00",
-        "currentPrice": 1.00,
-        "priceChange24h": 0.00,
-        "marketCap": 45678901234,
-        "usdValue": 5000000.00,
+        "balance": 5000000.00,
         "logoURI": "https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png"
       },
-      {
-        "coinId": "tether",
+      {"coinId": "tether",
         "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
         "symbol": "USDT",
         "name": "Tether USD",
         "decimals": 6,
-        "balance": "3000000.00",
-        "currentPrice": 1.00,
-        "priceChange24h": 0.00,
-        "marketCap": 98765432109,
-        "usdValue": 3000000.00,
+        "balance": 3000000.00,
         "logoURI": "https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
       },
-      {
-        "coinId": "binancecoin",
+      {"coinId": "binancecoin",
         "address": "0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
         "symbol": "BNB",
         "name": "BNB",
         "decimals": 18,
-        "balance": "15000.00",
-        "currentPrice": 312.45,
-        "priceChange24h": 0.79,
-        "marketCap": 48123456789,
-        "usdValue": 4686750.00,
+        "balance": 1000,
         "logoURI": "https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png"
       }
     ],
+
     "transactions": [
       {
         "hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "from": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
         "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef1",
-        "amount": "100.0",
+        "amount": 100.0,
         "token": {
           "symbol": "ETH",
           "name": "Ethereum",
@@ -95,7 +71,7 @@
         "hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
         "from": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef2",
         "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
-        "amount": "50.0",
+        "amount": 50.0,
         "token": {
           "symbol": "WBTC",
           "name": "Wrapped Bitcoin",
@@ -111,7 +87,7 @@
         "hash": "0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456",
         "from": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0",
         "to": "0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef3",
-        "amount": "1000000.0",
+        "amount": 1000000.0,
         "token": {
           "symbol": "USDC",
           "name": "USD Coin",
@@ -124,6 +100,7 @@
         "gasUsed": "45000"
       }
     ],
+
     "networks": [
       {
         "id": "ethereum",
@@ -156,6 +133,7 @@
         "icon": "bsc"
       }
     ],
+
     "settings": {
       "theme": "dark",
       "currency": "USD",
@@ -166,12 +144,15 @@
       "gasPrice": "auto"
     }
   },
+
+
+
   "metadata": {
-    "lastUpdated": "2024-01-15T12:00:00.000Z",
+    "lastUpdated": "2025-01-15T12:00:00.000Z",
     "version": "1.0.0",
-    "totalTransactions": 3,
-    "portfolioChange24h": 2.45,
-    "portfolioChange7d": 8.67,
-    "portfolioChange30d": 15.23
+    "totalTransactions": 0,
+    "portfolioChange24h": 0,
+    "portfolioChange7d": 0,
+    "portfolioChange30d": 0
   }
 } 

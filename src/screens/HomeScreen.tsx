@@ -25,7 +25,7 @@ import {
   LiquidGlass,
   SparklineChart,
 } from '../components';
-import { useWallet } from '../hooks/wallet/useWallet';
+import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { usePrices } from '../hooks/token/usePrices';
 import { Token } from '../types';
@@ -36,10 +36,10 @@ import { logger } from '../utils/logger';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-type AssetFilter = 'all' | 'gainer' | 'loser' | 'favourites';
+type AssetFilter = 'all' | 'gainer' | 'loser';
 
 export const HomeScreen: React.FC = () => {
-  const { isConnected, currentWallet, activeNetwork } = useWallet();
+  const { isConnected, currentWallet, activeNetwork } = useWalletStore();
   const { connectDevWallet } = useDevWallet();
   const { 
     fetchPrices, 
@@ -50,13 +50,14 @@ export const HomeScreen: React.FC = () => {
     getTokenPriceChange,
     calculateUSDValue
   } = usePrices();
-  const [walletData, setWalletData] = useState<any>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [marketData, setMarketData] = useState<CoinInfo[]>([]);
   const [loadingMarketData, setLoadingMarketData] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<AssetFilter>('all');
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+  const [animationsTriggered, setAnimationsTriggered] = useState(false);
   const navigation = useNavigation<any>();
 
   // Animation values
@@ -69,59 +70,6 @@ export const HomeScreen: React.FC = () => {
   const assetsTranslateY = useSharedValue(50);
   const assetsOpacity = useSharedValue(0);
 
-  // Load mock data for development
-  const loadWalletData = async () => {
-    setLoadingData(true);
-    try {
-      // Import the mock data directly
-      const mockData = require('../../mockData/api/dev-wallet.json');
-      console.log('📊 HomeScreen: Loading Dev Mode Wallet mockData...');
-      setWalletData(mockData.wallet);
-      logger.logButtonPress('HomeScreen', 'load mock wallet data');
-    } catch (error) {
-      logger.logError('HomeScreen', 'Failed to load wallet data');
-      console.error('Failed to load wallet data:', error);
-      // Set fallback data for development
-      setWalletData({
-        totalValue: 21013534,
-        tokens: [
-          {
-            symbol: 'USDC',
-            name: 'USD Coin',
-            balance: '5000000.00',
-            usdValue: 5000000,
-            priceChange24h: 0,
-            logoURI: 'https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png',
-            address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
-            decimals: 6
-          },
-          {
-            symbol: 'BNB',
-            name: 'BNB',
-            balance: '15000.00',
-            usdValue: 4686750,
-            priceChange24h: 0.79,
-            logoURI: 'https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png',
-            address: '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
-            decimals: 18
-          },
-          {
-            symbol: 'ETH',
-            name: 'Ethereum',
-            balance: '1250.875',
-            usdValue: 4301083.65,
-            priceChange24h: -2.39,
-            logoURI: 'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
-            address: '0x0000000000000000000000000000000000000000',
-            decimals: 18
-          }
-        ]
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
   // Load market data from CoinGecko
   const loadMarketData = async () => {
     setLoadingMarketData(true);
@@ -130,6 +78,63 @@ export const HomeScreen: React.FC = () => {
       if (result.success && result.data) {
         setMarketData(result.data);
         logger.logButtonPress('HomeScreen', 'load market data');
+      } else {
+        // Use fallback data if API fails
+        console.log('⚠️ Using fallback market data due to API failure');
+        setMarketData([
+          {
+            id: 'bitcoin',
+            symbol: 'btc',
+            name: 'Bitcoin',
+            image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
+            current_price: 51200,
+            market_cap: 1000000000000,
+            market_cap_rank: 1,
+            total_volume: 25000000000,
+            high_24h: 52000,
+            low_24h: 50000,
+            price_change_24h: 1200,
+            price_change_percentage_24h: 2.4,
+            market_cap_change_24h: 24000000000,
+            market_cap_change_percentage_24h: 2.4,
+            circulating_supply: 19500000,
+            total_supply: 21000000,
+            max_supply: 21000000,
+            ath: 69000,
+            ath_change_percentage: -25.8,
+            ath_date: '2021-11-10T14:24:11.849Z',
+            atl: 67.81,
+            atl_change_percentage: 75400.0,
+            atl_date: '2013-07-06T00:00:00.000Z',
+            last_updated: new Date().toISOString(),
+          },
+          {
+            id: 'ethereum',
+            symbol: 'eth',
+            name: 'Ethereum',
+            image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
+            current_price: 3200,
+            market_cap: 400000000000,
+            market_cap_rank: 2,
+            total_volume: 15000000000,
+            high_24h: 3300,
+            low_24h: 3100,
+            price_change_24h: 100,
+            price_change_percentage_24h: 3.2,
+            market_cap_change_24h: 12000000000,
+            market_cap_change_percentage_24h: 3.2,
+            circulating_supply: 120000000,
+            total_supply: 120000000,
+            max_supply: 0,
+            ath: 4800,
+            ath_change_percentage: -33.3,
+            ath_date: '2021-11-10T14:24:11.849Z',
+            atl: 0.432979,
+            atl_change_percentage: 740000.0,
+            atl_date: '2015-10-20T00:00:00.000Z',
+            last_updated: new Date().toISOString(),
+          }
+        ]);
       }
     } catch (error) {
       console.error('Failed to load market data:', error);
@@ -178,7 +183,7 @@ export const HomeScreen: React.FC = () => {
           market_cap_change_percentage_24h: -21.00,
           circulating_supply: 120000000,
           total_supply: 120000000,
-          max_supply: null,
+          max_supply: 0,
           ath: 4800,
           ath_change_percentage: -47.7,
           ath_date: '2021-11-10T14:24:11.849Z',
@@ -282,7 +287,7 @@ export const HomeScreen: React.FC = () => {
           market_cap_change_percentage_24h: 0.07,
           circulating_supply: 11000000000,
           total_supply: 11000000000,
-          max_supply: null,
+          max_supply: 0,
           ath: 1.32,
           ath_change_percentage: -44.7,
           ath_date: '2018-07-24T00:00:00.000Z',
@@ -299,15 +304,33 @@ export const HomeScreen: React.FC = () => {
 
   // Load data on mount
   useEffect(() => {
-    loadWalletData();
     loadMarketData();
   }, []);
 
+  // Auto-connect dev wallet if not connected
+  useEffect(() => {
+    console.log('🔍 HomeScreen: isConnected =', isConnected, 'currentWallet =', currentWallet ? 'exists' : 'null');
+    
+    // Only connect if we don't have a wallet and we're not already connecting
+    if (!currentWallet && !isConnectingWallet) {
+      console.log('🔄 Connecting Dev Wallet for fresh data...');
+      setIsConnectingWallet(true);
+      setLoadingData(true);
+      connectDevWallet().finally(() => {
+        setIsConnectingWallet(false);
+        setLoadingData(false);
+      });
+    } else if (currentWallet && loadingData) {
+      // If wallet is already connected but we're still loading, stop loading
+      setLoadingData(false);
+    }
+  }, [currentWallet, connectDevWallet, isConnectingWallet, loadingData]);
+
   // Start live price updates when wallet data is loaded
   useEffect(() => {
-    if (walletData && walletData.tokens) {
+    if (currentWallet && currentWallet.tokens) {
       // Get addresses for live price fetching
-      const tokenAddresses = walletData.tokens
+      const tokenAddresses = currentWallet.tokens
         .map((token: any) => token.address)
         .filter(Boolean);
       
@@ -326,7 +349,7 @@ export const HomeScreen: React.FC = () => {
         };
       }
     }
-  }, [walletData, fetchPrices, stopPriceRefresh]);
+  }, [currentWallet, fetchPrices, stopPriceRefresh]);
 
   // Animated styles
   const headerAnimatedStyle = useAnimatedStyle(() => ({
@@ -351,7 +374,10 @@ export const HomeScreen: React.FC = () => {
 
   // Start animations when data loads
   useEffect(() => {
-    if (!loadingData && walletData) {
+    if (!loadingData && currentWallet && !animationsTriggered) {
+      console.log('🎬 Starting HomeScreen animations...');
+      setAnimationsTriggered(true);
+      
       // Header animation
       headerOpacity.value = withTiming(1, { duration: 600 });
       headerTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
@@ -374,13 +400,48 @@ export const HomeScreen: React.FC = () => {
         assetsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
       }, 600);
     }
-  }, [loadingData, walletData]);
+  }, [loadingData, currentWallet, animationsTriggered]);
+
+  // Reset animations when wallet changes
+  useEffect(() => {
+    if (currentWallet) {
+      setAnimationsTriggered(false);
+    }
+  }, [currentWallet?.id]); // Only reset when wallet ID changes
 
   // Log screen focus
   useFocusEffect(
     useCallback(() => {
       logger.logScreenFocus('HomeScreen');
-    }, [])
+      
+      // Only trigger animations on focus if wallet exists and animations haven't been triggered
+      if (currentWallet && !animationsTriggered && !loadingData) {
+        console.log('🎬 Triggering animations on screen focus...');
+        setAnimationsTriggered(true);
+        
+        // Header animation
+        headerOpacity.value = withTiming(1, { duration: 600 });
+        headerTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+
+        // Portfolio animation
+        setTimeout(() => {
+          portfolioOpacity.value = withTiming(1, { duration: 800 });
+          portfolioScale.value = withSpring(1, { damping: 12, stiffness: 120 });
+        }, 200);
+
+        // Actions animation
+        setTimeout(() => {
+          actionsOpacity.value = withTiming(1, { duration: 600 });
+          actionsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+        }, 400);
+
+        // Assets animation
+        setTimeout(() => {
+          assetsOpacity.value = withTiming(1, { duration: 600 });
+          assetsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
+        }, 600);
+      }
+    }, [currentWallet, animationsTriggered, loadingData])
   );
 
   const truncateAddress = (address: string) => {
@@ -406,15 +467,20 @@ export const HomeScreen: React.FC = () => {
   };
 
   const calculateTotalValue = () => {
-    if (!walletData || !walletData.tokens) return 0;
-    return walletData.tokens.reduce((total: number, token: any) => {
-      const liveUSDValue = calculateUSDValue(token.address, token.balance);
-      return total + (liveUSDValue || token.usdValue || 0);
+    if (!currentWallet || !currentWallet.tokens) return 0;
+    
+    return currentWallet.tokens.reduce((total: number, token: any) => {
+      const livePrice = getTokenPrice(token.address) || 0;
+      const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
+      const tokenValue = tokenBalance * livePrice;
+      
+      console.log(`💰 ${token.symbol}: ${tokenBalance} × $${livePrice} = $${tokenValue.toLocaleString()}`);
+      
+      return total + tokenValue;
     }, 0);
   };
 
   const onRefresh = async () => {
-    await loadWalletData();
     await loadMarketData();
   };
 
@@ -424,17 +490,37 @@ export const HomeScreen: React.FC = () => {
   };
 
   const getFilteredMarketData = () => {
-    switch (selectedFilter) {
-      case 'gainer':
-        return marketData.filter(coin => coin.price_change_percentage_24h > 0);
-      case 'loser':
-        return marketData.filter(coin => coin.price_change_percentage_24h < 0);
-      case 'favourites':
-        // For now, return top 5 by market cap as "favourites"
-        return marketData.slice(0, 5);
-      default:
-        return marketData;
+    // Use current wallet tokens with live API data
+    if (!currentWallet || !currentWallet.tokens) return [];
+    
+    const filtered = (() => {
+      switch (selectedFilter) {
+        case 'gainer':
+          return currentWallet.tokens.filter((token: any) => {
+            const priceChange = getTokenPriceChange(token.address);
+            return priceChange !== null && priceChange > 0;
+          });
+        case 'loser':
+          return currentWallet.tokens.filter((token: any) => {
+            const priceChange = getTokenPriceChange(token.address);
+            return priceChange !== null && priceChange < 0;
+          });
+        default:
+          return currentWallet.tokens;
+      }
+    })();
+    
+    // Debug logging for gainer filter
+    if (selectedFilter === 'gainer') {
+      console.log('🔍 Gainer filter - Total tokens:', currentWallet.tokens.length);
+      console.log('🔍 Gainer filter - Positive changes:', currentWallet.tokens.filter((token: any) => {
+        const priceChange = getTokenPriceChange(token.address);
+        return priceChange !== null && priceChange > 0;
+      }).length);
+      console.log('🔍 Gainer filter - Filtered result:', filtered.length);
     }
+    
+    return filtered;
   };
 
   const generateSparklineData = (priceChange: number) => {
@@ -482,7 +568,7 @@ export const HomeScreen: React.FC = () => {
       <ScrollView 
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={loadingData || loadingMarketData} onRefresh={onRefresh} />
+          <RefreshControl refreshing={loadingMarketData} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
       >
@@ -502,7 +588,7 @@ export const HomeScreen: React.FC = () => {
           
         {/* Enhanced Total Portfolio Value */}
         <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, portfolioAnimatedStyle]}>
-          {walletData ? (
+          {currentWallet ? (
             <View style={{
               backgroundColor: 'rgba(255, 255, 255, 0.9)',
               borderRadius: 20,
@@ -545,7 +631,38 @@ export const HomeScreen: React.FC = () => {
               </View>
             </View>
           ) : (
-            <PortfolioSkeleton />
+            <View style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: 20,
+              padding: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.8)',
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{
+                  fontSize: 14,
+                  color: '#64748b',
+                  fontWeight: '500',
+                }}>
+                  Connecting Wallet...
+                </Text>
+              </View>
+              <View style={{ marginBottom: 8 }}>
+                <Text style={{
+                  fontSize: 36,
+                  fontWeight: 'bold',
+                  color: '#1e293b',
+                  letterSpacing: -1,
+                }}>
+                  $0.00
+                </Text>
+              </View>
+            </View>
           )}
         </Animated.View>
 
@@ -702,7 +819,7 @@ export const HomeScreen: React.FC = () => {
             shadowRadius: 4,
             elevation: 2,
           }}>
-            {(['all', 'gainer', 'loser', 'favourites'] as AssetFilter[]).map((filter) => (
+            {(['all', 'gainer', 'loser'] as AssetFilter[]).map((filter) => (
               <TouchableOpacity
                 key={filter}
                 style={{
@@ -780,13 +897,19 @@ export const HomeScreen: React.FC = () => {
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0.8)',
           }}>
-            {getFilteredMarketData().map((coin, index) => {
-              const isPositive = coin.price_change_percentage_24h >= 0;
-              const sparklineData = generateSparklineData(coin.price_change_percentage_24h);
+            {getFilteredMarketData().map((token: any, index: number) => {
+              const currentPrice = getTokenPrice(token.address) || 0;
+              const priceChange = getTokenPriceChange(token.address) || 0;
+              const isPositive = priceChange >= 0;
+              const sparklineData = generateSparklineData(priceChange);
+              
+              // Calculate USD value based on balance and live price
+              const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
+              const usdValue = tokenBalance * currentPrice;
               
               return (
                 <TouchableOpacity
-                  key={coin.id}
+                  key={token.address}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -796,15 +919,15 @@ export const HomeScreen: React.FC = () => {
                     borderBottomColor: 'rgba(148, 163, 184, 0.2)',
                   }}
                   onPress={() => {
-                    logger.logButtonPress(`${coin.symbol.toUpperCase()} Token`, 'view token details');
+                    logger.logButtonPress(`${token.symbol} Token`, 'view token details');
                     navigation.navigate('TokenDetails', { 
                       token: {
-                        id: coin.id,
-                        symbol: coin.symbol.toUpperCase(),
-                        name: coin.name,
-                        image: coin.image,
-                        current_price: coin.current_price,
-                        price_change_percentage_24h: coin.price_change_percentage_24h,
+                        id: token.coinId,
+                        symbol: token.symbol,
+                        name: token.name,
+                        image: token.logoURI,
+                        current_price: currentPrice,
+                        price_change_percentage_24h: priceChange,
                       }
                     });
                   }}
@@ -821,7 +944,7 @@ export const HomeScreen: React.FC = () => {
                     marginRight: 16,
                   }}>
                     <Image 
-                      source={{ uri: coin.image }} 
+                      source={{ uri: token.logoURI }} 
                       style={{ width: 32, height: 32, borderRadius: 16 }}
                     />
                   </View>
@@ -834,13 +957,13 @@ export const HomeScreen: React.FC = () => {
                       color: '#1e293b',
                       marginBottom: 4,
                     }}>
-                      {coin.name}
+                      {token.name}
                     </Text>
                     <Text style={{
                       fontSize: 14,
                       color: '#64748b',
                     }}>
-                      {coin.symbol.toUpperCase()}
+                      {token.symbol}
                     </Text>
                   </View>
 
@@ -863,14 +986,17 @@ export const HomeScreen: React.FC = () => {
                       color: '#1e293b',
                       marginBottom: 4,
                     }}>
-                      ₹{coin.current_price.toFixed(2)}
+                      ${usdValue.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </Text>
                     <Text style={{
                       fontSize: 14,
                       fontWeight: '500',
                       color: isPositive ? '#22c55e' : '#ef4444',
                     }}>
-                      {isPositive ? '+' : ''}{coin.price_change_percentage_24h.toFixed(2)}%
+                      {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
                     </Text>
                   </View>
                 </TouchableOpacity>

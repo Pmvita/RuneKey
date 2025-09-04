@@ -12,60 +12,22 @@ export const useDevWallet = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Dev wallet configuration with real crypto addresses
+  // Dev wallet configuration loaded from JSON file
   const devWalletConfig = {
-    id: 'developer-wallet',
-    name: 'Developer Wallet',
-    address: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-    publicKey: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-    network: 'ethereum' as const,
-    tokens: [
-      {
-        coinId: 'bitcoin',
-        address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-        symbol: 'BTC',
-        name: 'Wrapped Bitcoin',
-        decimals: 8,
-        balance: '35.5', // ~$2.3M in BTC
-        logoURI: 'https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png',
-      },
-      {
-        coinId: 'ethereum',
-        address: '0x0000000000000000000000000000000000000000',
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        balance: '1250.875', // ~$4.2M in ETH
-        logoURI: 'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
-      },
-      {
-        coinId: 'usd-coin',
-        address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
-        symbol: 'USDC',
-        name: 'USD Coin',
-        decimals: 6,
-        balance: '5000000.00', // $5M USDC
-        logoURI: 'https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png',
-      },
-      {
-        coinId: 'tether',
-        address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-        symbol: 'USDT',
-        name: 'Tether USD',
-        decimals: 6,
-        balance: '3000000.00', // $3M USDT
-        logoURI: 'https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png',
-      },
-      {
-        coinId: 'binancecoin',
-        address: '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
-        symbol: 'BNB',
-        name: 'BNB',
-        decimals: 18,
-        balance: '15000.00', // ~$1M in BNB
-        logoURI: 'https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png',
-      },
-    ]
+    id: mockDevWallet.wallet.id,
+    name: mockDevWallet.wallet.name,
+    address: mockDevWallet.wallet.address,
+    publicKey: mockDevWallet.wallet.publicKey,
+    network: mockDevWallet.wallet.network as const,
+    tokens: mockDevWallet.wallet.tokens.map(token => ({
+      coinId: token.coinId,
+      address: token.address,
+      symbol: token.symbol,
+      name: token.name,
+      decimals: token.decimals,
+      balance: token.balance.toString(),
+      logoURI: token.logoURI,
+    }))
   };
 
   const connectDevWallet = useCallback(async () => {
@@ -119,7 +81,7 @@ export const useDevWallet = () => {
         
         return {
           ...devWalletConfig,
-          balance: '1250.875', // ETH balance
+          balance: mockDevWallet.wallet.balance,
           tokens: tokensWithPrices,
           totalValue,
         };
@@ -134,7 +96,7 @@ export const useDevWallet = () => {
       connectDeveloperWallet();
       return {
         ...devWalletConfig,
-        balance: '1250.875',
+        balance: mockDevWallet.wallet.balance,
         tokens: devWalletConfig.tokens.map(token => ({
           ...token,
           currentPrice: 0,

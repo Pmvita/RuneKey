@@ -29,7 +29,7 @@ interface AppActions {
 const initialState: AppState = {
   theme: 'system',
   currency: 'USD',
-  isFirstLaunch: true,
+  isFirstLaunch: false,
   featureFlags: DEFAULT_FEATURE_FLAGS,
   priceRefreshInterval: APP_CONFIG.PRICE_REFRESH_INTERVAL,
   developerMode: false,

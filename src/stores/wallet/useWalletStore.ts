@@ -152,131 +152,80 @@ export const useWalletStore = create<WalletState & WalletActions>()(
 
       connectDeveloperWallet: () => {
         console.log('Connecting developer wallet...');
-        const mockWallet: Wallet = {
-          id: 'developer-wallet',
-          name: 'Developer Wallet',
-          address: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-          publicKey: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-          network: 'ethereum',
-          balance: '1250.875', // ETH amount that equals roughly $10.5M at current prices
-          tokens: [
-            {
-              address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-              symbol: 'BTC',
-              name: 'Wrapped Bitcoin',
-              decimals: 8,
-              balance: '35.5', // ~$2.3M in BTC
-              logoURI: 'https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png',
-              coinId: 'bitcoin',
-            },
-            {
-              address: '0x0000000000000000000000000000000000000000',
-              symbol: 'ETH',
-              name: 'Ethereum',
-              decimals: 18,
-              balance: '1250.875', // ~$4.2M in ETH
-              logoURI: 'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
-              coinId: 'ethereum',
-            },
-            {
-              address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
-              symbol: 'USDC',
-              name: 'USD Coin',
-              decimals: 6,
-              balance: '5000000.00', // $5M USDC
-              logoURI: 'https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png',
-              coinId: 'usd-coin',
-            },
-            {
-              address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-              symbol: 'USDT',
-              name: 'Tether USD',
-              decimals: 6,
-              balance: '3000000.00', // $3M USDT
-              logoURI: 'https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png',
-              coinId: 'tether',
-            },
-            {
-              address: '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
-              symbol: 'BNB',
-              name: 'BNB',
-              decimals: 18,
-              balance: '15000.00', // ~$1M in BNB
-              logoURI: 'https://tokens.1inch.io/0xb8c77482e45f1f44de1745f52c74426c631bdd52.png',
-              coinId: 'binancecoin',
-            },
-          ]
-        };
+        
+        try {
+          // Load data from dev-wallet.json file
+          const devWalletData = require('../../mockData/api/dev-wallet.json');
+          console.log('📊 WalletStore: Loading Dev Mode Wallet from dev-wallet.json...');
+          
+          const mockWallet: Wallet = {
+            id: devWalletData.wallet.id,
+            name: devWalletData.wallet.name,
+            address: devWalletData.wallet.address,
+            publicKey: devWalletData.wallet.publicKey,
+            network: devWalletData.wallet.network,
+            balance: devWalletData.wallet.balance,
+            tokens: devWalletData.wallet.tokens.map((token: any) => ({
+              address: token.address,
+              symbol: token.symbol,
+              name: token.name,
+              decimals: token.decimals,
+              balance: token.balance.toString(),
+              logoURI: token.logoURI,
+              coinId: token.coinId,
+            }))
+          };
 
-        // Mock transactions from dev wallet data
-        const mockTransactions = [
-          {
-            hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-            from: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-            to: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef1',
-            amount: '100.0',
+          // Mock transactions from dev wallet data
+          const mockTransactions = devWalletData.wallet.transactions.map((tx: any) => ({
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to,
+            amount: tx.amount.toString(),
             token: {
-              address: '0x0000000000000000000000000000000000000000',
-              symbol: 'ETH',
-              name: 'Ethereum',
-              decimals: 18,
-              logoURI: 'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
-              coinId: 'ethereum',
+              address: tx.token.address,
+              symbol: tx.token.symbol,
+              name: tx.token.name,
+              decimals: tx.token.decimals,
+              logoURI: devWalletData.wallet.tokens.find((t: any) => t.symbol === tx.token.symbol)?.logoURI || '',
+              coinId: devWalletData.wallet.tokens.find((t: any) => t.symbol === tx.token.symbol)?.coinId || '',
             },
-            timestamp: 1707350400000,
-            status: 'confirmed' as const,
-            type: 'send' as const,
-            gasPrice: '20000000000',
-            gasUsed: '21000'
-          },
-          {
-            hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-            from: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef2',
-            to: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-            amount: '50.0',
-            token: {
-              address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-              symbol: 'BTC',
-              name: 'Wrapped Bitcoin',
-              decimals: 8,
-              logoURI: 'https://tokens.1inch.io/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png',
-              coinId: 'bitcoin',
-            },
-            timestamp: 1707264000000,
-            status: 'confirmed' as const,
-            type: 'receive' as const,
-            gasPrice: '25000000000',
-            gasUsed: '65000'
-          },
-          {
-            hash: '0x7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
-            from: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
-            to: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef3',
-            amount: '1000000.0',
-            token: {
-              address: '0xA0b86a33E6441aBB619d3d5c9C5c27DA6E6f4d91',
-              symbol: 'USDC',
-              name: 'USD Coin',
-              decimals: 6,
-              logoURI: 'https://tokens.1inch.io/0xa0b86a33e6441abb619d3d5c9c5c27da6e6f4d91.png',
-              coinId: 'usd-coin',
-            },
-            timestamp: 1707177600000,
-            status: 'confirmed' as const,
-            type: 'send' as const,
-            gasPrice: '22000000000',
-            gasUsed: '45000'
-          }
-        ];
+            timestamp: tx.timestamp,
+            status: tx.status as const,
+            type: tx.type as const,
+            gasPrice: tx.gasPrice,
+            gasUsed: tx.gasUsed
+          }));
 
-        set({
-          isConnected: true,
-          currentWallet: mockWallet,
-          activeNetwork: 'ethereum',
-          transactions: mockTransactions,
-          error: null,
-        });
-        console.log('Developer wallet connected successfully');
+          set({
+            isConnected: true,
+            currentWallet: mockWallet,
+            activeNetwork: 'ethereum',
+            transactions: mockTransactions,
+            error: null,
+          });
+          console.log('Developer wallet connected successfully');
+        } catch (error) {
+          console.error('Failed to load dev wallet data:', error);
+          // Fallback to basic wallet structure if dev-wallet.json fails to load
+          const fallbackWallet: Wallet = {
+            id: 'developer-wallet',
+            name: 'Developer Wallet',
+            address: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
+            publicKey: '0x742d35Cc6b4D4EeC7e4b4dB4Ce123456789abcdef0',
+            network: 'ethereum',
+            balance: '',
+            tokens: []
+          };
+
+          set({
+            isConnected: true,
+            currentWallet: fallbackWallet,
+            activeNetwork: 'ethereum',
+            transactions: [],
+            error: 'Failed to load dev wallet data',
+          });
+        }
       },
 
       reset: () => {
@@ -287,11 +236,11 @@ export const useWalletStore = create<WalletState & WalletActions>()(
       name: STORAGE_KEYS.WALLET_DATA,
       storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({
-        // Only persist non-sensitive data
+        // Only persist connection state, not wallet data
         isConnected: state.isConnected,
         activeNetwork: state.activeNetwork,
         transactions: state.transactions,
-        // Don't persist wallet details for security
+        // Don't persist wallet data - always read fresh from dev-wallet.json
       }),
     }
   )

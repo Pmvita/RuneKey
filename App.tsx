@@ -207,7 +207,7 @@ function App() {
   const actualTheme = theme === 'system' ? (systemColorScheme || 'light') : theme;
 
   // Determine if we should show onboarding
-  const shouldShowOnboarding = isFirstLaunch || !isConnected;
+  const shouldShowOnboarding = isFirstLaunch;
 
   // Set up any initialization logic
   useEffect(() => {
