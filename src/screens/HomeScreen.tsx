@@ -24,7 +24,9 @@ import {
   AnimatedProgressBar,
   LiquidGlass,
   SparklineChart,
+  LoadingOverlay,
 } from '../components';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { usePrices } from '../hooks/token/usePrices';
@@ -541,6 +543,18 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      {/* Loading Overlay */}
+      <LoadingOverlay 
+        visible={loadingData || isConnectingWallet || loadingMarketData}
+        message={
+          isConnectingWallet ? "Connecting Wallet..." : 
+          loadingMarketData ? "Loading Market Data..." : 
+          "Loading Data..."
+        }
+        spinnerSize={80}
+        spinnerColor="#3B82F6"
+      />
+      
       {/* Particle Effects */}
       <ParticleEffect 
         type="confetti" 
@@ -649,8 +663,11 @@ export const HomeScreen: React.FC = () => {
                   color: '#64748b',
                   fontWeight: '500',
                 }}>
-                  Connecting Wallet...
+                  {isConnectingWallet ? "Connecting Wallet..." : "Loading Portfolio..."}
                 </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <LoadingSpinner size={20} color="#3B82F6" />
+                </View>
               </View>
               <View style={{ marginBottom: 8 }}>
                 <Text style={{
@@ -847,10 +864,20 @@ export const HomeScreen: React.FC = () => {
           
           {/* Loading Indicator */}
           {loadingMarketData && (
-            <View style={{ marginBottom: 16 }}>
-              {[1, 2, 3, 4, 5].map((index) => (
-                <TokenSkeleton key={index} />
-              ))}
+            <View style={{ 
+              marginBottom: 16, 
+              alignItems: 'center',
+              paddingVertical: 20,
+            }}>
+              <LoadingSpinner size={40} color="#3B82F6" />
+              <Text style={{
+                marginTop: 12,
+                fontSize: 14,
+                color: '#64748b',
+                fontWeight: '500',
+              }}>
+                Loading market data...
+              </Text>
             </View>
           )}
 

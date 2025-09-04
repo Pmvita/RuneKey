@@ -8,6 +8,8 @@ export { AnimatedNumber } from './common/AnimatedNumber';
 export { AnimatedPriceChange } from './common/AnimatedPriceChange';
 export { SkeletonLoader, TokenSkeleton, PortfolioSkeleton } from './common/SkeletonLoader';
 export { SparklineChart } from './common/SparklineChart';
+export { LoadingSpinner } from './common/LoadingSpinner';
+export { LoadingOverlay } from './common/LoadingOverlay';
 
 // New animated components
 export { AnimatedButton } from './common/AnimatedButton';
