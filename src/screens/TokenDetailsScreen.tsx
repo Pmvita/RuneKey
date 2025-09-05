@@ -792,8 +792,8 @@ export const TokenDetailsScreen: React.FC = () => {
 
         {/* Bottom Spacing */}
         <View style={{ height: 32 }} />
-        </ScrollView>
-      </SafeAreaView>
+      </ScrollView>
+    </SafeAreaView>
     </UniversalBackground>
   );
 }; 

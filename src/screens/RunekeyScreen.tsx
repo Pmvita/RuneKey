@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '../utils/logger';
+import { UniversalBackground } from '../components';
 
 export const RunekeyScreen: React.FC = () => {
   // Log screen focus

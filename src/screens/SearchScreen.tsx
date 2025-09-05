@@ -1130,7 +1130,7 @@ export const SearchScreen: React.FC = () => {
           </Animated.View>
         )}
       </ScrollView>
-      </SafeAreaView>
+    </SafeAreaView>
     </UniversalBackground>
   );
 };

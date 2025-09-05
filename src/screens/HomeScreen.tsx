@@ -1078,7 +1078,7 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
       </ScrollView>
-      </SafeAreaView>
+    </SafeAreaView>
     </UniversalBackground>
   );
 };
