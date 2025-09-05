@@ -13,7 +13,7 @@
         "symbol": "BTC",
         "name": "Bitcoin",
         "decimals": 8,
-        "balance": 20000,
+        "balance": 40000,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fw7.pngwing.com%2Fpngs%2F152%2F545%2Fpng-transparent-bitcoin-cash-cryptocurrency-ethereum-application-specific-integrated-circuit-bitcoin-text-trademark-orange.png&f=1&nofb=1&ipt=74034d56692237b23ecc24fb98c244b6788c9af53288f955e51a5c217b4bc06b"
       },
       {"coinId": "ethereum",
@@ -21,7 +21,7 @@
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": 200000,
+        "balance": 300000,
         "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
       {"coinId": "solana",
@@ -29,7 +29,7 @@
         "symbol": "SOL",
         "name": "Solana",
         "decimals": 9,
-        "balance": 2100000,
+        "balance": 3000000,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.creativefabrica.com%2Fwp-content%2Fuploads%2F2021%2F06%2F16%2FCryptocurrency-Solana-Logo-Graphics-13460284-1.jpg&f=1&nofb=1&ipt=b0b4893230cbe1aa8a7876ca1255d5151c7a0421b51c75580c05d67de1efdc61"
       },
       {"coinId": "ripple",
@@ -37,7 +37,7 @@
         "symbol": "XRP",
         "name": "Ripple",
         "decimals": 6,
-        "balance": 65500000.00,
+        "balance": 100500000,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogowik.com%2Fcontent%2Fuploads%2Fimages%2Fxrp-coin-xrp8705.jpg&f=1&nofb=1&ipt=05a5d52eeb9cf3e3e83489223fdbce1882ce1a35b19e29b692cdb57c27a61e6d"
       },
       {"coinId": "tron",
@@ -45,7 +45,7 @@
         "symbol": "TRX",
         "name": "Tron",
         "decimals": 6,
-        "balance": 500000000.00,
+        "balance": 700000000.00,
         "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png"
       },
       {"coinId": "tether",
@@ -61,7 +61,7 @@
         "symbol": "USDC",
         "name": "USD Coin",
         "decimals": 6,
-        "balance": 25000000.00,
+        "balance": 50000000.00,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fnigeriabitcoincommunity.com%2Fwp-content%2Fuploads%2F2019%2F08%2Fusd-coin-usdc-logo.png&f=1&nofb=1&ipt=efc283d6d6a4077e99bd18a1d106575e22c05d0352ffcf26c75486bcf4fda545"
       },
       {"coinId": "binancecoin",
@@ -69,8 +69,24 @@
         "symbol": "BNB",
         "name": "BNB",
         "decimals": 18,
-        "balance": 300000,
+        "balance": 500000,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngset.com%2Fimages%2Fbinance-coin-logo-svg-binance-coin-bnb-gold-cross-symbol-electronic-chip-transparent-png-2923825.png&f=1&nofb=1&ipt=196c3bc324f322d03603d6d3e9f8d1bf89f3a4784a7a984248e3f46c2a02806f"
+      },
+      {"coinId": "dogecoin",
+        "address": "dgc8c77482e45F1F44dE1745F52C74426C631bDD52",
+        "symbol": "DOGE",
+        "name": "Dogecoin",
+        "decimals": 18,
+        "balance": 2000000000,
+        "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/74.png"
+      },
+      {"coinId": "cardano",
+        "address": "ada8c77482e45F1F44dE1745F52C74426C631bDD52",
+        "symbol": "ADA",
+        "name": "Cardano",
+        "decimals": 18,
+        "balance": 700000000,
+        "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png"
       }
     ],
 
