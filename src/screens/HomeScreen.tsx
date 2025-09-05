@@ -790,6 +790,7 @@ export const HomeScreen: React.FC = () => {
                 logger.logButtonPress('Receive', 'navigate to receive screen');
                 setShowParticles(true);
                 setTimeout(() => setShowParticles(false), 2000);
+                navigation.navigate('Receive' as never);
               }}
               activeOpacity={0.7}
             >

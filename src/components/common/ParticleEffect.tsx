@@ -35,8 +35,8 @@ export const ParticleEffect: React.FC<ParticleEffectProps> = ({
     fireworks: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
   };
 
-  const createParticle = (x: number, y: number): Particle => ({
-    id: Date.now() + Math.random(),
+  const createParticle = (x: number, y: number, index: number): Particle => ({
+    id: Date.now() * 1000 + index + Math.random() * 10000,
     x,
     y,
     vx: (Math.random() - 0.5) * 8,
@@ -54,7 +54,7 @@ export const ParticleEffect: React.FC<ParticleEffectProps> = ({
     for (let i = 0; i < particleCount; i++) {
       const x = Math.random() * 300 + 50;
       const y = Math.random() * 200 + 100;
-      newParticles.push(createParticle(x, y));
+      newParticles.push(createParticle(x, y, i));
     }
     
     setParticles(newParticles);

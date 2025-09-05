@@ -7,6 +7,7 @@ interface CardProps {
   onPress?: () => void;
   variant?: 'default' | 'outlined' | 'elevated' | 'glass' | 'frost' | 'ice';
   disabled?: boolean;
+  className?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -14,6 +15,7 @@ export const Card: React.FC<CardProps> = ({
   onPress,
   variant = 'default',
   disabled = false,
+  className = '',
 }) => {
   const getCardStyle = () => {
     const baseStyle = {

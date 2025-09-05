@@ -24,6 +24,7 @@ import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { TokenDetailsScreen } from './src/screens/TokenDetailsScreen';
 import { SendScreen } from './src/screens/SendScreen';
+import { ReceiveScreen } from './src/screens/ReceiveScreen';
 import { OnboardingNavigator } from './src/screens/onboarding/OnboardingNavigator';
 
 // Hooks
@@ -191,6 +192,11 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
         <Stack.Screen 
           name="Send" 
           component={SendScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Receive" 
+          component={ReceiveScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

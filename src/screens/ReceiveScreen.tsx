@@ -36,22 +36,20 @@ import {
   Card
 } from '../components';
 
-type SendScreenRouteProp = RouteProp<RootStackParamList, 'Send'>;
+type ReceiveScreenRouteProp = RouteProp<RootStackParamList, 'Receive'>;
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export const SendScreen: React.FC = () => {
-  const route = useRoute<SendScreenRouteProp>();
+export const ReceiveScreen: React.FC = () => {
+  const route = useRoute<ReceiveScreenRouteProp>();
   const navigation = useNavigation();
   const { currentWallet } = useWalletStore();
   
-  const [amount, setAmount] = useState('');
-  const [recipientAddress, setRecipientAddress] = useState('');
   const [selectedToken, setSelectedToken] = useState(route.params?.selectedToken || currentWallet?.tokens[0]);
+  const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [showQRScanner, setShowQRScanner] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [showQRCode, setShowQRCode] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
 
   // Animation values
@@ -60,7 +58,7 @@ export const SendScreen: React.FC = () => {
   const buttonScale = useSharedValue(1);
 
   useEffect(() => {
-    logger.logScreenFocus('SendScreen');
+    logger.logScreenFocus('ReceiveScreen');
     
     // Animate cards on mount
     cardOpacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
@@ -77,9 +75,7 @@ export const SendScreen: React.FC = () => {
     transform: [{ scale: buttonScale.value }],
   }));
 
-  const handleSend = async () => {
-    if (!validateForm()) return;
-
+  const handleCopyAddress = async () => {
     // Animate button press and show particles
     buttonScale.value = withSequence(
       withTiming(0.95, { duration: 100 }),
@@ -88,65 +84,23 @@ export const SendScreen: React.FC = () => {
 
     setIsLoading(true);
     setShowParticles(true);
-    logger.logButtonPress('Send Transaction', 'initiate send transaction');
+    logger.logButtonPress('Copy Address', 'copy wallet address');
 
     try {
-      // Simulate transaction processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulate copying to clipboard
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       Alert.alert(
-        'Transaction Sent',
-        `Successfully sent ${amount} ${selectedToken?.symbol} to ${recipientAddress}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
+        'Address Copied',
+        'Wallet address has been copied to clipboard',
+        [{ text: 'OK' }]
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to send transaction. Please try again.');
+      Alert.alert('Error', 'Failed to copy address. Please try again.');
     } finally {
       setIsLoading(false);
       setShowParticles(false);
     }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!amount || parseFloat(amount) <= 0) {
-      newErrors.amount = 'Please enter a valid amount';
-    }
-
-    if (!recipientAddress || recipientAddress.length < 10) {
-      newErrors.recipient = 'Please enter a valid recipient address';
-    }
-
-    if (!selectedToken) {
-      newErrors.token = 'Please select a token to send';
-    }
-
-    if (selectedToken) {
-      const tokenBalance = parseFloat(selectedToken.balance || '0');
-      const sendAmount = parseFloat(amount);
-      
-      if (sendAmount > tokenBalance) {
-        newErrors.amount = `Insufficient balance. Available: ${tokenBalance} ${selectedToken.symbol}`;
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const openQRScanner = () => {
-    setShowQRScanner(true);
-    logger.logButtonPress('QR Scanner', 'open QR scanner');
-  };
-
-  const closeQRScanner = () => {
-    setShowQRScanner(false);
   };
 
   const onRefresh = async () => {
@@ -164,13 +118,25 @@ export const SendScreen: React.FC = () => {
     return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
   };
 
+  const generateWalletAddress = () => {
+    // Generate a demo wallet address
+    const chars = '0123456789abcdef';
+    let address = '0x';
+    for (let i = 0; i < 40; i++) {
+      address += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return address;
+  };
+
+  const walletAddress = generateWalletAddress();
+
   return (
     <UniversalBackground>
       <SafeAreaView style={{ flex: 1 }}>
         {/* Loading Overlay */}
         <LoadingOverlay 
           visible={isLoading}
-          message="Sending Transaction..."
+          message="Copying Address..."
           spinnerSize={60}
           spinnerColor="#3B82F6"
         />
@@ -204,8 +170,8 @@ export const SendScreen: React.FC = () => {
                   <Ionicons name="arrow-back" size={20} color="#1e293b" />
                 </TouchableOpacity>
                 <View style={styles.headerText}>
-                  <Text style={styles.title}>Send</Text>
-                  <Text style={styles.subtitle}>Transfer crypto to another wallet</Text>
+                  <Text style={styles.title}>Receive</Text>
+                  <Text style={styles.subtitle}>Receive crypto to your wallet</Text>
                 </View>
               </View>
             </Animated.View>
@@ -218,7 +184,7 @@ export const SendScreen: React.FC = () => {
                 className="p-4"
               >
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>From</Text>
+                  <Text style={styles.cardTitle}>Receive</Text>
                   <View style={styles.balanceContainer}>
                     <Text style={styles.balanceText}>
                       Balance: {formatBalance(selectedToken?.balance || '0', selectedToken?.decimals || 18)} {selectedToken?.symbol}
@@ -241,7 +207,7 @@ export const SendScreen: React.FC = () => {
                         {selectedToken?.symbol || 'Select Token'}
                       </Text>
                       <Text style={styles.tokenName}>
-                        {selectedToken?.name || 'Choose a token to send'}
+                        {selectedToken?.name || 'Choose a token to receive'}
                       </Text>
                     </View>
                   </View>
@@ -250,14 +216,14 @@ export const SendScreen: React.FC = () => {
               </LiquidGlass>
             </Animated.View>
 
-            {/* Amount Input */}
+            {/* Amount Input (Optional) */}
             <Animated.View style={[cardAnimatedStyle, styles.cardContainer]}>
               <LiquidGlass
                 cornerRadius={20}
                 elasticity={0.2}
                 className="p-4"
               >
-                <Text style={styles.cardTitle}>Amount</Text>
+                <Text style={styles.cardTitle}>Amount (Optional)</Text>
                 
                 <View style={styles.amountInputContainer}>
                   <View style={styles.amountInputRow}>
@@ -271,148 +237,119 @@ export const SendScreen: React.FC = () => {
                     />
                     <View style={styles.tokenInfo}>
                       <Text style={styles.tokenSymbol}>{selectedToken?.symbol}</Text>
-                      <View style={{ width: 12 }} />
-                      <TouchableOpacity
-                        onPress={() => setAmount(selectedToken?.balance || '0')}
-                        style={styles.maxButton}
-                      >
-                        <Text style={styles.maxButtonText}>MAX</Text>
-                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
                 
                 <View style={styles.feeRow}>
                   <Text style={styles.feeText}>≈ $0.00 USD</Text>
-                  <Text style={styles.feeText}>Fee: ~$0.00</Text>
+                  <Text style={styles.feeText}>Network: Ethereum</Text>
                 </View>
-                
-                {errors.amount && (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{errors.amount}</Text>
-                  </View>
-                )}
               </LiquidGlass>
             </Animated.View>
 
-            {/* Recipient Address */}
+            {/* Wallet Address */}
             <Animated.View style={[cardAnimatedStyle, styles.cardContainer]}>
               <LiquidGlass
                 cornerRadius={20}
                 elasticity={0.2}
                 className="p-4"
               >
-                <Text style={styles.cardTitle}>To</Text>
+                <Text style={styles.cardTitle}>Your Wallet Address</Text>
                 
-                <View style={styles.addressInputContainer}>
-                  <View style={styles.addressInputRow}>
-                    <TextInput
-                      value={recipientAddress}
-                      onChangeText={setRecipientAddress}
-                      placeholder="Enter wallet address"
-                      placeholderTextColor="#94a3b8"
-                      multiline
-                      style={styles.addressInput}
-                    />
+                <View style={styles.addressContainer}>
+                  <View style={styles.addressRow}>
+                    <Text style={styles.addressText} numberOfLines={3}>
+                      {walletAddress}
+                    </Text>
                     <TouchableOpacity
-                      onPress={openQRScanner}
-                      style={styles.qrButton}
+                      onPress={handleCopyAddress}
+                      style={styles.copyButton}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="qr-code-outline" size={24} color="#64748b" />
+                      <Ionicons name="copy-outline" size={24} color="#64748b" />
                     </TouchableOpacity>
                   </View>
                 </View>
                 
-                {recipientAddress && (
-                  <View style={styles.successContainer}>
-                    <View style={styles.successRow}>
-                      <Ionicons name="checkmark-circle" size={20} color="#22c55e" />
-                      <Text style={styles.successText}>Valid address format</Text>
-                    </View>
+                <View style={styles.successContainer}>
+                  <View style={styles.successRow}>
+                    <Ionicons name="checkmark-circle" size={20} color="#22c55e" />
+                    <Text style={styles.successText}>Valid wallet address</Text>
                   </View>
-                )}
-                
-                {errors.recipient && (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{errors.recipient}</Text>
-                  </View>
-                )}
+                </View>
               </LiquidGlass>
             </Animated.View>
 
-            {/* Transaction Summary */}
+            {/* QR Code Section */}
             <Animated.View style={[cardAnimatedStyle, styles.cardContainer]}>
               <LiquidGlass
                 cornerRadius={20}
                 elasticity={0.2}
                 className="p-4"
               >
-                <Text style={styles.cardTitle}>Transaction Summary</Text>
+                <Text style={styles.cardTitle}>QR Code</Text>
                 
-                <View style={styles.summaryContainer}>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Amount</Text>
-                    <Text style={styles.summaryValue}>
-                      {amount || '0'} {selectedToken?.symbol}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Network Fee</Text>
-                    <Text style={styles.summaryValue}>~$0.00</Text>
-                  </View>
-                  
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>Total</Text>
-                    <Text style={styles.totalValue}>
-                      {amount || '0'} {selectedToken?.symbol}
+                <View style={styles.qrCodeContainer}>
+                  <View style={styles.qrCodePlaceholder}>
+                    <Ionicons name="qr-code-outline" size={120} color="#3b82f6" />
+                    <Text style={styles.qrCodeText}>
+                      QR Code for{'\n'}
+                      {walletAddress.slice(0, 10)}...{walletAddress.slice(-8)}
                     </Text>
                   </View>
                 </View>
+                
+                <TouchableOpacity
+                  onPress={() => setShowQRCode(true)}
+                  style={styles.qrButton}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="expand-outline" size={20} color="#ffffff" />
+                  <Text style={styles.qrButtonText}>View Full QR Code</Text>
+                </TouchableOpacity>
               </LiquidGlass>
             </Animated.View>
 
-            {/* Safety Warning */}
-            <Animated.View style={[cardAnimatedStyle, styles.warningContainer]}>
+            {/* Instructions */}
+            <Animated.View style={[cardAnimatedStyle, styles.instructionsContainer]}>
               <LiquidGlass
                 cornerRadius={20}
                 elasticity={0.2}
                 className="p-4"
               >
-                <View style={styles.warningRow}>
-                  <Ionicons name="warning" size={24} color="#f59e0b" style={{ marginTop: 4 }} />
-                  <View style={styles.warningText}>
-                    <Text style={styles.warningTitle}>Double-check the recipient address</Text>
-                    <Text style={styles.warningSubtitle}>
-                      Transactions cannot be reversed. Make sure the address is correct.
+                <View style={styles.instructionsRow}>
+                  <Ionicons name="information-circle" size={24} color="#3b82f6" style={{ marginTop: 4 }} />
+                  <View style={styles.instructionsText}>
+                    <Text style={styles.instructionsTitle}>How to receive crypto</Text>
+                    <Text style={styles.instructionsSubtitle}>
+                      1. Share your wallet address or QR code{'\n'}
+                      2. Sender enters the amount and sends{'\n'}
+                      3. Funds will appear in your wallet
                     </Text>
                   </View>
                 </View>
               </LiquidGlass>
             </Animated.View>
 
-            {/* Send Button */}
+            {/* Copy Address Button */}
             <Animated.View style={[cardAnimatedStyle, buttonAnimatedStyle, styles.buttonContainer]}>
               <TouchableOpacity
-                onPress={handleSend}
-                disabled={isLoading || !amount || !recipientAddress}
-                style={[
-                  styles.sendButton,
-                  (isLoading || !amount || !recipientAddress) && styles.sendButtonDisabled
-                ]}
+                onPress={handleCopyAddress}
+                disabled={isLoading}
+                style={styles.copyAddressButton}
                 activeOpacity={0.8}
               >
                 <View style={styles.buttonContent}>
                   {isLoading ? (
                     <>
                       <View style={styles.loadingSpinner} />
-                      <Text style={styles.buttonText}>Sending...</Text>
+                      <Text style={styles.buttonText}>Copying...</Text>
                     </>
                   ) : (
                     <>
-                      <Ionicons name="send" size={24} color="white" style={{ marginRight: 12 }} />
-                      <Text style={styles.buttonText}>Send Transaction</Text>
+                      <Ionicons name="copy" size={24} color="white" style={{ marginRight: 12 }} />
+                      <Text style={styles.buttonText}>Copy Address</Text>
                     </>
                   )}
                 </View>
@@ -421,9 +358,9 @@ export const SendScreen: React.FC = () => {
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* QR Scanner Modal */}
+        {/* QR Code Modal */}
         <Modal
-          visible={showQRScanner}
+          visible={showQRCode}
           animationType="slide"
           presentationStyle="fullScreen"
         >
@@ -432,40 +369,34 @@ export const SendScreen: React.FC = () => {
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <TouchableOpacity
-                    onPress={closeQRScanner}
+                    onPress={() => setShowQRCode(false)}
                     style={styles.modalCloseButton}
                     activeOpacity={0.7}
                   >
                     <Ionicons name="close" size={24} color="#1e293b" />
                   </TouchableOpacity>
-                  <Text style={styles.modalTitle}>Scan QR Code</Text>
+                  <Text style={styles.modalTitle}>QR Code</Text>
                   <View style={{ width: 40 }} />
                 </View>
                 
                 <View style={styles.modalBody}>
-                  <View style={styles.qrScannerPlaceholder}>
-                    <Ionicons name="qr-code-outline" size={100} color="#3b82f6" />
-                    <Text style={styles.qrPlaceholderText}>
-                      QR Scanner not available{'\n'}
-                      Install expo-barcode-scanner to enable QR scanning
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        // Simulate QR scan for demo
-                        setRecipientAddress('0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6');
-                        setShowQRScanner(false);
-                      }}
-                      style={styles.demoButton}
-                    >
-                      <Text style={styles.demoButtonText}>Use Demo Address</Text>
-                    </TouchableOpacity>
+                  <View style={styles.fullQRCodeContainer}>
+                    <View style={styles.fullQRCode}>
+                      <Ionicons name="qr-code-outline" size={200} color="#3b82f6" />
+                      <Text style={styles.fullQRCodeText}>
+                        {walletAddress}
+                      </Text>
+                    </View>
                   </View>
                 </View>
                 
                 <View style={styles.modalFooter}>
-                  <Text style={styles.modalFooterText}>
-                    Position the QR code within the frame to scan
-                  </Text>
+                  <TouchableOpacity
+                    onPress={handleCopyAddress}
+                    style={styles.modalCopyButton}
+                  >
+                    <Text style={styles.modalCopyButtonText}>Copy Address</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </SafeAreaView>
@@ -595,20 +526,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1e293b',
   },
-  maxButton: {
-    marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.2)',
-  },
-  maxButtonText: {
-    fontSize: 12,
-    color: '#1e293b',
-    fontWeight: '600',
-  },
   feeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -618,7 +535,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748b',
   },
-  addressInputContainer: {
+  addressContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 12,
@@ -626,16 +543,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  addressInputRow: {
+  addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  addressInput: {
+  addressText: {
     flex: 1,
     fontSize: 16,
     color: '#1e293b',
+    fontFamily: 'monospace',
   },
-  qrButton: {
+  copyButton: {
     marginLeft: 12,
     padding: 12,
     borderRadius: 12,
@@ -661,86 +579,76 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: '500',
   },
-  errorContainer: {
-    padding: 16,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 14,
-  },
-  summaryContainer: {
-    marginTop: 8,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  qrCodeContainer: {
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    marginBottom: 16,
   },
-  summaryLabel: {
+  qrCodePlaceholder: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  qrCodeText: {
     color: '#64748b',
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: 12,
+    fontFamily: 'monospace',
   },
-  summaryValue: {
-    color: '#1e293b',
+  qrButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#3B82F6',
+    borderRadius: 12,
+  },
+  qrButtonText: {
+    color: '#ffffff',
     fontWeight: '600',
-    fontSize: 18,
+    fontSize: 16,
+    marginLeft: 8,
   },
-  totalRow: {
-    paddingTop: 16,
-  },
-  totalLabel: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  totalValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  warningContainer: {
+  instructionsContainer: {
     paddingHorizontal: 24,
     marginBottom: 32,
   },
-  warningRow: {
+  instructionsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  warningText: {
+  instructionsText: {
     marginLeft: 16,
     flex: 1,
   },
-  warningTitle: {
-    color: '#f59e0b',
+  instructionsTitle: {
+    color: '#3B82F6',
     fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 8,
   },
-  warningSubtitle: {
-    color: '#d97706',
+  instructionsSubtitle: {
+    color: '#64748b',
     fontSize: 14,
+    lineHeight: 20,
   },
   buttonContainer: {
     paddingHorizontal: 24,
     marginBottom: 32,
   },
-  sendButton: {
+  copyAddressButton: {
     width: '100%',
     paddingVertical: 20,
     borderRadius: 24,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#22c55e',
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.5)',
-  },
-  sendButtonDisabled: {
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderColor: 'rgba(0, 0, 0, 0.2)',
+    borderColor: 'rgba(34, 197, 94, 0.5)',
   },
   buttonContent: {
     flexDirection: 'row',
@@ -790,41 +698,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  qrScannerPlaceholder: {
-    width: 320,
-    height: 320,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  fullQRCodeContainer: {
+    alignItems: 'center',
+  },
+  fullQRCode: {
+    width: 300,
+    height: 300,
+    backgroundColor: '#ffffff',
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  qrPlaceholderText: {
+  fullQRCodeText: {
     color: '#64748b',
     textAlign: 'center',
-    marginTop: 24,
-    paddingHorizontal: 24,
-    fontSize: 16,
-  },
-  demoButton: {
-    marginTop: 32,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    backgroundColor: '#3B82F6',
-    borderRadius: 16,
-  },
-  demoButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 18,
+    marginTop: 16,
+    fontSize: 12,
+    fontFamily: 'monospace',
+    paddingHorizontal: 16,
   },
   modalFooter: {
     padding: 24,
   },
-  modalFooterText: {
-    color: '#64748b',
-    textAlign: 'center',
-    fontSize: 16,
+  modalCopyButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    backgroundColor: '#3B82F6',
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  modalCopyButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
 });

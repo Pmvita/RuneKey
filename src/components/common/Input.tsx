@@ -25,6 +25,7 @@ interface InputProps {
   maxLength?: number;
   onFocus?: () => void;
   onBlur?: () => void;
+  className?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -45,6 +46,7 @@ export const Input: React.FC<InputProps> = ({
   maxLength,
   onFocus,
   onBlur,
+  className = '',
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const borderWidth = useSharedValue(1);

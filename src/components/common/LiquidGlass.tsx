@@ -204,7 +204,7 @@ const renderContent = () => {
                     right: 0,
                     bottom: 0,
                     borderRadius: cornerRadius,
-                    backgroundColor: '#4e6a71',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     borderWidth: 3,
                     borderColor: 'rgba(135, 206, 235, 0.9)',
                     shadowColor: '#87CEEB',

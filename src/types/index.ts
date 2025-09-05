@@ -130,6 +130,9 @@ export type RootStackParamList = {
   Send: {
     selectedToken?: Token;
   };
+  Receive: {
+    selectedToken?: Token;
+  };
   Home: undefined;
   Wallet: undefined;
   Settings: undefined;
