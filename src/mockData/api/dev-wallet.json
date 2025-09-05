@@ -21,7 +21,7 @@
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": 300000,
+        "balance": 230000,
         "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
       {"coinId": "solana",
