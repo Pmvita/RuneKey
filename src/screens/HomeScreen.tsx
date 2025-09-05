@@ -37,6 +37,7 @@ import { NETWORK_CONFIGS } from '../constants';
 import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
+import { formatLargeCurrency } from '../utils/formatters';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -558,6 +559,26 @@ export const HomeScreen: React.FC = () => {
       }
     })();
     
+    // Sort tokens by USD value from largest to smallest
+    const sortedTokens = filtered.sort((a: any, b: any) => {
+      const aPrice = a.currentPrice || getTokenPrice(a.address) || 0;
+      const bPrice = b.currentPrice || getTokenPrice(b.address) || 0;
+      const aBalance = typeof a.balance === 'string' ? parseFloat(a.balance) : a.balance || 0;
+      const bBalance = typeof b.balance === 'string' ? parseFloat(b.balance) : b.balance || 0;
+      const aValue = aBalance * aPrice;
+      const bValue = bBalance * bPrice;
+      
+      return bValue - aValue; // Sort descending (largest first)
+    });
+    
+    // Log sorted order for debugging
+    console.log('📊 Assets sorted by value:', sortedTokens.map((token: any) => {
+      const price = token.currentPrice || getTokenPrice(token.address) || 0;
+      const balance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
+      const value = balance * price;
+      return `${token.symbol}: ${formatLargeCurrency(value)}`;
+    }));
+    
     // Debug logging for gainer filter
     if (selectedFilter === 'gainer') {
       console.log('🔍 Gainer filter - Total tokens:', currentWallet.tokens.length);
@@ -568,7 +589,7 @@ export const HomeScreen: React.FC = () => {
       console.log('🔍 Gainer filter - Filtered result:', filtered.length);
     }
     
-    return filtered;
+    return sortedTokens;
   };
 
   const generateSparklineData = (priceChange: number) => {
@@ -1041,10 +1062,7 @@ export const HomeScreen: React.FC = () => {
                       color: '#1e293b',
                       marginBottom: 4,
                     }}>
-                      ${usdValue.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatLargeCurrency(usdValue)}
                     </Text>
                     <Text style={{
                       fontSize: 14,

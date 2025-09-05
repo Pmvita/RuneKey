@@ -120,6 +120,50 @@ export const SearchScreen: React.FC = () => {
     transform: [{ translateY: trendingTranslateY.value }],
   }));
 
+  // Fallback trending tokens data
+  const getFallbackTrendingTokens = (): TrendingToken[] => [
+    {
+      id: 'bitcoin',
+      symbol: 'BTC',
+      name: 'Bitcoin',
+      image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
+      current_price: 110000,
+      price_change_percentage_24h: 2.5,
+    },
+    {
+      id: 'ethereum',
+      symbol: 'ETH',
+      name: 'Ethereum',
+      image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
+      current_price: 4300,
+      price_change_percentage_24h: -1.2,
+    },
+    {
+      id: 'solana',
+      symbol: 'SOL',
+      name: 'Solana',
+      image: 'https://assets.coingecko.com/coins/images/4128/large/solana.png',
+      current_price: 200,
+      price_change_percentage_24h: 5.8,
+    },
+    {
+      id: 'cardano',
+      symbol: 'ADA',
+      name: 'Cardano',
+      image: 'https://assets.coingecko.com/coins/images/975/large/cardano.png',
+      current_price: 0.5,
+      price_change_percentage_24h: 3.2,
+    },
+    {
+      id: 'polkadot',
+      symbol: 'DOT',
+      name: 'Polkadot',
+      image: 'https://assets.coingecko.com/coins/images/12171/large/polkadot.png',
+      current_price: 8.5,
+      price_change_percentage_24h: -0.8,
+    },
+  ];
+
   // Fetch trending tokens from API
   const fetchTrendingTokens = async () => {
     setIsLoadingTrending(true);
@@ -132,17 +176,23 @@ export const SearchScreen: React.FC = () => {
           symbol: token.symbol,
           name: token.name,
           image: token.image,
-          current_price: token.current_price,
-          price_change_percentage_24h: token.price_change_percentage_24h,
+          current_price: token.current_price || 0,
+          price_change_percentage_24h: token.price_change_percentage_24h || 0,
         }));
         setApiTrendingTokens(transformedTokens);
         setLastUpdated(new Date());
       } else {
-        setApiTrendingTokens([]);
+        // Use fallback data if API returns empty
+        console.log('📊 Using fallback trending tokens data');
+        setApiTrendingTokens(getFallbackTrendingTokens());
+        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error('Failed to fetch trending tokens:', error);
-      setApiTrendingTokens([]);
+      // Use fallback data on error
+      console.log('📊 Using fallback trending tokens due to error');
+      setApiTrendingTokens(getFallbackTrendingTokens());
+      setLastUpdated(new Date());
     } finally {
       setIsLoadingTrending(false);
     }
@@ -305,6 +355,15 @@ export const SearchScreen: React.FC = () => {
 
   // Format price change
   const formatPriceChange = (change: number) => {
+    // Handle NaN, undefined, or null values
+    if (isNaN(change) || change === null || change === undefined) {
+      return {
+        value: '0.00',
+        color: '#64748b',
+        icon: 'remove',
+      };
+    }
+    
     const isPositive = change >= 0;
     return {
       value: Math.abs(change).toFixed(2),

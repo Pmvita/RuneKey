@@ -82,6 +82,30 @@ export const formatCurrency = (
   });
 };
 
+export const formatLargeCurrency = (
+  amount: number | string,
+  currency: string = 'USD'
+): string => {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  if (isNaN(numAmount)) return '$0.00';
+
+  // Format billions (1B+)
+  if (numAmount >= 1000000000) {
+    const billions = numAmount / 1000000000;
+    return `$${billions.toFixed(1)}B`;
+  }
+
+  // Format millions (1M+)
+  if (numAmount >= 1000000) {
+    const millions = numAmount / 1000000;
+    return `$${millions.toFixed(1)}M`;
+  }
+
+  // For amounts under 1M, use regular currency formatting
+  return formatCurrency(numAmount, currency);
+};
+
 export const formatPercentage = (
   value: number,
   decimals: number = 2
