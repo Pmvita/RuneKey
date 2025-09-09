@@ -140,6 +140,7 @@ export type RootStackParamList = {
   CoinDetails: {
     coin: any; // CoinInfo type from priceService
   };
+  Allocation: undefined;
   Home: undefined;
   Wallet: undefined;
   Settings: undefined;

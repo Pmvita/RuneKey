@@ -1342,6 +1342,7 @@ export const HomeScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => {
                 logger.logButtonPress('Allocation', 'view detailed allocation');
+                navigation.navigate('Allocation');
               }}
             >
               <Ionicons name="chevron-forward" size={20} color="#64748b" />

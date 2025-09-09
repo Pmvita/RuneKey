@@ -75,11 +75,12 @@ export const formatCurrency = (
   
   if (isNaN(numAmount)) return '$0.00';
 
-  return formatNumber(numAmount, {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  }).format(numAmount);
 };
 
 export const formatLargeCurrency = (
@@ -96,14 +97,19 @@ export const formatLargeCurrency = (
     return `$${billions.toFixed(1)}B`;
   }
 
-  // Format millions (1M+)
+  // Format millions (1M+) - user prefers M suffix for amounts over 1 million
   if (numAmount >= 1000000) {
     const millions = numAmount / 1000000;
     return `$${millions.toFixed(1)}M`;
   }
 
-  // For amounts under 1M, use regular currency formatting
-  return formatCurrency(numAmount, currency);
+  // For amounts under 1M, use regular currency formatting with comma separators
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numAmount);
 };
 
 export const formatPercentage = (
