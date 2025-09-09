@@ -25,6 +25,9 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { TokenDetailsScreen } from './src/screens/TokenDetailsScreen';
 import { SendScreen } from './src/screens/SendScreen';
 import { ReceiveScreen } from './src/screens/ReceiveScreen';
+import { BuyScreen } from './src/screens/BuyScreen';
+import { MarketScreen } from './src/screens/MarketScreen';
+import { CoinDetailsScreen } from './src/screens/CoinDetailsScreen';
 import { OnboardingNavigator } from './src/screens/onboarding/OnboardingNavigator';
 
 // Hooks
@@ -197,6 +200,21 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
         <Stack.Screen 
           name="Receive" 
           component={ReceiveScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Buy" 
+          component={BuyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Market" 
+          component={MarketScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="CoinDetails" 
+          component={CoinDetailsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

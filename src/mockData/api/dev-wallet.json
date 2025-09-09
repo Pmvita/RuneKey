@@ -21,7 +21,7 @@
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": 230000,
+        "balance": 220000,
         "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
       {"coinId": "solana",
@@ -45,7 +45,7 @@
         "symbol": "TRX",
         "name": "Tron",
         "decimals": 6,
-        "balance": 700000000.00,
+        "balance": 600000000.00,
         "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png"
       },
       {"coinId": "tether",
@@ -53,7 +53,7 @@
         "symbol": "USDT",
         "name": "Tether USD",
         "decimals": 6,
-        "balance": 105000000.50,
+        "balance": 200000000.00,
         "logoURI": "https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
       },
       {"coinId": "usd-coin",

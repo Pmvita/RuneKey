@@ -133,6 +133,13 @@ export type RootStackParamList = {
   Receive: {
     selectedToken?: Token;
   };
+  Buy: {
+    selectedToken?: Token;
+  };
+  Market: undefined;
+  CoinDetails: {
+    coin: any; // CoinInfo type from priceService
+  };
   Home: undefined;
   Wallet: undefined;
   Settings: undefined;

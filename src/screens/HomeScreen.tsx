@@ -64,6 +64,7 @@ export const HomeScreen: React.FC = () => {
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [animationsTriggered, setAnimationsTriggered] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
   const navigation = useNavigation<any>();
 
   // Animation values
@@ -509,6 +510,43 @@ export const HomeScreen: React.FC = () => {
     }, 0);
   };
 
+  const calculatePortfolioChange = () => {
+    if (!currentWallet || !currentWallet.tokens) return { percentage: 0, absolute: 0 };
+    
+    const currentValue = calculateTotalValue();
+    
+    // Generate mock historical data based on timeframe
+    let historicalMultiplier = 1;
+    switch (selectedTimeframe) {
+      case '1D':
+        historicalMultiplier = 0.99; // -1% for 1 day
+        break;
+      case '1W':
+        historicalMultiplier = 0.95; // -5% for 1 week
+        break;
+      case '1M':
+        historicalMultiplier = 0.90; // -10% for 1 month
+        break;
+      case '1Y':
+        historicalMultiplier = 0.80; // -20% for 1 year
+        break;
+      case 'ALL':
+        historicalMultiplier = 0.70; // -30% for all time
+        break;
+      default:
+        historicalMultiplier = 0.99;
+    }
+    
+    const historicalValue = currentValue * historicalMultiplier;
+    const absoluteChange = currentValue - historicalValue;
+    const percentageChange = historicalValue > 0 ? (absoluteChange / historicalValue) * 100 : 0;
+    
+    return {
+      percentage: percentageChange,
+      absolute: absoluteChange
+    };
+  };
+
   const onRefresh = async () => {
     const now = Date.now();
     const timeSinceLastRefresh = now - lastRefreshTime;
@@ -639,104 +677,309 @@ export const HomeScreen: React.FC = () => {
       >
         {/* Enhanced Header */}
         <Animated.View style={[{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }, headerAnimatedStyle]}>
-          <Text style={{
-            fontSize: 32,
-            fontWeight: 'bold',
-            color: '#1e293b',
-            textAlign: 'center',
-            marginBottom: 8,
-            letterSpacing: -0.5,
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 16,
           }}>
-            RuneKey
-          </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{
+                fontSize: 28,
+                fontWeight: 'bold',
+                color: '#1e293b',
+                marginRight: 12,
+              }}>
+                Wallet
+              </Text>
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                }}
+                onPress={() => {
+                  // Toggle balance visibility
+                  logger.logButtonPress('Balance Visibility', 'toggle visibility');
+                }}
+              >
+                <Ionicons name="eye" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  marginRight: 8,
+                }}
+                onPress={() => {
+                  logger.logButtonPress('Calendar', 'open calendar');
+                }}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#64748b" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  marginRight: 8,
+                }}
+                onPress={() => {
+                  logger.logButtonPress('Chart', 'open chart');
+                }}
+              >
+                <Ionicons name="trending-up-outline" size={20} color="#64748b" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  marginRight: 8,
+                }}
+                onPress={() => {
+                  logger.logButtonPress('Notifications', 'open notifications');
+                }}
+              >
+                <Ionicons name="notifications-outline" size={20} color="#64748b" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                }}
+                onPress={() => {
+                  logger.logButtonPress('Settings', 'open settings');
+                  navigation.navigate('Settings' as never);
+                }}
+              >
+                <Ionicons name="settings-outline" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Crypto/Market Tabs */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, headerAnimatedStyle]}>
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: '#f1f5f9',
+            borderRadius: 8,
+            padding: 2,
+          }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: '#1e293b',
+                borderRadius: 6,
+                paddingVertical: 8,
+                alignItems: 'center',
+              }}
+              onPress={() => {
+                logger.logButtonPress('Crypto Tab', 'switch to crypto view');
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: '#ffffff',
+              }}>
+                Crypto
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: '#f1f5f9',
+                borderRadius: 6,
+                paddingVertical: 8,
+                alignItems: 'center',
+              }}
+              onPress={() => {
+                logger.logButtonPress('Market Tab', 'switch to market view');
+                navigation.navigate('Market' as never);
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: '#64748b',
+              }}>
+                Market
+              </Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
           
-        {/* Enhanced Total Portfolio Value */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, portfolioAnimatedStyle]}>
+        {/* Main Balance Display */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, portfolioAnimatedStyle]}>
           {currentWallet ? (
             <View style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.1,
-              shadowRadius: 20,
-              elevation: 8,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.8)',
+              alignItems: 'center',
             }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <Text style={{
-                  fontSize: 14,
-                  color: '#64748b',
-                  fontWeight: '500',
-                }}>
-                  Total Portfolio Value
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <AnimatedPriceChange 
-                    value={40.09}
-                    className="mr-2"
-                  />
-                </View>
-              </View>
+              {/* Main Balance */}
               <View style={{ marginBottom: 8 }}>
                 <AnimatedNumber
                   value={calculateTotalValue()}
                   format="currency"
                   style={{
-                    fontSize: 36,
+                    fontSize: 44,
                     fontWeight: 'bold',
                     color: '#1e293b',
                     letterSpacing: -1,
+                    textAlign: 'center',
                   }}
                   duration={1500}
                 />
               </View>
+              
+              {/* Percentage Change */}
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                marginBottom: 16 
+              }}>
+                {(() => {
+                  const change = calculatePortfolioChange();
+                  const isPositive = change.percentage >= 0;
+                  return (
+                    <>
+                      <Ionicons 
+                        name={isPositive ? "trending-up" : "trending-down"} 
+                        size={16} 
+                        color={isPositive ? "#22c55e" : "#ef4444"} 
+                      />
+                      <Text style={{
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: isPositive ? "#22c55e" : "#ef4444",
+                        marginLeft: 4,
+                      }}>
+                        {change.percentage.toFixed(1)}% ({isPositive ? '+' : ''}{formatLargeCurrency(change.absolute)})
+                      </Text>
+                    </>
+                  );
+                })()}
+              </View>
+              
+              {/* Sparkline Chart */}
+              <View style={{ 
+                width: '100%', 
+                height: 60, 
+                marginBottom: 16 
+              }}>
+                {(() => {
+                  const change = calculatePortfolioChange();
+                  const isPositive = change.percentage >= 0;
+                  return (
+                    <SparklineChart
+                      data={generateSparklineData(change.percentage)}
+                      width={screenWidth - 48}
+                      height={60}
+                      color={isPositive ? "#22c55e" : "#ef4444"}
+                      strokeWidth={3}
+                    />
+                  );
+                })()}
+              </View>
             </View>
           ) : (
             <View style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.1,
-              shadowRadius: 20,
-              elevation: 8,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.8)',
+              alignItems: 'center',
             }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <Text style={{
-                  fontSize: 14,
-                  color: '#64748b',
-                  fontWeight: '500',
-                }}>
-                  {isConnectingWallet ? "Connecting Wallet..." : "Loading Portfolio..."}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <LoadingSpinner size={20} color="#3B82F6" />
-                </View>
-              </View>
-              <View style={{ marginBottom: 8 }}>
-                <Text style={{
-                  fontSize: 36,
-                  fontWeight: 'bold',
-                  color: '#1e293b',
-                  letterSpacing: -1,
-                }}>
-                  $0.00
-                </Text>
-              </View>
+              <Text style={{
+                fontSize: 48,
+                fontWeight: 'bold',
+                color: '#1e293b',
+                letterSpacing: -1,
+                textAlign: 'center',
+                marginBottom: 8,
+              }}>
+                $0.00
+              </Text>
+              <Text style={{
+                fontSize: 14,
+                color: '#64748b',
+                fontWeight: '500',
+                marginBottom: 16,
+              }}>
+                {isConnectingWallet ? "Connecting Wallet..." : "Loading Portfolio..."}
+              </Text>
             </View>
           )}
         </Animated.View>
 
-        {/* Enhanced Quick Actions */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 32 }, actionsAnimatedStyle]}>
+        {/* Timeframe Selectors */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, portfolioAnimatedStyle]}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+          }}>
+            {['1D', '1W', '1M', '1Y', 'ALL'].map((timeframe) => (
+              <TouchableOpacity
+                key={timeframe}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 16,
+                  borderRadius: 8,
+                  backgroundColor: selectedTimeframe === timeframe ? '#f1f5f9' : 'transparent',
+                }}
+                onPress={() => {
+                  logger.logButtonPress('Timeframe', `select ${timeframe}`);
+                  setSelectedTimeframe(timeframe);
+                }}
+              >
+                <Text style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: selectedTimeframe === timeframe ? '#1e293b' : '#64748b',
+                }}>
+                  {timeframe}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* Action Buttons */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, actionsAnimatedStyle]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+            {/* Buy Button */}
+            <TouchableOpacity
+              style={{
+                alignItems: 'center',
+                paddingVertical: 16,
+                paddingHorizontal: 20,
+              }}
+              onPress={() => {
+                logger.logButtonPress('Buy', 'navigate to buy screen');
+                setShowParticles(true);
+                setTimeout(() => setShowParticles(false), 2000);
+                navigation.navigate('Buy' as never);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={{
+                width: 56,
+                height: 56,
+                backgroundColor: '#f8fafc',
+                borderRadius: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+              }}>
+                <Ionicons name="add" size={24} color="#64748b" />
+              </View>
+              <Text style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: '#374151',
+              }}>
+                Buy
+              </Text>
+            </TouchableOpacity>
+
             {/* Send Button */}
             <TouchableOpacity
               style={{
@@ -753,25 +996,20 @@ export const HomeScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={{
-                width: 64,
-                height: 64,
-                backgroundColor: '#fef2f2',
-                borderRadius: 32,
+                width: 56,
+                height: 56,
+                backgroundColor: '#f8fafc',
+                borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 8,
-                shadowColor: '#ef4444',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 4,
                 borderWidth: 1,
-                borderColor: 'rgba(239, 68, 68, 0.2)',
+                borderColor: '#e2e8f0',
               }}>
-                <Ionicons name="arrow-up" size={28} color="#ef4444" />
+                <Ionicons name="arrow-up" size={24} color="#64748b" />
               </View>
               <Text style={{
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: '600',
                 color: '#374151',
               }}>
@@ -795,97 +1033,42 @@ export const HomeScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={{
-                width: 64,
-                height: 64,
-                backgroundColor: '#f0fdf4',
-                borderRadius: 32,
+                width: 56,
+                height: 56,
+                backgroundColor: '#f8fafc',
+                borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 8,
-                shadowColor: '#22c55e',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 4,
                 borderWidth: 1,
-                borderColor: 'rgba(34, 197, 94, 0.2)',
+                borderColor: '#e2e8f0',
               }}>
-                <Ionicons name="arrow-down" size={28} color="#22c55e" />
+                <Ionicons name="arrow-down" size={24} color="#64748b" />
               </View>
               <Text style={{
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: '600',
                 color: '#374151',
               }}>
                 Receive
               </Text>
             </TouchableOpacity>
-
-            {/* Swap Button */}
-            <TouchableOpacity
-              style={{
-                alignItems: 'center',
-                paddingVertical: 16,
-                paddingHorizontal: 20,
-              }}
-              onPress={() => {
-                logger.logButtonPress('Swap', 'navigate to swap screen');
-                setShowParticles(true);
-                setTimeout(() => setShowParticles(false), 2000);
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={{
-                width: 64,
-                height: 64,
-                backgroundColor: '#eff6ff',
-                borderRadius: 32,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 8,
-                shadowColor: '#3b82f6',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 4,
-                borderWidth: 1,
-                borderColor: 'rgba(59, 130, 246, 0.2)',
-              }}>
-                <Ionicons name="swap-horizontal" size={28} color="#3b82f6" />
-              </View>
-              <Text style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: '#374151',
-              }}>
-                Swap
-              </Text>
-            </TouchableOpacity>
           </View>
+        </Animated.View>
+
+        {/* Assets Title */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, actionsAnimatedStyle]}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#1e293b',
+          }}>
+            Assets
+          </Text>
         </Animated.View>
 
         {/* Enhanced Assets Section */}
         <Animated.View style={[{ paddingHorizontal: 24, paddingBottom: 32 }, assetsAnimatedStyle]}>
-          <Text style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: '#1e293b',
-            marginBottom: 16,
-          }}>
-            Assets
-          </Text>
-
-          {/* Filter Tabs */}
-          <TabSelector
-            options={[
-              { key: 'all', label: 'All' },
-              { key: 'gainer', label: 'Gainers' },
-              { key: 'loser', label: 'Losers' }
-            ]}
-            selectedKey={selectedFilter}
-            onSelect={handleFilterPress}
-            style={{ marginBottom: 16 }}
-          />
           
           {/* Loading Indicator */}
           {loadingMarketData && (
@@ -960,142 +1143,212 @@ export const HomeScreen: React.FC = () => {
             </View>
           )}
           
-          {/* Market Data List */}
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 20,
-            overflow: 'hidden',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
-            {getFilteredMarketData().map((token: any, index: number) => {
-              // Use live prices from dev wallet if available, otherwise fallback to mock prices
-              const currentPrice = token.currentPrice || getTokenPrice(token.address) || 0;
-              const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
-              const isPositive = priceChange >= 0;
-              const sparklineData = generateSparklineData(priceChange);
-              
-              // Calculate USD value based on balance and live price
-              const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
-              const usdValue = tokenBalance * currentPrice;
-              
-              return (
-                <TouchableOpacity
-                  key={token.address}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 16,
-                    paddingHorizontal: 20,
-                    borderBottomWidth: index < getFilteredMarketData().length - 1 ? 1 : 0,
-                    borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-                  }}
-                  onPress={() => {
-                    logger.logButtonPress(`${token.symbol} Token`, 'view token details');
-                    navigation.navigate('TokenDetails', { 
-                      token: {
-                        id: token.coinId,
-                        symbol: token.symbol,
-                        name: token.name,
-                        image: token.logoURI,
-                        current_price: currentPrice,
-                        price_change_percentage_24h: priceChange,
-                      }
-                    });
-                  }}
-                  activeOpacity={0.7}
-                >
-                  {/* Token Icon */}
-                  <View style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: '#f1f5f9',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 16,
+          {/* Asset List */}
+          {getFilteredMarketData().map((token: any, index: number) => {
+            // Use live prices from dev wallet if available, otherwise fallback to mock prices
+            const currentPrice = token.currentPrice || getTokenPrice(token.address) || 0;
+            const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
+            const isPositive = priceChange >= 0;
+            
+            // Calculate USD value based on balance and live price
+            const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
+            const usdValue = tokenBalance * currentPrice;
+            
+            return (
+              <TouchableOpacity
+                key={token.address}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 16,
+                  paddingHorizontal: 0,
+                  marginBottom: 8,
+                }}
+                onPress={() => {
+                  logger.logButtonPress(`${token.symbol} Token`, 'view token details');
+                  navigation.navigate('TokenDetails', { 
+                    token: {
+                      id: token.coinId,
+                      symbol: token.symbol,
+                      name: token.name,
+                      image: token.logoURI,
+                      current_price: currentPrice,
+                      price_change_percentage_24h: priceChange,
+                    }
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                {/* Token Icon */}
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: '#f1f5f9',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}>
+                  <Image 
+                    source={{ uri: token.logoURI }} 
+                    style={{ width: 28, height: 28, borderRadius: 14 }}
+                  />
+                </View>
+
+                {/* Token Info */}
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#1e293b',
+                    marginBottom: 2,
                   }}>
-                    <Image 
-                      source={{ uri: token.logoURI }} 
-                      style={{ width: 32, height: 32, borderRadius: 16 }}
+                    {token.symbol}
+                  </Text>
+                  <Text style={{
+                    fontSize: 14,
+                    color: '#64748b',
+                  }}>
+                    {formatTokenBalance(token.balance, token.decimals || 18)} {token.symbol}
+                  </Text>
+                </View>
+
+                {/* Price and Change */}
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#1e293b',
+                    marginBottom: 2,
+                  }}>
+                    {formatLargeCurrency(usdValue)}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons 
+                      name={isPositive ? "trending-up" : "trending-down"} 
+                      size={12} 
+                      color={isPositive ? '#22c55e' : '#ef4444'} 
                     />
-                  </View>
-
-                  {/* Token Info */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{
-                      fontSize: 16,
-                      fontWeight: '600',
-                      color: '#1e293b',
-                      marginBottom: 4,
-                    }}>
-                      {token.name}
-                    </Text>
-                    <Text style={{
-                      fontSize: 14,
-                      color: '#64748b',
-                    }}>
-                      {token.symbol}
-                    </Text>
-                  </View>
-
-                  {/* Sparkline Chart */}
-                  <View style={{ marginHorizontal: 16 }}>
-                    <SparklineChart
-                      data={sparklineData}
-                      width={60}
-                      height={30}
-                      color={isPositive ? '#22c55e' : '#ef4444'}
-                      strokeWidth={2}
-                    />
-                  </View>
-
-                  {/* Price and Change */}
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{
-                      fontSize: 16,
-                      fontWeight: '600',
-                      color: '#1e293b',
-                      marginBottom: 4,
-                    }}>
-                      {formatLargeCurrency(usdValue)}
-                    </Text>
                     <Text style={{
                       fontSize: 14,
                       fontWeight: '500',
                       color: isPositive ? '#22c55e' : '#ef4444',
+                      marginLeft: 2,
                     }}>
-                      {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
+                      {isPositive ? '+' : ''}{priceChange.toFixed(1)}%
                     </Text>
                   </View>
-                </TouchableOpacity>
-              );
-            })}
-            
-            {/* Fallback for no data */}
-            {getFilteredMarketData().length === 0 && !loadingMarketData && (
-              <View style={{
-                padding: 32,
-                alignItems: 'center',
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+          
+          {/* Fallback for no data */}
+          {getFilteredMarketData().length === 0 && !loadingMarketData && (
+            <View style={{
+              padding: 32,
+              alignItems: 'center',
+            }}>
+              <Ionicons name="wallet-outline" size={48} color="#94a3b8" />
+              <Text style={{
+                color: '#64748b',
+                textAlign: 'center',
+                marginTop: 16,
+                fontSize: 16,
               }}>
-                <Ionicons name="trending-down" size={48} color="#94a3b8" />
+                No assets found
+              </Text>
+            </View>
+          )}
+        </Animated.View>
+
+        {/* Allocation Section */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, assetsAnimatedStyle]}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#1e293b',
+            marginBottom: 16,
+          }}>
+            ALLOCATION
+          </Text>
+          
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+            {/* Donut Chart Placeholder */}
+            <View style={{
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              backgroundColor: '#f1f5f9',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 20,
+              borderWidth: 8,
+              borderColor: '#3b82f6',
+            }}>
+              <View style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: '#ffffff',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
                 <Text style={{
+                  fontSize: 12,
+                  fontWeight: '600',
                   color: '#64748b',
-                  textAlign: 'center',
-                  marginTop: 16,
-                  fontSize: 16,
                 }}>
-                  No assets found for this filter
+                  Portfolio
                 </Text>
               </View>
-            )}
+            </View>
+            
+            {/* Legend */}
+            <View style={{ flex: 1 }}>
+              {getFilteredMarketData().slice(0, 3).map((token: any, index: number) => {
+                const colors = ['#3b82f6', '#22c55e', '#f59e0b'];
+                const color = colors[index] || '#64748b';
+                
+                return (
+                  <View key={token.symbol} style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 8,
+                  }}>
+                    <View style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: color,
+                      marginRight: 8,
+                    }} />
+                    <Text style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#1e293b',
+                    }}>
+                      {token.symbol}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+            
+            {/* Chevron */}
+            <TouchableOpacity
+              onPress={() => {
+                logger.logButtonPress('Allocation', 'view detailed allocation');
+              }}
+            >
+              <Ionicons name="chevron-forward" size={20} color="#64748b" />
+            </TouchableOpacity>
           </View>
         </Animated.View>
+
       </ScrollView>
     </SafeAreaView>
     </UniversalBackground>
