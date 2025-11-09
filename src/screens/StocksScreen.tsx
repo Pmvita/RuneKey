@@ -77,7 +77,7 @@ const buildTradingViewHtml = (symbol: string) => `
 `;
 
 export const StocksScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'chart'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'watchlist' | 'chart'>('overview');
   const [holdings, setHoldings] = useState<InvestmentHolding[]>(() =>
     investments.map((investment) => ({
       ...investment,
@@ -457,41 +457,6 @@ export const StocksScreen: React.FC = () => {
             <Text style={{ color: '#F87171', fontWeight: '600', fontSize: 13 }}>Sell</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => openTradeModal(item, 'buy')}
-            style={{
-              flex: 1,
-              marginRight: 8,
-              paddingVertical: 10,
-              borderRadius: 12,
-              backgroundColor: 'rgba(59, 130, 246, 0.16)',
-              borderWidth: 1,
-              borderColor: 'rgba(59, 130, 246, 0.35)',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: '#3B82F6', fontWeight: '600', fontSize: 13 }}>Buy</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => openTradeModal(item, 'sell')}
-            style={{
-              flex: 1,
-              marginLeft: 8,
-              paddingVertical: 10,
-              borderRadius: 12,
-              backgroundColor: 'rgba(248, 113, 113, 0.16)',
-              borderWidth: 1,
-              borderColor: 'rgba(248, 113, 113, 0.45)',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: '#F87171', fontWeight: '600', fontSize: 13 }}>Sell</Text>
-          </TouchableOpacity>
-        </View>
       </TouchableOpacity>
     );
   };
@@ -510,10 +475,11 @@ export const StocksScreen: React.FC = () => {
           <TabSelector
             options={[
               { key: 'overview', label: 'Overview' },
+              { key: 'watchlist', label: 'Watchlist' },
               { key: 'chart', label: 'Chart' },
             ]}
             selectedKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'overview' | 'chart')}
+            onSelect={(key) => setActiveTab(key as 'overview' | 'watchlist' | 'chart')}
             style={{ marginBottom: 24 }}
           />
         </View>
@@ -703,19 +669,7 @@ export const StocksScreen: React.FC = () => {
             </ScrollView>
           </View>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700' }}>Watchlist</Text>
-            <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600' }}>AUTO-SYNCED</Text>
-            </View>
-
-            <FlatList
-              data={holdings.slice(0, 10)}
-              keyExtractor={(item) => item.id}
-              renderItem={renderHolding}
-              scrollEnabled={false}
-            />
-
-            <View style={{ marginTop: 32 }}>
+          <View style={{ marginTop: 32 }}>
             <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginBottom: 16 }}>
               Market News
             </Text>
@@ -764,8 +718,29 @@ export const StocksScreen: React.FC = () => {
                 ) : null}
               </TouchableOpacity>
             ))}
-            </View>
+          </View>
           </ScrollView>
+        ) : activeTab === 'watchlist' ? (
+          <FlatList
+            data={holdings}
+            keyExtractor={(item) => item.id}
+            renderItem={renderHolding}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 8 }}
+            showsVerticalScrollIndicator={false}
+            refreshing={isRefreshing}
+            onRefresh={refreshAll}
+            ListHeaderComponent={
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, marginTop: 16 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700' }}>Watchlist</Text>
+                <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600' }}>AUTO-SYNCED</Text>
+              </View>
+            }
+            ListEmptyComponent={
+              <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                <Text style={{ color: '#64748B', fontSize: 14 }}>No holdings available.</Text>
+              </View>
+            }
+          />
         ) : (
           <ScrollView
             style={{ flex: 1 }}
