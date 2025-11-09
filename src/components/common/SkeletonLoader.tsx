@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, DimensionValue } from 'react-native';
 interface SkeletonLoaderProps {
-  width?: number | string;
+  width?: DimensionValue;
   height?: number;
   borderRadius?: number;
   className?: string;

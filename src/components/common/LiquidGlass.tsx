@@ -3,14 +3,12 @@ import { View, TouchableOpacity, ViewStyle, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
   withSpring,
   withTiming,
   interpolate,
   Extrapolate,
   runOnJS,
 } from 'react-native-reanimated';
-import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 interface LiquidGlassProps {
   children: React.ReactNode;
@@ -53,52 +51,13 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
 }) => {
   // Shared values for animations
   const scale = useSharedValue(1);
-  const rotationX = useSharedValue(0);
-  const rotationY = useSharedValue(0);
   const opacity = useSharedValue(0.9);
   const blur = useSharedValue(0);
   const pressProgress = useSharedValue(0);
   const hoverProgress = useSharedValue(0);
 
-  // Gesture handler for tilt effect
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: () => {
-      if (enableTilt) {
-        hoverProgress.value = withSpring(1, springConfig);
-      }
-    },
-    onActive: (event) => {
-      if (enableTilt) {
-        // Calculate rotation based on touch position
-        const maxRotation = 15;
-        rotationX.value = withSpring(
-          interpolate(
-            event.y,
-            [-100, 100],
-            [maxRotation, -maxRotation],
-            Extrapolate.CLAMP
-          ),
-          springConfig
-        );
-        rotationY.value = withSpring(
-          interpolate(
-            event.x,
-            [-100, 100],
-            [-maxRotation, maxRotation],
-            Extrapolate.CLAMP
-          ),
-          springConfig
-        );
-      }
-    },
-    onEnd: () => {
-      if (enableTilt) {
-        rotationX.value = withSpring(0, springConfig);
-        rotationY.value = withSpring(0, springConfig);
-        hoverProgress.value = withSpring(0, springConfig);
-      }
-    },
-  });
+  // Note: Tilt effect using gesture handler is disabled due to API compatibility
+  // The component now focuses on press effects which work reliably across platforms
 
   // Press effect animation
   const handlePressIn = useCallback(() => {
@@ -123,8 +82,6 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
     return {
       transform: [
         { scale: scale.value },
-        { rotateX: `${rotationX.value}deg` },
-        { rotateY: `${rotationY.value}deg` },
       ],
       opacity: opacity.value,
     };
@@ -191,11 +148,32 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
   // Render content based on whether it's pressable
 const renderContent = () => {
     const baseContent = (
-        <GestureHandlerRootView>
-            <PanGestureHandler onGestureEvent={gestureHandler} enabled={enableTilt}>
-            <Animated.View style={[animatedContainerStyle, style]}>
-                {/* Glass background layer */}
-                <Animated.View
+        <Animated.View style={[animatedContainerStyle, style]}>
+            {/* Glass background layer */}
+            <Animated.View
+            style={[
+                {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: cornerRadius,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderWidth: 3,
+                borderColor: 'rgba(135, 206, 235, 0.9)',
+                shadowColor: '#87CEEB',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.6,
+                shadowRadius: 12,
+                elevation: 12,
+                },
+                animatedGlassStyle,
+            ]}
+            />
+            
+            {/* Blur overlay layer */}
+            <Animated.View
                 style={[
                     {
                     position: 'absolute',
@@ -204,40 +182,15 @@ const renderContent = () => {
                     right: 0,
                     bottom: 0,
                     borderRadius: cornerRadius,
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    borderWidth: 3,
-                    borderColor: 'rgba(135, 206, 235, 0.9)',
-                    shadowColor: '#87CEEB',
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 12,
-                    elevation: 12,
+                    backgroundColor: 'white',
                     },
-                    animatedGlassStyle,
+                    animatedBlurStyle,
                 ]}
                 />
                 
-                {/* Blur overlay layer */}
-                <Animated.View
-                    style={[
-                        {
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: cornerRadius,
-                        backgroundColor: 'white',
-                        },
-                        animatedBlurStyle,
-                    ]}
-                    />
-                    
-                    {/* Content */}
-                    <View style={{ zIndex: 1 }}>{children}</View>
-                </Animated.View>
-            </PanGestureHandler>
-        </GestureHandlerRootView>
+                {/* Content */}
+                <View style={{ zIndex: 1 }}>{children}</View>
+            </Animated.View>
 );
 
     if (onPress && !disabled) {

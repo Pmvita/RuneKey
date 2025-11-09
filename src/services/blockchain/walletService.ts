@@ -1,8 +1,18 @@
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Wallet, SupportedNetwork, Token } from '../../types';
 import { STORAGE_KEYS, COMMON_TOKENS } from '../../constants';
 // import { solanaWalletService } from './solanaService'; // Temporarily disabled for React Native compatibility
-import { evmWalletService } from './evmService';
+
+// Conditionally import evmService - only on native platforms to avoid viem bundling issues on web
+let evmWalletService: any;
+if (Platform.OS !== 'web') {
+  try {
+    evmWalletService = require('./evmService').evmWalletService;
+  } catch (error) {
+    console.warn('Failed to load evmService:', error);
+  }
+}
 
 export class WalletService {
   /**
@@ -13,6 +23,9 @@ export class WalletService {
       if (network === 'solana') {
         throw new Error('Solana support temporarily disabled for React Native compatibility');
       } else {
+        if (!evmWalletService) {
+          throw new Error('Wallet generation is not available on web platform. Please use a mobile device.');
+        }
         return await evmWalletService.generateWallet(network);
       }
     } catch (error) {
@@ -32,6 +45,9 @@ export class WalletService {
       if (network === 'solana') {
         throw new Error('Solana support temporarily disabled for React Native compatibility');
       } else {
+        if (!evmWalletService) {
+          throw new Error('Wallet import is not available on web platform. Please use a mobile device.');
+        }
         return await evmWalletService.importWallet(privateKeyOrMnemonic, network);
       }
     } catch (error) {
@@ -49,6 +65,9 @@ export class WalletService {
         console.warn('Solana support temporarily disabled for React Native compatibility');
         return '0';
       } else {
+        if (!evmWalletService) {
+          return '0'; // Return 0 balance on web
+        }
         return await evmWalletService.getBalance(wallet.address, wallet.network);
       }
     } catch (error) {
@@ -66,6 +85,9 @@ export class WalletService {
         console.warn('Solana support temporarily disabled for React Native compatibility');
         return [];
       } else {
+        if (!evmWalletService) {
+          return []; // Return empty array on web
+        }
         return await evmWalletService.getTokenBalances(wallet.address, wallet.network);
       }
     } catch (error) {
@@ -87,6 +109,9 @@ export class WalletService {
       if (wallet.network === 'solana') {
         throw new Error('Solana support temporarily disabled for React Native compatibility');
       } else {
+        if (!evmWalletService) {
+          throw new Error('Sending tokens is not available on web platform. Please use a mobile device.');
+        }
         return await evmWalletService.sendToken(
           wallet.address,
           toAddress,
@@ -110,6 +135,10 @@ export class WalletService {
         console.warn('Solana support temporarily disabled for React Native compatibility');
         return false;
       } else {
+        if (!evmWalletService) {
+          // Basic validation fallback for web
+          return /^0x[a-fA-F0-9]{40}$/.test(address);
+        }
         return evmWalletService.validateAddress(address);
       }
     } catch (error) {
@@ -161,9 +190,9 @@ export class WalletService {
    */
   getCommonTokens(network: SupportedNetwork): Token[] {
     if (network === 'solana') {
-      return COMMON_TOKENS.solana;
+      return [...COMMON_TOKENS.solana]; // Spread to make mutable
     } else {
-      return COMMON_TOKENS.ethereum; // Use ethereum tokens for all EVM networks
+      return [...COMMON_TOKENS.ethereum]; // Spread to make mutable - Use ethereum tokens for all EVM networks
     }
   }
 
@@ -181,6 +210,9 @@ export class WalletService {
         console.warn('Solana support temporarily disabled for React Native compatibility');
         return '0';
       } else {
+        if (!evmWalletService) {
+          return '0'; // Return 0 fee on web
+        }
         return await evmWalletService.estimateFee(
           wallet.address,
           toAddress,

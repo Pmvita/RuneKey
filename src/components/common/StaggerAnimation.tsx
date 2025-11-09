@@ -69,10 +69,7 @@ export const StaggerAnimation: React.FC<StaggerAnimationProps> = ({
       {children.map((child, index) => (
         <View
           key={index}
-          style={{
-            ...getAnimationStyle(index),
-            transition: `all ${duration}ms ease-out`,
-          }}
+          style={getAnimationStyle(index)}
         >
           {child}
         </View>

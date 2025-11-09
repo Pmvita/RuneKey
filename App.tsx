@@ -4,7 +4,11 @@ import './src/utils/polyfills';
 // Import react-native-reanimated
 import 'react-native-reanimated';
 
-import React, { useEffect } from 'react';
+// Initialize react-native-screens early to prevent duplicate registration
+import { enableScreens } from 'react-native-screens';
+enableScreens(true);
+
+import React, { useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -13,7 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme, AppRegistry, TouchableOpacity, Image } from 'react-native';
+import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform } from 'react-native';
 import { logger } from './src/utils/logger';
 
 // Screens
@@ -228,21 +232,81 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
   );
 };
 
+// Error Boundary Component
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('App Error:', error, errorInfo);
+    logger.logError('AppErrorBoundary', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#111827' }}>
+          <Text style={{ color: '#EF4444', fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>
+            Something went wrong
+          </Text>
+          <Text style={{ color: '#9CA3AF', fontSize: 14, textAlign: 'center', marginBottom: 20 }}>
+            {this.state.error?.message || 'An unexpected error occurred'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => this.setState({ hasError: false, error: null })}
+            style={{
+              backgroundColor: '#3B82F6',
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Try Again</Text>
+          </TouchableOpacity>
+          {Platform.OS === 'web' && (
+            <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 20, textAlign: 'center' }}>
+              Check the browser console for more details
+            </Text>
+          )}
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function App() {
   const { theme, isFirstLaunch } = useAppStore();
   const { isConnected } = useWalletStore();
   const systemColorScheme = useColorScheme();
   
-  // Determine the actual theme to use
-  const actualTheme = theme === 'system' ? (systemColorScheme || 'light') : theme;
+  // Determine the actual theme to use - ensure it's always a valid string
+  const actualTheme: 'light' | 'dark' = theme === 'system' 
+    ? ((systemColorScheme === 'dark' ? 'dark' : 'light') as 'light' | 'dark')
+    : (theme === 'dark' ? 'dark' : 'light');
 
-  // Determine if we should show onboarding
-  const shouldShowOnboarding = isFirstLaunch;
+  // Determine if we should show onboarding - ensure boolean
+  const shouldShowOnboarding = Boolean(isFirstLaunch);
 
   // Set up any initialization logic
   useEffect(() => {
     // Any app initialization can go here
-    console.log('RuneKey app started');
+    console.log('RuneKey app started', { platform: Platform.OS });
+    
+    // Log web-specific info
+    if (Platform.OS === 'web') {
+      console.log('Running on web platform');
+    }
   }, []);
 
   const handleOnboardingComplete = () => {
@@ -252,21 +316,23 @@ function App() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          {shouldShowOnboarding ? (
-            <OnboardingNavigator onComplete={handleOnboardingComplete} />
-          ) : (
-            <AppNavigator actualTheme={actualTheme} />
-          )}
-          <StatusBar 
-            style={actualTheme === 'dark' ? 'light' : 'dark'} 
-            backgroundColor={actualTheme === 'dark' ? '#111827' : '#F9FAFB'}
-          />
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaProvider>
+            {shouldShowOnboarding ? (
+              <OnboardingNavigator onComplete={handleOnboardingComplete} />
+            ) : (
+              <AppNavigator actualTheme={actualTheme} />
+            )}
+            <StatusBar 
+              style={actualTheme === 'dark' ? 'light' : 'dark'} 
+              backgroundColor={actualTheme === 'dark' ? '#111827' : '#F9FAFB'}
+            />
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

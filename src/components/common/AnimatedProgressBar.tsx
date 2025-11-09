@@ -108,7 +108,6 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
             height,
             width: `${animatedProgress}%`,
             backgroundColor: color,
-            transition: 'width 0.3s ease',
           }}
         />
       </View>

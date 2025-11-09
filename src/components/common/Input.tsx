@@ -124,7 +124,7 @@ export const Input: React.FC<InputProps> = ({
   const getLabelStyle = () => {
     return {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: '600' as const,
       color: '#cbd5e1',
       marginBottom: 8,
       letterSpacing: 0.5,
@@ -136,7 +136,7 @@ export const Input: React.FC<InputProps> = ({
       color: '#ef4444',
       fontSize: 12,
       marginTop: 4,
-      fontWeight: '500',
+      fontWeight: '500' as const,
     };
   };
 

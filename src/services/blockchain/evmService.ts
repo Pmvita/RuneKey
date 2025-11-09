@@ -1,29 +1,60 @@
-import { createPublicClient, createWalletClient, http, parseEther, formatEther } from 'viem';
-import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { mainnet, polygon, bsc, avalanche, arbitrum, optimism } from 'viem/chains';
+import { Platform } from 'react-native';
 import { Wallet, Token, SupportedNetwork } from '../../types';
 import { NETWORK_CONFIGS } from '../../constants';
 
+// Conditional imports - viem has issues with web bundling
+// Use dynamic require that won't be analyzed by bundler
+let viem: any;
+let viemAccounts: any;
+let viemChains: any;
+
+const isWeb = Platform.OS === 'web';
+
+if (!isWeb) {
+  try {
+    // Only import viem on native platforms
+    // This will be intercepted by Metro resolver on web
+    viem = require('viem');
+    viemAccounts = require('viem/accounts');
+    viemChains = require('viem/chains');
+  } catch (error) {
+    // On web, these requires will fail or return empty, which is expected
+    if (!isWeb) {
+      console.warn('Failed to load viem:', error);
+    }
+  }
+}
+
 class EvmWalletService {
   private getChain(network: SupportedNetwork) {
+    if (Platform.OS === 'web') {
+      // Return minimal chain config for web
+      return { id: 1, name: 'Ethereum', network: 'homestead' };
+    }
+    
     const chains = {
-      ethereum: mainnet,
-      polygon: polygon,
-      bsc: bsc,
-      avalanche: avalanche,
-      arbitrum: arbitrum,
-      optimism: optimism,
+      ethereum: viemChains.mainnet,
+      polygon: viemChains.polygon,
+      bsc: viemChains.bsc,
+      avalanche: viemChains.avalanche,
+      arbitrum: viemChains.arbitrum,
+      optimism: viemChains.optimism,
     };
     return chains[network as keyof typeof chains];
   }
 
   private getPublicClient(network: SupportedNetwork) {
+    if (Platform.OS === 'web') {
+      // Return mock client for web
+      return null;
+    }
+    
     const chain = this.getChain(network);
     const config = NETWORK_CONFIGS[network];
     
-    return createPublicClient({
+    return viem.createPublicClient({
       chain,
-      transport: http(config.rpcUrl),
+      transport: viem.http(config.rpcUrl),
     });
   }
 
@@ -31,9 +62,13 @@ class EvmWalletService {
    * Generate a new EVM wallet
    */
   async generateWallet(network: SupportedNetwork): Promise<Wallet> {
+    if (Platform.OS === 'web') {
+      throw new Error('Wallet generation is not available on web platform. Please use a mobile device.');
+    }
+    
     try {
-      const privateKey = generatePrivateKey();
-      const account = privateKeyToAccount(privateKey);
+      const privateKey = viemAccounts.generatePrivateKey();
+      const account = viemAccounts.privateKeyToAccount(privateKey);
       
       const wallet: Wallet = {
         address: account.address,
@@ -46,7 +81,7 @@ class EvmWalletService {
       return wallet;
     } catch (error) {
       console.error('Failed to generate EVM wallet:', error);
-      throw new Error('Failed to generate EVM wallet');
+      throw new Error('Failed to generate wallet');
     }
   }
 
@@ -58,7 +93,7 @@ class EvmWalletService {
       // Ensure private key has 0x prefix
       const formattedPrivateKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
       
-      const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+      const account = viemAccounts.privateKeyToAccount(formattedPrivateKey as `0x${string}`);
       
       const wallet: Wallet = {
         address: account.address,
@@ -79,6 +114,10 @@ class EvmWalletService {
    * Get wallet balance
    */
   async getBalance(address: string, network: SupportedNetwork): Promise<string> {
+    if (Platform.OS === 'web') {
+      throw new Error('Balance checking is not available on web platform. Please use a mobile device.');
+    }
+    
     try {
       // Validate address format - trim whitespace and check format
       const cleanAddress = address?.trim();
@@ -92,7 +131,7 @@ class EvmWalletService {
         address: cleanAddress as `0x${string}`,
       });
       
-      return formatEther(balance);
+      return viem.formatEther(balance);
     } catch (error) {
       console.error('Failed to get EVM balance:', error);
       return '0';
@@ -234,6 +273,10 @@ class EvmWalletService {
     network: SupportedNetwork,
     token?: Token
   ): Promise<string> {
+    if (Platform.OS === 'web') {
+      throw new Error('Fee estimation is not available on web platform. Please use a mobile device.');
+    }
+    
     try {
       const client = this.getPublicClient(network);
       
@@ -242,13 +285,13 @@ class EvmWalletService {
         const gasEstimate = await client.estimateGas({
           account: fromAddress as `0x${string}`,
           to: toAddress as `0x${string}`,
-          value: parseEther(amount),
+          value: viem.parseEther(amount),
         });
         
         const gasPrice = await client.getGasPrice();
         const fee = gasEstimate * gasPrice;
         
-        return formatEther(fee);
+        return viem.formatEther(fee);
       } else {
         // ERC-20 token transfer
         const gasEstimate = await client.estimateContractGas({
@@ -276,7 +319,7 @@ class EvmWalletService {
         const gasPrice = await client.getGasPrice();
         const fee = gasEstimate * gasPrice;
         
-        return formatEther(fee);
+        return viem.formatEther(fee);
       }
     } catch (error) {
       console.error('Failed to estimate EVM fee:', error);

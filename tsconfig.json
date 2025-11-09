@@ -13,5 +13,10 @@
       "@/utils/*": ["./src/utils/*"],
       "@/constants/*": ["./src/constants/*"]
     }
-  }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "nativewind-env.d.ts"
+  ]
 }
