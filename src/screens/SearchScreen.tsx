@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList, Dimensions, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList, Dimensions, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -409,91 +409,51 @@ export const SearchScreen: React.FC = () => {
       ? token.current_price 
       : (token as any).current_price || 0;
     
+    const listLength = selectedCategory === 'tokens' ? topTokens.length : apiTrendingTokens.length;
+
     return (
       <TouchableOpacity
         key={token.id}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 16,
-          borderBottomWidth: index < (selectedCategory === 'tokens' ? topTokens.length : apiTrendingTokens.length) - 1 ? 1 : 0,
-          borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-        }}
+        style={[
+          styles.assetRow,
+          index < listLength - 1 && styles.assetRowDivider,
+        ]}
         onPress={() => handleTokenPress(token)}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
       >
-        {/* Token Icon */}
-        <View style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: '#0b1120',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: 16,
-        }}>
+        <View style={styles.assetIcon}>
           {token.image ? (
             <Image 
               source={{ uri: token.image }} 
-              style={{ width: 32, height: 32, borderRadius: 16 }}
+              style={styles.assetIconImage}
             />
           ) : (
-            <Ionicons name="ellipse" size={24} color="#94a3b8" />
+            <Ionicons name="ellipse" size={20} color="#94A3B8" style={styles.iconGlyph} />
           )}
         </View>
 
-        {/* Token Info */}
-        <View style={{ flex: 1 }}>
-          <Text style={{
-            fontSize: 16,
-            fontWeight: '600',
-            color: '#FFFFFF',
-            marginBottom: 4,
-          }}>
-            {token.name}
-          </Text>
+        <View style={styles.assetInfo}>
+          <Text style={styles.assetName}>{token.name}</Text>
           {selectedCategory === 'tokens' && (
-            <Text style={{
-              fontSize: 12,
-              color: '#94A3B8',
-            }}>
+            <Text style={styles.assetMetaText}>
               #{(token as CoinInfo).market_cap_rank || 'N/A'}
             </Text>
           )}
         </View>
 
-        {/* Price Info */}
-        <View style={{ alignItems: 'flex-end' }}>
+        <View style={styles.assetMetrics}>
           {selectedCategory === 'tokens' && (
-            <Text style={{
-              fontSize: 14,
-              fontWeight: '500',
-              color: '#FFFFFF',
-              marginBottom: 4,
-            }}>
+            <Text style={styles.assetPrice}>
               {formatCurrency(currentPrice)}
             </Text>
           )}
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 4,
-          }}>
+          <View style={styles.assetChangeRow}>
             <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
-            <Text style={{
-              fontSize: 12,
-              fontWeight: '600',
-              color: priceChange.color,
-              marginLeft: 4,
-            }}>
+            <Text style={[styles.assetChangeText, { color: priceChange.color }]}>
               {priceChange.value}%
             </Text>
           </View>
-          <Text style={{
-            fontSize: 14,
-            fontWeight: '500',
-            color: '#94A3B8',
-          }}>
+          <Text style={styles.assetSymbol}>
             {token.symbol}
           </Text>
         </View>
@@ -505,146 +465,74 @@ export const SearchScreen: React.FC = () => {
     return (
       <TouchableOpacity
         key={dapp.id}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 16,
-          borderBottomWidth: index < dapps.length - 1 ? 1 : 0,
-          borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-        }}
+        style={[
+          styles.dappRow,
+          index < dapps.length - 1 && styles.assetRowDivider,
+        ]}
         onPress={() => openDApp(dapp)}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
       >
-        {/* DApp Icon */}
-        <View style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: '#0b1120',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: 16,
-        }}>
+        <View style={styles.dappIcon}>
           {dapp.icon ? (
             <Image 
               source={{ uri: dapp.icon }} 
-              style={{ width: 40, height: 40, borderRadius: 20 }}
+              style={styles.dappIconImage}
             />
           ) : (
-            <Ionicons name="apps" size={24} color="#94a3b8" />
+            <Ionicons name="apps" size={22} color="#94A3B8" style={styles.iconGlyph} />
           )}
         </View>
 
-        {/* DApp Info */}
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <Text style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#FFFFFF',
-              marginRight: 8,
-            }}>
-              {dapp.name}
-            </Text>
+        <View style={styles.dappInfo}>
+          <View style={styles.dappTitleRow}>
+            <Text style={styles.assetName}>{dapp.name}</Text>
             {dapp.trending && (
-              <View style={{
-                backgroundColor: 'rgba(250, 204, 21, 0.18)',
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                borderRadius: 8,
-              }}>
-                <Text style={{
-                  fontSize: 10,
-                  fontWeight: '600',
-                  color: '#d97706',
-                }}>
+              <View style={styles.dappTrendingPill}>
+                <Text style={styles.dappTrendingText}>
                   TRENDING
                 </Text>
               </View>
             )}
           </View>
           
-          <Text style={{
-            fontSize: 14,
-            color: '#94A3B8',
-            marginBottom: 4,
-          }}>
+          <Text style={styles.dappDescription}>
             {dapp.description}
           </Text>
           
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginRight: 12,
-            }}>
+          <View style={styles.dappStatsRow}>
+            <View style={styles.dappStat}>
               <Ionicons name="star" size={12} color="#fbbf24" />
-              <Text style={{
-                fontSize: 12,
-                color: '#94A3B8',
-                marginLeft: 4,
-              }}>
+              <Text style={styles.dappStatText}>
                 {dapp.rating}
               </Text>
             </View>
             
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginRight: 12,
-            }}>
+            <View style={styles.dappStat}>
               <Ionicons name="people" size={12} color="#94A3B8" />
-              <Text style={{
-                fontSize: 12,
-                color: '#94A3B8',
-                marginLeft: 4,
-              }}>
+              <Text style={styles.dappStatText}>
                 {formatNumber(dapp.users)}
               </Text>
             </View>
             
-            <View style={{
-              backgroundColor: '#dbeafe',
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 8,
-            }}>
-              <Text style={{
-                fontSize: 10,
-                fontWeight: '600',
-                color: '#2563eb',
-              }}>
+            <View style={styles.dappCategoryPill}>
+              <Text style={styles.dappCategoryText}>
                 {dapp.category}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* DApp Actions */}
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{
-            fontSize: 12,
-            color: '#94A3B8',
-            marginBottom: 4,
-          }}>
+        <View style={styles.dappMeta}>
+          <Text style={styles.dappVolume}>
             {formatVolume(dapp.volume_24h)}
           </Text>
           
           <TouchableOpacity
-            style={{
-              backgroundColor: '#3b82f6',
-              borderRadius: 16,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-            }}
+            style={styles.dappOpenButton}
             onPress={() => openDApp(dapp)}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
-            <Text style={{
-              fontSize: 12,
-              fontWeight: '600',
-              color: '#ffffff',
-            }}>
+            <Text style={styles.dappOpenText}>
               Open
             </Text>
           </TouchableOpacity>
@@ -657,33 +545,26 @@ export const SearchScreen: React.FC = () => {
     if (dappCategories.length === 0) return null;
 
     return (
-      <View style={{ marginBottom: 16 }}>
+      <View style={styles.dappCategoryContainer}>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingRight: 24 }}
+          contentContainerStyle={styles.horizontalScrollContent}
         >
           <TouchableOpacity
-            style={{
-              backgroundColor: selectedDappCategory === 'all' ? '#3b82f6' : 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 16,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              marginRight: 12,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
+            style={[
+              styles.categoryChip,
+              selectedDappCategory === 'all' && styles.categoryChipSelected,
+            ]}
             onPress={() => filterDAppsByCategory('all')}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
-            <Text style={{
-              fontSize: 12,
-              fontWeight: '600',
-              color: selectedDappCategory === 'all' ? '#ffffff' : '#374151',
-            }}>
+            <Text
+              style={[
+                styles.categoryChipText,
+                selectedDappCategory === 'all' && styles.categoryChipTextSelected,
+              ]}
+            >
               All
             </Text>
           </TouchableOpacity>
@@ -691,26 +572,19 @@ export const SearchScreen: React.FC = () => {
           {dappCategories.map((category) => (
             <TouchableOpacity
               key={category}
-              style={{
-                backgroundColor: selectedDappCategory === category ? '#3b82f6' : 'rgba(255, 255, 255, 0.9)',
-                borderRadius: 16,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                marginRight: 12,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
+              style={[
+                styles.categoryChip,
+                selectedDappCategory === category && styles.categoryChipSelected,
+              ]}
               onPress={() => filterDAppsByCategory(category)}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
             >
-              <Text style={{
-                fontSize: 12,
-                fontWeight: '600',
-                color: selectedDappCategory === category ? '#ffffff' : '#374151',
-              }}>
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  selectedDappCategory === category && styles.categoryChipTextSelected,
+                ]}
+              >
                 {category}
               </Text>
             </TouchableOpacity>
@@ -724,70 +598,39 @@ export const SearchScreen: React.FC = () => {
     if (selectedCategory !== 'tokens' || topTokens.length === 0) return null;
 
     return (
-      <View style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: 16,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        marginTop: 16,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-      }}>
-        <Text style={{
-          fontSize: 14,
-          color: '#94A3B8',
-        }}>
-          Showing {topTokens.length} of {hasMorePages ? 'many' : totalTokens} tokens
-        </Text>
-        
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{
-            fontSize: 14,
-            color: '#94A3B8',
-            marginRight: 8,
-          }}>
-            Page {currentPage}
+      <LiquidGlass cornerRadius={18} elasticity={0.18} style={styles.paginationGlass} className="p-4">
+        <View style={styles.paginationRow}>
+          <Text style={styles.paginationMeta}>
+            Showing {topTokens.length} of {hasMorePages ? 'many' : totalTokens} tokens
           </Text>
           
-          {hasMorePages && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#3b82f6',
-                borderRadius: 20,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-              onPress={loadNextPage}
-              disabled={isLoadingTokens}
-              activeOpacity={0.7}
-            >
-              {isLoadingTokens ? (
-                <LoadingSpinner size={16} color="#ffffff" />
-              ) : (
-                <>
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#ffffff',
-                    marginRight: 4,
-                  }}>
-                    Next
-                  </Text>
-                  <Ionicons name="chevron-forward" size={16} color="#ffffff" />
-                </>
-              )}
-            </TouchableOpacity>
-          )}
+          <View style={styles.paginationControls}>
+            <Text style={styles.paginationMeta}>
+              Page {currentPage}
+            </Text>
+            
+            {hasMorePages && (
+              <TouchableOpacity
+                style={styles.paginationButton}
+                onPress={loadNextPage}
+                disabled={isLoadingTokens}
+                activeOpacity={0.75}
+              >
+                {isLoadingTokens ? (
+                  <LoadingSpinner size={16} color="#0F172A" />
+                ) : (
+                  <>
+                    <Text style={styles.paginationButtonText}>
+                      Next
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color="#0F172A" />
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
+      </LiquidGlass>
     );
   };
 
@@ -809,59 +652,48 @@ export const SearchScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        {/* Enhanced Header */}
-        <Animated.View style={[{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }, headerAnimatedStyle]}>
-          <Text style={{
-            fontSize: 32,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            textAlign: 'center',
-            marginBottom: 8,
-            letterSpacing: -0.5,
-          }}>
-            Search
+        {/* Hero */}
+        <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
+          <Text style={styles.headerEyebrow}>Discover</Text>
+          <Text style={styles.headerTitle}>Search the Bridge</Text>
+          <Text style={styles.headerSubtitle}>
+            Explore tokens, DApps, and curated collections ready for RuneKey’s hybrid crypto and equity flows.
           </Text>
         </Animated.View>
 
-        {/* Enhanced Search Bar */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, searchBarAnimatedStyle]}>
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 16,
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
-            <Ionicons name="search" size={20} color="#94A3B8" style={{ marginRight: 12 }} />
-            <TextInput
-              style={{
-                flex: 1,
-                fontSize: 16,
-                color: '#FFFFFF',
-                backgroundColor: 'transparent',
-              }}
-              placeholder="Search tokens, DApps, NFTs..."
-              placeholderTextColor="#94a3b8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
+        {/* Search Bar */}
+        <Animated.View style={[styles.sectionWrapper, searchBarAnimatedStyle]}>
+          <LiquidGlass
+            variant="transparent"
+            cornerRadius={24}
+            elasticity={0.18}
+            style={styles.transparentCard}
+            className="p-1"
+          >
+            <View style={styles.searchRow}>
+              <Ionicons name="search" size={20} color="#94A3B8" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search tokens, DApps, NFTs..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton} activeOpacity={0.75}>
+                  <Ionicons name="close" size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </LiquidGlass>
         </Animated.View>
 
-        {/* Enhanced Category Filters */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, categoriesAnimatedStyle]}>
+        {/* Category Filters */}
+        <Animated.View style={[styles.sectionWrapper, categoriesAnimatedStyle]}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingRight: 24 }}
+            contentContainerStyle={styles.horizontalScrollContent}
           >
             {[
               { key: 'all', label: 'All', icon: 'grid-outline' },
@@ -871,35 +703,26 @@ export const SearchScreen: React.FC = () => {
             ].map((category) => (
               <TouchableOpacity
                 key={category.key}
-                style={{
-                  backgroundColor: selectedCategory === category.key ? '#3b82f6' : 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: 24,
-                  paddingHorizontal: 20,
-                  paddingVertical: 12,
-                  marginRight: 12,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  elevation: 2,
-                  borderWidth: 1,
-                  borderColor: selectedCategory === category.key ? '#3b82f6' : 'rgba(255, 255, 255, 0.8)',
-                }}
+                style={[
+                  styles.categoryChip,
+                  selectedCategory === category.key && styles.categoryChipSelected,
+                ]}
                 onPress={() => handleCategoryPress(category.key as any)}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.categoryChipContent}>
                   <Ionicons 
                     name={category.icon as any} 
                     size={16} 
-                    color={selectedCategory === category.key ? '#ffffff' : '#64748b'} 
-                    style={{ marginRight: 8 }}
+                    color={selectedCategory === category.key ? '#0F172A' : '#94A3B8'} 
+                    style={styles.categoryChipIcon}
                   />
-                  <Text style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: selectedCategory === category.key ? '#ffffff' : '#374151',
-                  }}>
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      selectedCategory === category.key && styles.categoryChipTextSelected,
+                    ]}
+                  >
                     {category.label}
                   </Text>
                 </View>
@@ -910,282 +733,160 @@ export const SearchScreen: React.FC = () => {
 
         {/* Content based on selected category */}
         {selectedCategory === 'tokens' ? (
-          <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
-            <View style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 4,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.8)',
-            }}>
-              {/* Section Header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{
-                  fontSize: 20,
-                  fontWeight: 'bold',
-                  color: '#FFFFFF',
-                }}>
-                  Top Tokens
-                </Text>
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.glassCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Top Tokens</Text>
+                  <Text style={styles.sectionSubtitle}>Live market leaders ranked by market cap</Text>
+                </View>
                 <TouchableOpacity
-                  style={{
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 20,
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
+                  style={styles.sectionActionButton}
                   onPress={handleRefresh}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#ffffff',
-                  }}>
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Tokens List */}
               {isLoadingTokens && topTokens.length === 0 ? (
-                <View style={{ 
-                  paddingVertical: 40, 
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+                <View style={styles.loadingContainer}>
                   <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={{
-                    color: '#94A3B8',
-                    marginTop: 16,
-                    fontSize: 14,
-                    fontWeight: '500',
-                  }}>
+                  <Text style={styles.loadingText}>
                     Loading top tokens...
                   </Text>
                 </View>
               ) : topTokens.length > 0 ? (
-                <View>
+                <View style={styles.assetList}>
                   {topTokens.map((token, index) => renderTokenItem(token, index))}
                 </View>
               ) : (
-                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                  <Ionicons name="ellipse-outline" size={48} color="#94a3b8" />
-                  <Text style={{
-                    color: '#94A3B8',
-                    textAlign: 'center',
-                    marginTop: 16,
-                    fontSize: 16,
-                  }}>
+                <View style={styles.emptyState}>
+                  <Ionicons name="ellipse-outline" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
                     No tokens available
                   </Text>
                 </View>
               )}
-            </View>
-            
-            {/* Pagination Controls */}
+            </LiquidGlass>
+
             {renderPaginationControls()}
           </Animated.View>
         ) : selectedCategory === 'dapps' ? (
-          <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
-            <View style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 4,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.8)',
-            }}>
-              {/* Section Header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{
-                  fontSize: 20,
-                  fontWeight: 'bold',
-                  color: '#FFFFFF',
-                }}>
-                  Decentralized Apps
-                </Text>
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.glassCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Decentralized Apps</Text>
+                  <Text style={styles.sectionSubtitle}>Trusted tools hand-picked for RuneKey users</Text>
+                </View>
                 <TouchableOpacity
-                  style={{
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 20,
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
+                  style={styles.sectionActionButton}
                   onPress={handleRefresh}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#ffffff',
-                  }}>
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* DApp Categories */}
               {renderDAppCategories()}
 
-              {/* DApps List */}
               {isLoadingDapps && dapps.length === 0 ? (
-                <View style={{ 
-                  paddingVertical: 40, 
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+                <View style={styles.loadingContainer}>
                   <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={{
-                    color: '#94A3B8',
-                    marginTop: 16,
-                    fontSize: 14,
-                    fontWeight: '500',
-                  }}>
+                  <Text style={styles.loadingText}>
                     Loading DApps...
                   </Text>
                 </View>
               ) : dapps.length > 0 ? (
-                <View>
+                <View style={styles.assetList}>
                   {dapps.map((dapp, index) => renderDAppItem(dapp, index))}
                 </View>
               ) : (
-                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                  <Ionicons name="apps-outline" size={48} color="#94a3b8" />
-                  <Text style={{
-                    color: '#94A3B8',
-                    textAlign: 'center',
-                    marginTop: 16,
-                    fontSize: 16,
-                  }}>
+                <View style={styles.emptyState}>
+                  <Ionicons name="apps-outline" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
                     No DApps available
                   </Text>
                 </View>
               )}
-            </View>
+            </LiquidGlass>
           </Animated.View>
         ) : (
-          /* Enhanced Trending Tokens Section for other categories */
-          <Animated.View style={[{ paddingHorizontal: 24 }, trendingAnimatedStyle]}>
-            <View style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 4,
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.8)',
-            }}>
-              {/* Section Header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{
-                  fontSize: 20,
-                  fontWeight: 'bold',
-                  color: '#FFFFFF',
-                }}>
-                  Trending Tokens
-                </Text>
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              variant="transparent"
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.borderlessCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Trending Tokens</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Updated {lastUpdated ? formatTime(lastUpdated) : 'just now'}
+                  </Text>
+                </View>
                 <TouchableOpacity
-                  style={{
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 20,
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
+                  style={styles.sectionActionButton}
                   onPress={handleRefresh}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#ffffff',
-                  }}>
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Last Updated Info */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={{
-                  fontSize: 12,
-                  color: '#94A3B8',
-                  marginRight: 8,
-                }}>
-                  Last updated: {lastUpdated ? formatTime(lastUpdated) : 'Never'}
-                </Text>
-                <View style={{
-                  width: 6,
-                  height: 6,
-                  backgroundColor: '#22c55e',
-                  borderRadius: 3,
-                  marginRight: 6,
-                }} />
-                <Text style={{
-                  fontSize: 12,
-                  color: '#22c55e',
-                  fontWeight: '600',
-                }}>
-                  Live
-                </Text>
-              </View>
-
-              {/* Trending Tokens List */}
               {isLoadingTrending ? (
-                <View style={{ 
-                  paddingVertical: 40, 
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+                <View style={styles.loadingContainer}>
                   <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={{
-                    color: '#94A3B8',
-                    marginTop: 16,
-                    fontSize: 14,
-                    fontWeight: '500',
-                  }}>
+                  <Text style={styles.loadingText}>
                     Loading trending tokens...
                   </Text>
                 </View>
               ) : apiTrendingTokens.length > 0 ? (
-                <View>
+                <View style={styles.assetList}>
                   {apiTrendingTokens.slice(0, 5).map((token, index) => renderTokenItem(token, index))}
                 </View>
               ) : (
-                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                  <Ionicons name="trending-down" size={48} color="#94a3b8" />
-                  <Text style={{
-                    color: '#94A3B8',
-                    textAlign: 'center',
-                    marginTop: 16,
-                    fontSize: 16,
-                  }}>
+                <View style={styles.emptyState}>
+                  <Ionicons name="trending-down" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
                     No trending tokens available
                   </Text>
                 </View>
               )}
-            </View>
+
+              <TouchableOpacity
+                style={styles.sectionLink}
+                onPress={() => setShowTrendingModal(true)}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.sectionLinkText}>
+                  View detailed list
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#38BDF8" />
+              </TouchableOpacity>
+            </LiquidGlass>
           </Animated.View>
         )}
       </ScrollView>
@@ -1193,3 +894,364 @@ export const SearchScreen: React.FC = () => {
     </UniversalBackground>
   );
 };
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  headerEyebrow: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#94A3B8',
+    lineHeight: 20,
+  },
+  sectionWrapper: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  horizontalScrollContent: {
+    paddingRight: 24,
+  },
+  glassCard: {
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  transparentCard: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  borderlessCard: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  searchIcon: {
+    marginRight: 4,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#E2E8F0',
+  },
+  clearButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+  },
+  categoryChip: {
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  categoryChipSelected: {
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
+  },
+  categoryChipContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  categoryChipIcon: {
+    marginRight: 2,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  categoryChipTextSelected: {
+    color: '#0F172A',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: 4,
+  },
+  sectionActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#38BDF8',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 22,
+  },
+  sectionActionIcon: {
+    marginRight: 6,
+  },
+  sectionActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  assetList: {
+    gap: 4,
+  },
+  emptyState: {
+    paddingVertical: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  emptyText: {
+    color: '#94A3B8',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  paginationGlass: {
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  paginationMeta: {
+    fontSize: 13,
+    color: '#94A3B8',
+  },
+  paginationControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  paginationButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  assetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 16,
+  },
+  assetRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(148, 163, 184, 0.15)',
+  },
+  assetIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  assetIconImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  iconGlyph: {
+    backgroundColor: 'transparent',
+  },
+  assetInfo: {
+    flex: 1,
+  },
+  assetName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  assetMetaText: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 4,
+  },
+  assetMetrics: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  assetPrice: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  assetChangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  assetChangeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  assetSymbol: {
+    fontSize: 13,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+  },
+  dappRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 16,
+  },
+  dappIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dappIconImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  dappInfo: {
+    flex: 1,
+  },
+  dappTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  dappTrendingPill: {
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  dappTrendingText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FBBF24',
+  },
+  dappDescription: {
+    fontSize: 14,
+    color: '#94A3B8',
+    marginBottom: 6,
+  },
+  dappStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dappStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dappStatText: {
+    fontSize: 12,
+    color: '#94A3B8',
+  },
+  dappCategoryPill: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  dappCategoryText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#38BDF8',
+  },
+  dappMeta: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  dappVolume: {
+    fontSize: 12,
+    color: '#94A3B8',
+  },
+  dappOpenButton: {
+    backgroundColor: '#38BDF8',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+  },
+  dappOpenText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  dappCategoryContainer: {
+    marginBottom: 16,
+  },
+  sectionLink: {
+    marginTop: 24,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionLinkText: {
+    color: '#38BDF8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});

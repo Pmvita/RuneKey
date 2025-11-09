@@ -31,6 +31,7 @@ interface LiquidGlassProps {
   enableTilt?: boolean;
   enablePressEffect?: boolean;
   enableHoverEffect?: boolean;
+  variant?: 'glass' | 'transparent';
 }
 
 export const LiquidGlass: React.FC<LiquidGlassProps> = ({
@@ -48,10 +49,11 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
   enableTilt = true,
   enablePressEffect = true,
   enableHoverEffect = true,
+  variant = 'glass',
 }) => {
   // Shared values for animations
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(0.9);
+  const opacity = useSharedValue(variant === 'glass' ? 0.9 : 1);
   const blur = useSharedValue(0);
   const pressProgress = useSharedValue(0);
   const hoverProgress = useSharedValue(0);
@@ -73,7 +75,9 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
     if (enablePressEffect && !disabled) {
       scale.value = withSpring(1, springConfig);
       pressProgress.value = withSpring(0, springConfig);
-      opacity.value = withSpring(0.9, springConfig);
+      if (variant === 'glass') {
+        opacity.value = withSpring(0.9, springConfig);
+      }
     }
   }, [enablePressEffect, disabled, scale, pressProgress, opacity, springConfig]);
 
@@ -84,10 +88,14 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
         { scale: scale.value },
       ],
       opacity: opacity.value,
+      borderRadius: cornerRadius,
     };
   });
 
   const animatedGlassStyle = useAnimatedStyle(() => {
+    if (variant !== 'glass') {
+      return {};
+    }
     return {
       opacity: interpolate(
         pressProgress.value,
@@ -109,6 +117,9 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
   });
 
   const animatedBlurStyle = useAnimatedStyle(() => {
+    if (variant !== 'glass') {
+      return {};
+    }
     return {
       opacity: interpolate(
         hoverProgress.value,
@@ -131,8 +142,10 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
 
   // Initialize blur effect
   useEffect(() => {
-    blur.value = withTiming(blurAmount, { duration: animationDuration });
-  }, [blurAmount, animationDuration]);
+    if (variant === 'glass') {
+      blur.value = withTiming(blurAmount, { duration: animationDuration });
+    }
+  }, [blurAmount, animationDuration, variant]);
 
   // Add console log to verify component is working
   useEffect(() => {
@@ -149,46 +162,47 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
 const renderContent = () => {
     const baseContent = (
         <Animated.View style={[animatedContainerStyle, style]}>
-            {/* Glass background layer */}
-            <Animated.View
-            style={[
-                {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderRadius: cornerRadius,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                borderWidth: 3,
-                borderColor: 'rgba(135, 206, 235, 0.9)',
-                shadowColor: '#87CEEB',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.6,
-                shadowRadius: 12,
-                elevation: 12,
-                },
-                animatedGlassStyle,
-            ]}
-            />
-            
-            {/* Blur overlay layer */}
-            <Animated.View
-                style={[
+            {variant === 'glass' && (
+              <>
+                <Animated.View
+                  style={[
                     {
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    borderRadius: cornerRadius,
-                    backgroundColor: 'white',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      borderRadius: cornerRadius,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderWidth: 3,
+                      borderColor: 'rgba(135, 206, 235, 0.9)',
+                      shadowColor: '#87CEEB',
+                      shadowOffset: { width: 0, height: 6 },
+                      shadowOpacity: 0.6,
+                      shadowRadius: 12,
+                      elevation: 12,
                     },
-                    animatedBlurStyle,
-                ]}
+                    animatedGlassStyle,
+                  ]}
                 />
                 
-                {/* Content */}
+                <Animated.View
+                    style={[
+                        {
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: cornerRadius,
+                        backgroundColor: 'white',
+                        },
+                        animatedBlurStyle,
+                    ]}
+                    />
+              </>
+            )}
+                
                 <View style={{ zIndex: 1 }}>{children}</View>
             </Animated.View>
 );
