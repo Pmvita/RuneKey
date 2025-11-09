@@ -153,6 +153,7 @@ export type RootStackParamList = {
   InvestmentDetails: {
     holding: InvestmentHolding;
   };
+  TrendingTokens: undefined;
 };
 
 // Component Props Types

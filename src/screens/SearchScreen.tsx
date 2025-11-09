@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Modal, FlatList, Dimensions, Linking, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Dimensions, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,13 @@ import { dappService, DApp } from '../services/api/dappService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
 import { LiquidGlass, LoadingSpinner, UniversalBackground } from '../components';
+import { Token } from '../types';
+import {
+  NormalizedTrendingToken,
+  mapTrendingResponse,
+  createFallbackTrendingTokens,
+  mergeCoinInfoWithTrending,
+} from '../utils/trending';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -30,24 +37,12 @@ interface SearchResult {
   trending?: boolean;
 }
 
-interface TrendingToken {
-  id: string;
-  symbol: string;
-  name: string;
-  image: string;
-  current_price: number;
-  price_change_percentage_24h: number;
-}
-
 export const SearchScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'tokens' | 'dapps' | 'collections'>('all');
-  const [apiTrendingTokens, setApiTrendingTokens] = useState<TrendingToken[]>([]);
+  const [apiTrendingTokens, setApiTrendingTokens] = useState<NormalizedTrendingToken[]>([]);
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [autoRefreshInterval, setAutoRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
-  const [showTrendingModal, setShowTrendingModal] = useState(false);
-  
   // New state for tokens tab pagination
   const [topTokens, setTopTokens] = useState<CoinInfo[]>([]);
   const [isLoadingTokens, setIsLoadingTokens] = useState(false);
@@ -120,78 +115,39 @@ export const SearchScreen: React.FC = () => {
     transform: [{ translateY: trendingTranslateY.value }],
   }));
 
-  // Fallback trending tokens data
-  const getFallbackTrendingTokens = (): TrendingToken[] => [
-    {
-      id: 'bitcoin',
-      symbol: 'BTC',
-      name: 'Bitcoin',
-      image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
-      current_price: 110000,
-      price_change_percentage_24h: 2.5,
-    },
-    {
-      id: 'ethereum',
-      symbol: 'ETH',
-      name: 'Ethereum',
-      image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
-      current_price: 4300,
-      price_change_percentage_24h: -1.2,
-    },
-    {
-      id: 'solana',
-      symbol: 'SOL',
-      name: 'Solana',
-      image: 'https://assets.coingecko.com/coins/images/4128/large/solana.png',
-      current_price: 200,
-      price_change_percentage_24h: 5.8,
-    },
-    {
-      id: 'cardano',
-      symbol: 'ADA',
-      name: 'Cardano',
-      image: 'https://assets.coingecko.com/coins/images/975/large/cardano.png',
-      current_price: 0.5,
-      price_change_percentage_24h: 3.2,
-    },
-    {
-      id: 'polkadot',
-      symbol: 'DOT',
-      name: 'Polkadot',
-      image: 'https://assets.coingecko.com/coins/images/12171/large/polkadot.png',
-      current_price: 8.5,
-      price_change_percentage_24h: -0.8,
-    },
-  ];
-
   // Fetch trending tokens from API
   const fetchTrendingTokens = async () => {
     setIsLoadingTrending(true);
     try {
       const result = await priceService.fetchTrendingTokens();
       if (result.success && result.data.length > 0) {
-        // Transform the trending data to match our expected format
-        const transformedTokens: TrendingToken[] = result.data.map((token: any) => ({
-          id: token.id,
-          symbol: token.symbol,
-          name: token.name,
-          image: token.image,
-          current_price: token.current_price || 0,
-          price_change_percentage_24h: token.price_change_percentage_24h || 0,
-        }));
-        setApiTrendingTokens(transformedTokens);
+        const transformedTokens = mapTrendingResponse(result.data);
+        let enrichedTokens = transformedTokens;
+
+        try {
+          const marketResponse = await priceService.fetchMarketDataByIds(
+            transformedTokens.map((token) => token.id).filter(Boolean)
+          );
+          if (marketResponse.success && marketResponse.data.length > 0) {
+            enrichedTokens = mergeCoinInfoWithTrending(transformedTokens, marketResponse.data);
+          }
+        } catch (marketError) {
+          console.warn('SearchScreen: Unable to enrich trending tokens with market data', marketError);
+        }
+
+        setApiTrendingTokens(enrichedTokens);
         setLastUpdated(new Date());
       } else {
         // Use fallback data if API returns empty
         console.log('📊 Using fallback trending tokens data');
-        setApiTrendingTokens(getFallbackTrendingTokens());
+        setApiTrendingTokens(createFallbackTrendingTokens());
         setLastUpdated(new Date());
       }
     } catch (error) {
       console.error('Failed to fetch trending tokens:', error);
       // Use fallback data on error
       console.log('📊 Using fallback trending tokens due to error');
-      setApiTrendingTokens(getFallbackTrendingTokens());
+      setApiTrendingTokens(createFallbackTrendingTokens());
       setLastUpdated(new Date());
     } finally {
       setIsLoadingTrending(false);
@@ -327,8 +283,6 @@ export const SearchScreen: React.FC = () => {
       fetchTrendingTokens();
     }, 30000); // Refresh every 30 seconds
 
-    setAutoRefreshInterval(interval);
-
     // Cleanup on unmount
     return () => {
       if (interval) {
@@ -355,8 +309,7 @@ export const SearchScreen: React.FC = () => {
 
   // Format price change
   const formatPriceChange = (change: number) => {
-    // Handle NaN, undefined, or null values
-    if (isNaN(change) || change === null || change === undefined) {
+    if (!Number.isFinite(change)) {
       return {
         value: '0.00',
         color: '#94A3B8',
@@ -373,11 +326,22 @@ export const SearchScreen: React.FC = () => {
   };
 
   const formatCurrency = (value: number) => {
+    if (!Number.isFinite(value)) {
+      return '$0.00';
+    }
+
+    if (Math.abs(value) >= 1_000_000) {
+      return `$${(value / 1_000_000).toFixed(1)}M`;
+    }
+
+    const minimumFractionDigits = Math.abs(value) < 1 ? 4 : 2;
+    const maximumFractionDigits = Math.abs(value) < 1 ? 4 : 2;
+
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      minimumFractionDigits,
+      maximumFractionDigits,
     }).format(value);
   };
 
@@ -399,7 +363,7 @@ export const SearchScreen: React.FC = () => {
     }).format(volume);
   };
 
-  const renderTokenItem = (token: TrendingToken | CoinInfo, index: number) => {
+  const renderTokenItem = (token: NormalizedTrendingToken | CoinInfo, index: number) => {
     const priceChange = formatPriceChange(
       'price_change_percentage_24h' in token 
         ? token.price_change_percentage_24h 
@@ -408,12 +372,13 @@ export const SearchScreen: React.FC = () => {
     const currentPrice = 'current_price' in token 
       ? token.current_price 
       : (token as any).current_price || 0;
+    const showPrice = Number.isFinite(currentPrice);
     
     const listLength = selectedCategory === 'tokens' ? topTokens.length : apiTrendingTokens.length;
 
     return (
       <TouchableOpacity
-        key={token.id}
+        key={token.id || `${token.symbol}-${index}`}
         style={[
           styles.assetRow,
           index < listLength - 1 && styles.assetRowDivider,
@@ -442,7 +407,7 @@ export const SearchScreen: React.FC = () => {
         </View>
 
         <View style={styles.assetMetrics}>
-          {selectedCategory === 'tokens' && (
+          {showPrice && (
             <Text style={styles.assetPrice}>
               {formatCurrency(currentPrice)}
             </Text>
@@ -634,8 +599,25 @@ export const SearchScreen: React.FC = () => {
     );
   };
 
-  const handleTokenPress = (token: TrendingToken | CoinInfo) => {
-    navigation.navigate('TokenDetails', { tokenId: token.id });
+  const buildTokenForDetails = (token: NormalizedTrendingToken | CoinInfo): Token => ({
+    address: (token as any).contract_address || token.id || `token-${token.symbol}`,
+    symbol: token.symbol?.toUpperCase?.() || 'TOKEN',
+    name: token.name || token.symbol?.toUpperCase?.() || 'Token',
+    decimals: 18,
+    logoURI: token.image,
+    price: (token as any).current_price ?? ('current_price' in token ? token.current_price : 0),
+    priceChange24h:
+      (token as any).price_change_percentage_24h ?? ('price_change_percentage_24h' in token ? token.price_change_percentage_24h : 0),
+  });
+
+  const handleTokenPress = (token: NormalizedTrendingToken | CoinInfo) => {
+    const builtToken = buildTokenForDetails(token);
+    navigation.navigate('TokenDetails', { token: builtToken });
+  };
+
+  const handleViewDetailedList = () => {
+    logger.logButtonPress('Trending Tokens', 'view detailed list');
+    navigation.navigate('TrendingTokens');
   };
 
   const handleCategoryPress = (category: 'all' | 'tokens' | 'dapps' | 'collections') => {
@@ -876,11 +858,7 @@ export const SearchScreen: React.FC = () => {
                 </View>
               )}
 
-              <TouchableOpacity
-                style={styles.sectionLink}
-                onPress={() => setShowTrendingModal(true)}
-                activeOpacity={0.75}
-              >
+              <TouchableOpacity style={styles.sectionLink} onPress={handleViewDetailedList} activeOpacity={0.75}>
                 <Text style={styles.sectionLinkText}>
                   View detailed list
                 </Text>

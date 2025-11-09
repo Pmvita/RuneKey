@@ -313,6 +313,49 @@ class PriceService {
   }
 
   /**
+   * Fetch market data for specific coin IDs
+   */
+  async fetchMarketDataByIds(ids: string[]): Promise<ApiResponse<CoinInfo[]>> {
+    if (!ids.length) {
+      return { data: [], success: true };
+    }
+
+    try {
+      const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+      if (!uniqueIds.length) {
+        return { data: [], success: true };
+      }
+
+      const response = await this.makeRateLimitedRequest(() =>
+        axios.get(`${this.baseURL}/coins/markets`, {
+          params: {
+            vs_currency: 'usd',
+            ids: uniqueIds.join(','),
+            order: 'market_cap_desc',
+            per_page: uniqueIds.length,
+            page: 1,
+            sparkline: false,
+            price_change_percentage: '24h',
+            locale: 'en',
+          },
+        })
+      );
+
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      console.error('Failed to fetch market data by IDs:', error);
+      return {
+        data: [],
+        success: false,
+        error: error.message || 'Failed to fetch market data by IDs',
+      };
+    }
+  }
+
+  /**
    * Fetch market data (alias for fetchTopCoins)
    */
   async fetchMarketData(limit: number = 20, page: number = 1): Promise<ApiResponse<CoinInfo[]>> {
