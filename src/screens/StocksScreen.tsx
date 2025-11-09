@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
@@ -22,7 +22,13 @@ import investingData from '../../mockData/investing.json';
 import { Investment, InvestmentHolding } from '../types';
 import { investingService } from '../services/api/investingService';
 import { formatLargeCurrency } from '../utils/formatters';
-import { SparklineChart, TabSelector, UniversalBackground } from '../components';
+import {
+  SelectionHighlightOverlay,
+  SparklineChart,
+  TabSelector,
+  UniversalBackground,
+  useSelectionHighlight,
+} from '../components';
 import {
   stocksService,
   StockNewsItem,
@@ -101,6 +107,8 @@ export const StocksScreen: React.FC = () => {
   const [losersPage, setLosersPage] = useState(0);
   const [isLoadingTopMovers, setIsLoadingTopMovers] = useState(false);
   const [topMoversTab, setTopMoversTab] = useState<'gainers' | 'losers'>('gainers');
+  const { setHighlight } = useSelectionHighlight();
+  const lastHighlightedSymbolRef = useRef<string | null>(null);
   const [selectedHolding, setSelectedHolding] = useState<InvestmentHolding | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [tradeQuantity, setTradeQuantity] = useState<string>('1');
@@ -352,6 +360,22 @@ export const StocksScreen: React.FC = () => {
     losersPage * TOP_MOVERS_PAGE_SIZE,
     losersPage * TOP_MOVERS_PAGE_SIZE + TOP_MOVERS_PAGE_SIZE
   );
+  const emitHighlight = useCallback(
+    (symbol: string | null) => {
+      if (!symbol) return;
+      const upper = symbol.toUpperCase();
+      lastHighlightedSymbolRef.current = upper;
+      setHighlight(`stocks:${upper}`);
+    },
+    [setHighlight]
+  );
+
+  useEffect(() => {
+    const upper = resolvedActiveSymbol?.toUpperCase();
+    if (upper && lastHighlightedSymbolRef.current !== upper) {
+      emitHighlight(upper);
+    }
+  }, [emitHighlight, resolvedActiveSymbol]);
 
   const openTradeModal = (holding: InvestmentHolding, side: 'buy' | 'sell') => {
     setSelectedHolding(holding);
@@ -359,6 +383,7 @@ export const StocksScreen: React.FC = () => {
     setTradeQuantity('1');
     setTradeModalVisible(true);
     setActiveSymbol(holding.symbol);
+    emitHighlight(holding.symbol);
   };
 
   const handleConfirmTrade = async () => {
@@ -651,63 +676,72 @@ export const StocksScreen: React.FC = () => {
               ) : (
                 trendingStocks.map((stock) => {
                   const positive = stock.changePercent >= 0;
+                  const symbol = stock.symbol.toUpperCase();
                   return (
-                    <TouchableOpacity
-                      key={stock.symbol}
-                      activeOpacity={0.9}
-                      style={{
-                        width: 140,
-                        marginRight: 12,
-                        padding: 16,
-                        borderRadius: 20,
-                        backgroundColor: 'rgba(15, 23, 42, 0.85)',
-                        borderWidth: 1,
-                        borderColor: 'rgba(30, 41, 59, 0.6)',
-                      }}
-                      onPress={() => {
-                        setActiveSymbol(stock.symbol.toUpperCase());
-                        setFeaturedOverride({
-                          symbol: stock.symbol.toUpperCase(),
-                          name: stock.name,
-                          market: stock.exchange ?? 'MARKET',
-                          currentPrice: stock.price,
-                          changePercent: stock.changePercent,
-                        });
-                      }}
-                    >
-                      <Image
-                        source={{ uri: getLogoUri(stock.symbol) }}
-                        style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 12,
-                          alignSelf: 'center',
-                          marginBottom: 12,
-                          backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                        }}
+                    <View key={stock.symbol} style={{ position: 'relative' }}>
+                      <SelectionHighlightOverlay
+                        highlightKey={`stocks:${symbol}`}
+                        color="#3B82F6"
+                        borderRadius={20}
+                        style={{ top: -4, left: -4, right: -4, bottom: -4, borderWidth: 2 }}
                       />
-                      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' }}>
-                        {stock.symbol}
-                      </Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
-                        {stock.name.length > 18 ? `${stock.name.slice(0, 15)}…` : stock.name}
-                      </Text>
-                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600', marginTop: 12, textAlign: 'center' }}>
-                        {formatLargeCurrency(stock.price)}
-                      </Text>
-                      <Text
+                      <TouchableOpacity
+                        activeOpacity={0.9}
                         style={{
-                          color: positive ? '#34D399' : '#F87171',
-                          fontSize: 12,
-                          fontWeight: '600',
-                          marginTop: 4,
-                          textAlign: 'center',
+                          width: 140,
+                          marginRight: 12,
+                          padding: 16,
+                          borderRadius: 20,
+                          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                          borderWidth: 1,
+                          borderColor: 'rgba(30, 41, 59, 0.6)',
+                        }}
+                        onPress={() => {
+                          setActiveSymbol(symbol);
+                          setFeaturedOverride({
+                            symbol,
+                            name: stock.name,
+                            market: stock.exchange ?? 'MARKET',
+                            currentPrice: stock.price,
+                            changePercent: stock.changePercent,
+                          });
+                          emitHighlight(symbol);
                         }}
                       >
-                        {positive ? '+' : ''}
-                        {stock.changePercent.toFixed(2)}%
-                      </Text>
-                    </TouchableOpacity>
+                        <Image
+                          source={{ uri: getLogoUri(stock.symbol) }}
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 12,
+                            alignSelf: 'center',
+                            marginBottom: 12,
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                          }}
+                        />
+                        <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' }}>
+                          {stock.symbol}
+                        </Text>
+                        <Text style={{ color: '#94A3B8', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
+                          {stock.name.length > 18 ? `${stock.name.slice(0, 15)}…` : stock.name}
+                        </Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600', marginTop: 12, textAlign: 'center' }}>
+                          {formatLargeCurrency(stock.price)}
+                        </Text>
+                        <Text
+                          style={{
+                            color: positive ? '#34D399' : '#F87171',
+                            fontSize: 12,
+                            fontWeight: '600',
+                            marginTop: 4,
+                            textAlign: 'center',
+                          }}
+                        >
+                          {positive ? '+' : ''}
+                          {stock.changePercent.toFixed(2)}%
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   );
                 })
               )}
@@ -937,14 +971,16 @@ export const StocksScreen: React.FC = () => {
                       key={`${result.symbol}-${result.exchange}`}
                       activeOpacity={0.85}
                       onPress={() => {
-                        setActiveSymbol(result.symbol.toUpperCase());
+                        const nextSymbol = result.symbol.toUpperCase();
+                        setActiveSymbol(nextSymbol);
                         setFeaturedOverride({
-                          symbol: result.symbol.toUpperCase(),
+                          symbol: nextSymbol,
                           name: result.name,
                           market: result.exchange,
                           currentPrice: result.price ?? featuredInstrument?.currentPrice ?? 0,
                           changePercent: result.changePercent ?? featuredInstrument?.changePercent ?? 0,
                         });
+                        emitHighlight(nextSymbol);
                         setChartSearchQuery('');
                         setChartSearchResults([]);
                       }}
@@ -1066,47 +1102,57 @@ export const StocksScreen: React.FC = () => {
                       {visibleGainers.length === 0 ? (
                         <Text style={{ color: '#64748B', fontSize: 13 }}>No gainers data available.</Text>
                       ) : (
-                        visibleGainers.map((stock) => (
-                          <TouchableOpacity
-                            key={`gainer-${stock.symbol}`}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              setActiveSymbol(stock.symbol.toUpperCase());
-                              setFeaturedOverride({
-                                symbol: stock.symbol.toUpperCase(),
-                                name: stock.name,
-                                market: stock.exchange ?? 'MARKET',
-                                currentPrice: stock.price,
-                                changePercent: stock.changePercent,
-                              });
-                            }}
-                            style={{
-                              paddingVertical: 10,
-                              borderBottomWidth: 1,
-                              borderColor: 'rgba(30, 41, 59, 0.45)',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                            }}
-                          >
-                            <View>
-                              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
-                                {stock.symbol}
-                              </Text>
-                              <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
-                                {stock.name}
-                              </Text>
+                        visibleGainers.map((stock) => {
+                          const symbol = stock.symbol.toUpperCase();
+                          return (
+                            <View key={`gainer-${symbol}`} style={{ position: 'relative' }}>
+                              <SelectionHighlightOverlay
+                                highlightKey={`stocks:${symbol}`}
+                                color="#34D399"
+                                borderRadius={12}
+                              />
+                              <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => {
+                                  setActiveSymbol(symbol);
+                                  setFeaturedOverride({
+                                    symbol,
+                                    name: stock.name,
+                                    market: stock.exchange ?? 'MARKET',
+                                    currentPrice: stock.price,
+                                    changePercent: stock.changePercent,
+                                  });
+                                  emitHighlight(symbol);
+                                }}
+                                style={{
+                                  paddingVertical: 10,
+                                  borderBottomWidth: 1,
+                                  borderColor: 'rgba(30, 41, 59, 0.45)',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                }}
+                              >
+                                <View>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
+                                    {symbol}
+                                  </Text>
+                                  <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                                    {stock.name}
+                                  </Text>
+                                </View>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                                    {formatLargeCurrency(stock.price)}
+                                  </Text>
+                                  <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '600', marginTop: 4 }}>
+                                    +{stock.changePercent.toFixed(2)}%
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
                             </View>
-                            <View style={{ alignItems: 'flex-end' }}>
-                              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
-                                {formatLargeCurrency(stock.price)}
-                              </Text>
-                              <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '600', marginTop: 4 }}>
-                                +{stock.changePercent.toFixed(2)}%
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        ))
+                          );
+                        })
                       )}
                     </View>
                   ) : (
@@ -1166,47 +1212,57 @@ export const StocksScreen: React.FC = () => {
                       {visibleLosers.length === 0 ? (
                         <Text style={{ color: '#64748B', fontSize: 13 }}>No losers data available.</Text>
                       ) : (
-                        visibleLosers.map((stock) => (
-                          <TouchableOpacity
-                            key={`loser-${stock.symbol}`}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              setActiveSymbol(stock.symbol.toUpperCase());
-                              setFeaturedOverride({
-                                symbol: stock.symbol.toUpperCase(),
-                                name: stock.name,
-                                market: stock.exchange ?? 'MARKET',
-                                currentPrice: stock.price,
-                                changePercent: stock.changePercent,
-                              });
-                            }}
-                            style={{
-                              paddingVertical: 10,
-                              borderBottomWidth: 1,
-                              borderColor: 'rgba(30, 41, 59, 0.45)',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                            }}
-                          >
-                            <View>
-                              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
-                                {stock.symbol}
-                              </Text>
-                              <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
-                                {stock.name}
-                              </Text>
+                        visibleLosers.map((stock) => {
+                          const symbol = stock.symbol.toUpperCase();
+                          return (
+                            <View key={`loser-${symbol}`} style={{ position: 'relative' }}>
+                              <SelectionHighlightOverlay
+                                highlightKey={`stocks:${symbol}`}
+                                color="#F87171"
+                                borderRadius={12}
+                              />
+                              <TouchableOpacity
+                                activeOpacity={0.85}
+                                onPress={() => {
+                                  setActiveSymbol(symbol);
+                                  setFeaturedOverride({
+                                    symbol,
+                                    name: stock.name,
+                                    market: stock.exchange ?? 'MARKET',
+                                    currentPrice: stock.price,
+                                    changePercent: stock.changePercent,
+                                  });
+                                  emitHighlight(symbol);
+                                }}
+                                style={{
+                                  paddingVertical: 10,
+                                  borderBottomWidth: 1,
+                                  borderColor: 'rgba(30, 41, 59, 0.45)',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                }}
+                              >
+                                <View>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
+                                    {symbol}
+                                  </Text>
+                                  <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                                    {stock.name}
+                                  </Text>
+                                </View>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                                    {formatLargeCurrency(stock.price)}
+                                  </Text>
+                                  <Text style={{ color: '#F87171', fontSize: 12, fontWeight: '600', marginTop: 4 }}>
+                                    {stock.changePercent.toFixed(2)}%
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
                             </View>
-                            <View style={{ alignItems: 'flex-end' }}>
-                              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
-                                {formatLargeCurrency(stock.price)}
-                              </Text>
-                              <Text style={{ color: '#F87171', fontSize: 12, fontWeight: '600', marginTop: 4 }}>
-                                {stock.changePercent.toFixed(2)}%
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        ))
+                          );
+                        })
                       )}
                     </View>
                   )}

@@ -11,6 +11,12 @@ export { SparklineChart } from './common/SparklineChart';
 export { LoadingSpinner } from './common/LoadingSpinner';
 export { LoadingOverlay } from './common/LoadingOverlay';
 export { TabSelector } from './common/TabSelector';
+export { default as SelectionHighlight } from './common/SelectionHighlight';
+export {
+  SelectionHighlightProvider,
+  useSelectionHighlight,
+  SelectionHighlightOverlay,
+} from './common/SelectionHighlightProvider';
 export { default as BubbleBackground } from './common/BubbleBackground';
 export { UniversalBackground } from './common/UniversalBackground';
 

@@ -1,7 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image, Dimensions } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  Image,
+  Dimensions,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 import { priceService, CoinInfo, ChartData } from '../services/api/priceService';
 import { priceCacheService } from '../services/priceCacheService';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
@@ -46,6 +57,98 @@ export const TokenDetailsScreen: React.FC = () => {
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   const [priceSource, setPriceSource] = useState<string>('none');
   const [priceChangePercentage, setPriceChangePercentage] = useState<number>(0);
+  const tradingViewSymbol = useMemo(() => {
+    const symbol = token.symbol?.toUpperCase();
+    if (!symbol) return null;
+
+    const directMap: Record<string, string> = {
+      BTC: 'BINANCE:BTCUSDT',
+      ETH: 'BINANCE:ETHUSDT',
+      SOL: 'BINANCE:SOLUSDT',
+      XRP: 'BINANCE:XRPUSDT',
+      ADA: 'BINANCE:ADAUSDT',
+      TRX: 'BINANCE:TRXUSDT',
+      DOGE: 'BINANCE:DOGEUSDT',
+      BNB: 'BINANCE:BNBUSDT',
+      LTC: 'BINANCE:LTCUSDT',
+      MATIC: 'BINANCE:MATICUSDT',
+      AVAX: 'BINANCE:AVAXUSDT',
+      DOT: 'BINANCE:DOTUSDT',
+      LINK: 'BINANCE:LINKUSDT',
+      SHIB: 'BINANCE:SHIBUSDT',
+      ATOM: 'BINANCE:ATOMUSDT',
+      NEAR: 'BINANCE:NEARUSDT',
+      UNI: 'BINANCE:UNIUSDT',
+      ETC: 'BINANCE:ETCUSDT',
+      BCH: 'BINANCE:BCHUSDT',
+      APT: 'BINANCE:APTUSDT',
+      OP: 'BINANCE:OPUSDT',
+      ARB: 'BINANCE:ARBUSDT',
+      SUI: 'BINANCE:SUIUSDT',
+    };
+
+    if (directMap[symbol]) {
+      return directMap[symbol];
+    }
+
+    if (symbol === 'USDT') {
+      return 'FX_IDC:USDTUSD';
+    }
+
+    if (symbol === 'USDC') {
+      return 'FX_IDC:USDCUSD';
+    }
+
+    if (symbol.length <= 5) {
+      return `BINANCE:${symbol}USDT`;
+    }
+
+    return null;
+  }, [token.symbol]);
+
+  const tradingViewHtml = useMemo(() => {
+    if (!tradingViewSymbol) return null;
+    return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+      html, body, #chart-container {
+        margin: 0;
+        padding: 0;
+        background: #000000;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chart-container"></div>
+    <script type="text/javascript">
+      new TradingView.widget({
+        autosize: true,
+        symbol: "${tradingViewSymbol}",
+        interval: "60",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "3",
+        locale: "en",
+        toolbar_bg: "#000000",
+        enable_publishing: false,
+        allow_symbol_change: false,
+        container_id: "chart-container",
+        hide_sidebar: true,
+        calendar: true,
+        studies: ["RSI@tv-basicstudies"],
+      });
+    </script>
+  </body>
+</html>
+    `;
+  }, [tradingViewSymbol]);
+
 
   // Get token logo URI from current wallet
   const getTokenLogoURI = () => {
@@ -267,9 +370,7 @@ export const TokenDetailsScreen: React.FC = () => {
 
   // Get price change value
   const getPriceChangeValue = () => {
-    const currentPrice = getCurrentPrice();
-    const percentage = getPriceChangePercentage();
-    return (currentPrice * percentage) / 100;
+    return (currentPrice * priceChangePercentage) / 100;
   };
 
   // Format currency
@@ -324,14 +425,14 @@ export const TokenDetailsScreen: React.FC = () => {
     const volatility = 0.02; // 2% volatility
     
     // Generate realistic price movement based on the current price
-    let currentPrice = basePrice;
+    let simulatedPrice = basePrice;
     
     for (let i = 0; i < dataPoints; i++) {
-          // Add some trend based on price change percentage
-    const trend = priceChangePercentage > 0 ? 0.001 : -0.001;
+      // Add some trend based on price change percentage
+      const trend = priceChangePercentage > 0 ? 0.001 : -0.001;
       const randomChange = (Math.random() - 0.5) * volatility + trend;
-      currentPrice = currentPrice * (1 + randomChange);
-      data.push(currentPrice);
+      simulatedPrice = simulatedPrice * (1 + randomChange);
+      data.push(simulatedPrice);
     }
     
     console.log('📊 TokenDetails: Generated fallback chart data with base price:', basePrice);
@@ -427,6 +528,7 @@ export const TokenDetailsScreen: React.FC = () => {
   const tokenBalance = getTokenBalance();
   const tokenUSDValue = getTokenUSDValue();
   const priceChangeValue = getPriceChangeValue();
+  const canRenderTradingView = tradingViewHtml && Platform.OS !== 'web';
 
   return (
     <UniversalBackground>
@@ -445,7 +547,7 @@ export const TokenDetailsScreen: React.FC = () => {
           justifyContent: 'space-between',
           paddingHorizontal: 20,
           paddingVertical: 16,
-          backgroundColor: '#111827',
+          backgroundColor: 'transparent',
           borderBottomWidth: 1,
           borderBottomColor: '#e2e8f0',
         }}>
@@ -545,7 +647,7 @@ export const TokenDetailsScreen: React.FC = () => {
         <View style={{
           paddingHorizontal: 20,
           paddingVertical: 24,
-          backgroundColor: '#111827',
+          backgroundColor: 'transparent',
         }}>
           <Text style={{
             fontSize: 32,
@@ -574,38 +676,51 @@ export const TokenDetailsScreen: React.FC = () => {
         </View>
 
         {/* Chart Section */}
-        <View style={{
-          paddingHorizontal: 20,
-          paddingVertical: 24,
-          backgroundColor: '#111827',
-          marginBottom: 8,
-        }}>
-          <View style={{
-            height: 200,
-            backgroundColor: '#000000',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 16,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            {isLoadingChart ? (
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 24,
+            backgroundColor: 'transparent',
+            marginBottom: 8,
+          }}
+        >
+          <View
+            style={{
+              height: canRenderTradingView ? 320 : 200,
+              backgroundColor: '#000000',
+              borderRadius: 12,
+              padding: canRenderTradingView ? 0 : 16,
+              marginBottom: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            {canRenderTradingView ? (
+              <WebView
+                key={tradingViewSymbol || 'fallback-chart'}
+                source={{ html: tradingViewHtml! }}
+                style={{ flex: 1, alignSelf: 'stretch', backgroundColor: '#000000' }}
+                originWhitelist={['*']}
+                javaScriptEnabled
+                startInLoadingState
+                renderLoading={() => (
+                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator color="#3b82f6" />
+                  </View>
+                )}
+              />
+            ) : isLoadingChart ? (
               <View style={{ alignItems: 'center' }}>
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  borderWidth: 3,
-                  borderColor: '#3b82f6',
-                  borderTopColor: 'transparent',
-                  animation: 'spin 1s linear infinite',
-                }} />
-                <Text style={{
-                  marginTop: 12,
-                  fontSize: 14,
-                  color: '#94A3B8',
-                  fontWeight: '500',
-                }}>
+                <ActivityIndicator color="#3b82f6" />
+                <Text
+                  style={{
+                    marginTop: 12,
+                    fontSize: 14,
+                    color: '#94A3B8',
+                    fontWeight: '500',
+                  }}
+                >
                   Loading chart data...
                 </Text>
               </View>
@@ -620,12 +735,14 @@ export const TokenDetailsScreen: React.FC = () => {
             ) : (
               <View style={{ alignItems: 'center' }}>
                 <Ionicons name="trending-up" size={48} color="#94A3B8" />
-                <Text style={{
-                  marginTop: 12,
-                  fontSize: 14,
-                  color: '#94A3B8',
-                  fontWeight: '500',
-                }}>
+                <Text
+                  style={{
+                    marginTop: 12,
+                    fontSize: 14,
+                    color: '#94A3B8',
+                    fontWeight: '500',
+                  }}
+                >
                   Chart data unavailable
                 </Text>
               </View>
@@ -668,7 +785,7 @@ export const TokenDetailsScreen: React.FC = () => {
         <View style={{
           paddingHorizontal: 20,
           paddingVertical: 24,
-          backgroundColor: '#111827',
+          backgroundColor: 'transparent',
           marginBottom: 8,
         }}>
           <View style={{
@@ -734,7 +851,7 @@ export const TokenDetailsScreen: React.FC = () => {
             justifyContent: 'space-between',
             paddingHorizontal: 20,
             paddingVertical: 16,
-            backgroundColor: '#111827',
+            backgroundColor: 'transparent',
             marginBottom: 8,
           }}
           onPress={() => {
@@ -748,13 +865,15 @@ export const TokenDetailsScreen: React.FC = () => {
         </TouchableOpacity>
 
         {/* Action Buttons */}
-        <View style={{
-          flexDirection: 'row',
-          paddingHorizontal: 20,
-          paddingVertical: 24,
-          backgroundColor: '#111827',
-          gap: 12,
-        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            paddingHorizontal: 20,
+            paddingVertical: 24,
+            backgroundColor: 'transparent',
+            gap: 12,
+          }}
+        >
           <TouchableOpacity
             style={{
               flex: 1,
@@ -796,4 +915,4 @@ export const TokenDetailsScreen: React.FC = () => {
     </SafeAreaView>
     </UniversalBackground>
   );
-}; 
+};

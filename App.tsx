@@ -44,6 +44,7 @@ import { useWalletStore } from './src/stores/wallet/useWalletStore';
 
 // Types
 import { RootStackParamList } from './src/types';
+import { SelectionHighlightProvider } from './src/components';
 
 const existingTextStyle = Text.defaultProps?.style;
 const textColorStyle: TextStyle = { color: '#FFFFFF' };
@@ -352,17 +353,19 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
-          <SafeAreaProvider>
-            {shouldShowOnboarding ? (
-              <OnboardingNavigator onComplete={handleOnboardingComplete} />
-            ) : (
-              <AppNavigator actualTheme={actualTheme} />
-            )}
-            <StatusBar 
-              style="light"
-              backgroundColor="#000000"
-            />
-          </SafeAreaProvider>
+          <SelectionHighlightProvider>
+            <SafeAreaProvider>
+              {shouldShowOnboarding ? (
+                <OnboardingNavigator onComplete={handleOnboardingComplete} />
+              ) : (
+                <AppNavigator actualTheme={actualTheme} />
+              )}
+              <StatusBar 
+                style="light"
+                backgroundColor="#000000"
+              />
+            </SafeAreaProvider>
+          </SelectionHighlightProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
     </ErrorBoundary>
