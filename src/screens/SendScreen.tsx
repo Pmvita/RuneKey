@@ -201,7 +201,7 @@ export const SendScreen: React.FC = () => {
                   style={styles.backButton}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="arrow-back" size={20} color="#1e293b" />
+                  <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
                 <View style={styles.headerText}>
                   <Text style={styles.title}>Send</Text>
@@ -245,7 +245,7 @@ export const SendScreen: React.FC = () => {
                       </Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-down" size={24} color="#64748b" />
+                  <Ionicons name="chevron-down" size={24} color="#94A3B8" />
                 </TouchableOpacity>
               </LiquidGlass>
             </Animated.View>
@@ -319,7 +319,7 @@ export const SendScreen: React.FC = () => {
                       style={styles.qrButton}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="qr-code-outline" size={24} color="#64748b" />
+                      <Ionicons name="qr-code-outline" size={24} color="#94A3B8" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -436,7 +436,7 @@ export const SendScreen: React.FC = () => {
                     style={styles.modalCloseButton}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="close" size={24} color="#1e293b" />
+                    <Ionicons name="close" size={24} color="#FFFFFF" />
                   </TouchableOpacity>
                   <Text style={styles.modalTitle}>Scan QR Code</Text>
                   <View style={{ width: 40 }} />
@@ -501,11 +501,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   subtitle: {
     fontSize: 18,
-    color: '#64748b',
+    color: '#94A3B8',
     marginTop: 4,
   },
   cardContainer: {
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   balanceContainer: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     fontWeight: '500',
   },
   tokenSelector: {
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#111827',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.1)',
@@ -570,14 +570,14 @@ const styles = StyleSheet.create({
   tokenSymbol: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   tokenName: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
   },
   amountInputContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   maxButton: {
     marginTop: 8,
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   },
   maxButtonText: {
     fontSize: 12,
-    color: '#1e293b',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   feeRow: {
@@ -616,10 +616,10 @@ const styles = StyleSheet.create({
   },
   feeText: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
   },
   addressInputContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   addressInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   qrButton: {
     marginLeft: 12,
@@ -684,10 +684,10 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   summaryLabel: {
-    color: '#64748b',
+    color: '#94A3B8',
   },
   summaryValue: {
-    color: '#1e293b',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 18,
   },
@@ -697,12 +697,12 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   totalValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   warningContainer: {
     paddingHorizontal: 24,
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
   modalTitle: {
-    color: '#1e293b',
+    color: '#FFFFFF',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   qrPlaceholderText: {
-    color: '#64748b',
+    color: '#94A3B8',
     textAlign: 'center',
     marginTop: 24,
     paddingHorizontal: 24,
@@ -823,7 +823,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalFooterText: {
-    color: '#64748b',
+    color: '#94A3B8',
     textAlign: 'center',
     fontSize: 16,
   },

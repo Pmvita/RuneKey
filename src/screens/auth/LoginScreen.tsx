@@ -345,7 +345,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     autoCapitalize="none"
                     error={emailError}
                     leftElement={
-                      <Ionicons name="mail-outline" size={20} color="#64748b" />
+                      <Ionicons name="mail-outline" size={20} color="#94A3B8" />
                     }
                   />
                   
@@ -357,7 +357,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     secureTextEntry={!showPassword}
                     error={passwordError}
                     leftElement={
-                      <Ionicons name="lock-closed-outline" size={20} color="#64748b" />
+                      <Ionicons name="lock-closed-outline" size={20} color="#94A3B8" />
                     }
                     rightElement={
                       <TouchableOpacity 
@@ -368,7 +368,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                         <Ionicons 
                           name={showPassword ? "eye-off-outline" : "eye-outline"} 
                           size={20} 
-                          color="#64748b" 
+                          color="#94A3B8" 
                         />
                       </TouchableOpacity>
                     }

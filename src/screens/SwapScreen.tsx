@@ -414,9 +414,9 @@ export const SwapScreen: React.FC = () => {
           justifyContent: 'space-between',
           paddingHorizontal: 20,
           paddingVertical: 16,
-          backgroundColor: '#f8fafc',
+          backgroundColor: '#000000',
         }}>
-          <Text style={{ fontSize: 24, fontWeight: '700', color: '#1e293b' }}>
+          <Text style={{ fontSize: 24, fontWeight: '700', color: '#FFFFFF' }}>
             Swap
           </Text>
           <TouchableOpacity
@@ -425,14 +425,14 @@ export const SwapScreen: React.FC = () => {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: '#ffffff',
+              backgroundColor: '#111827',
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: 1,
-              borderColor: '#e2e8f0',
+              borderColor: '#1f2937',
             }}
           >
-            <Ionicons name="settings-outline" size={20} color="#64748b" />
+            <Ionicons name="settings-outline" size={20} color="#94A3B8" />
           </TouchableOpacity>
         </View>
 
@@ -445,11 +445,11 @@ export const SwapScreen: React.FC = () => {
           overflow: 'hidden',
         }]}>
           <View style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: '#111827',
             borderRadius: 12,
             padding: 16,
             borderWidth: 1,
-            borderColor: '#e2e8f0',
+            borderColor: '#1f2937',
           }}>
             <View style={{
               flexDirection: 'row',
@@ -457,10 +457,10 @@ export const SwapScreen: React.FC = () => {
               justifyContent: 'space-between',
               marginBottom: 12,
             }}>
-              <Text style={{ fontSize: 14, color: '#64748b' }}>
+              <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                 Slippage Tolerance
               </Text>
-              <Text style={{ fontSize: 14, color: '#1e293b', fontWeight: '600' }}>
+              <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>
                 {slippage}%
               </Text>
             </View>
@@ -499,11 +499,11 @@ export const SwapScreen: React.FC = () => {
         {/* Main Swap Container */}
         <View style={{ marginHorizontal: 20 }}>
           <View style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: '#111827',
             borderRadius: 20,
             padding: 20,
             borderWidth: 1,
-            borderColor: '#e2e8f0',
+            borderColor: '#1f2937',
           }}>
             {/* Input Token Card */}
             <Animated.View style={[inputCardStyle]}>
@@ -514,7 +514,7 @@ export const SwapScreen: React.FC = () => {
                   justifyContent: 'space-between',
                   marginBottom: 8,
                 }}>
-                  <Text style={{ fontSize: 14, color: '#64748b' }}>
+                  <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                     You Pay
                   </Text>
                   {selectedInputToken?.balance && (
@@ -529,11 +529,11 @@ export const SwapScreen: React.FC = () => {
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: '#000000',
                   borderRadius: 16,
                   padding: 16,
                   borderWidth: 1,
-                  borderColor: '#e2e8f0',
+                  borderColor: '#1f2937',
                 }}>
                   <View style={{ flex: 1 }}>
                     <TextInput
@@ -544,13 +544,13 @@ export const SwapScreen: React.FC = () => {
                       style={{
                         fontSize: 28,
                         fontWeight: '700',
-                        color: '#1e293b',
+                        color: '#FFFFFF',
                         paddingVertical: 8,
                       }}
                       placeholderTextColor="#64748b"
                     />
                     {inputUSDValue > 0 && (
-                      <Text style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
+                      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>
                         {formatCurrency(inputUSDValue)}
                       </Text>
                     )}
@@ -561,13 +561,13 @@ export const SwapScreen: React.FC = () => {
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: '#f1f5f9',
+                      backgroundColor: '#0b1120',
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       borderRadius: 12,
                       minWidth: 100,
                       borderWidth: 1,
-                      borderColor: '#e2e8f0',
+                      borderColor: '#1f2937',
                     }}
                   >
                     {selectedInputToken ? (
@@ -575,16 +575,16 @@ export const SwapScreen: React.FC = () => {
                         {getTokenLogo(selectedInputToken)}
                         <Text style={{ 
                           fontWeight: '600', 
-                          color: '#1e293b', 
+                          color: '#FFFFFF', 
                           marginLeft: 8,
                           marginRight: 4,
                         }}>
                           {selectedInputToken.symbol}
                         </Text>
-                        <Ionicons name="chevron-down" size={16} color="#64748b" />
+                        <Ionicons name="chevron-down" size={16} color="#94A3B8" />
                       </>
                     ) : (
-                      <Text style={{ color: '#64748b' }}>
+                      <Text style={{ color: '#94A3B8' }}>
                         Select Token
                       </Text>
                     )}
@@ -603,7 +603,7 @@ export const SwapScreen: React.FC = () => {
                     width: 40,
                     height: 40,
                     borderRadius: 20,
-                    backgroundColor: '#f1f5f9',
+                    backgroundColor: '#0b1120',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderWidth: 2,
@@ -622,18 +622,18 @@ export const SwapScreen: React.FC = () => {
             {/* Output Token Card */}
             <Animated.View style={[outputCardStyle]}>
               <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>
+                <Text style={{ fontSize: 14, color: '#94A3B8', marginBottom: 8 }}>
                   You Receive
                 </Text>
 
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: '#000000',
                   borderRadius: 16,
                   padding: 16,
                   borderWidth: 1,
-                  borderColor: '#e2e8f0',
+                  borderColor: '#1f2937',
                 }}>
                   <View style={{ flex: 1 }}>
                     <TextInput
@@ -644,13 +644,13 @@ export const SwapScreen: React.FC = () => {
                       style={{
                         fontSize: 28,
                         fontWeight: '700',
-                        color: '#1e293b',
+                        color: '#FFFFFF',
                         paddingVertical: 8,
                       }}
                       placeholderTextColor="#64748b"
                     />
                     {outputUSDValue > 0 && (
-                      <Text style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
+                      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>
                         {formatCurrency(outputUSDValue)}
                       </Text>
                     )}
@@ -661,13 +661,13 @@ export const SwapScreen: React.FC = () => {
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: '#f1f5f9',
+                      backgroundColor: '#0b1120',
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       borderRadius: 12,
                       minWidth: 100,
                       borderWidth: 1,
-                      borderColor: '#e2e8f0',
+                      borderColor: '#1f2937',
                     }}
                   >
                     {selectedOutputToken ? (
@@ -675,16 +675,16 @@ export const SwapScreen: React.FC = () => {
                         {getTokenLogo(selectedOutputToken)}
                         <Text style={{ 
                           fontWeight: '600', 
-                          color: '#1e293b', 
+                          color: '#FFFFFF', 
                           marginLeft: 8,
                           marginRight: 4,
                         }}>
                           {selectedOutputToken.symbol}
                         </Text>
-                        <Ionicons name="chevron-down" size={16} color="#64748b" />
+                        <Ionicons name="chevron-down" size={16} color="#94A3B8" />
                       </>
                     ) : (
-                      <Text style={{ color: '#64748b' }}>
+                      <Text style={{ color: '#94A3B8' }}>
                         Select Token
                       </Text>
                     )}
@@ -705,12 +705,12 @@ export const SwapScreen: React.FC = () => {
                  marginTop: 8,
                }}>
                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                   <Ionicons name="time-outline" size={16} color="#64748b" />
-                   <Text style={{ fontSize: 12, color: '#64748b', marginLeft: 4 }}>
+                   <Ionicons name="time-outline" size={16} color="#94A3B8" />
+                   <Text style={{ fontSize: 12, color: '#94A3B8', marginLeft: 4 }}>
                      Rate expires in {rateTimer.toString().padStart(2, '0')}:00s
                    </Text>
                  </View>
-                 <Text style={{ fontSize: 12, color: '#64748b' }}>
+                 <Text style={{ fontSize: 12, color: '#94A3B8' }}>
                    1 {selectedInputToken.symbol} = {((selectedOutputToken.currentPrice || 0) / (selectedInputToken.currentPrice || 1)).toFixed(6)} {selectedOutputToken.symbol}
                  </Text>
                </View>
@@ -719,12 +719,12 @@ export const SwapScreen: React.FC = () => {
                          {/* Swap Details */}
              {inputAmount && selectedInputToken && selectedOutputToken && (
                <View style={{
-                 backgroundColor: '#f8fafc',
+                 backgroundColor: '#000000',
                  borderRadius: 12,
                  padding: 16,
                  marginTop: 16,
                  borderWidth: 1,
-                 borderColor: '#e2e8f0',
+                 borderColor: '#1f2937',
                }}>
                  <View style={{
                    flexDirection: 'row',
@@ -732,7 +732,7 @@ export const SwapScreen: React.FC = () => {
                    justifyContent: 'space-between',
                    marginBottom: 12,
                  }}>
-                   <Text style={{ fontSize: 14, color: '#64748b' }}>
+                   <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                      Price Impact
                    </Text>
                    <Text style={{ fontSize: 14, color: '#10B981', fontWeight: '600' }}>
@@ -745,10 +745,10 @@ export const SwapScreen: React.FC = () => {
                    justifyContent: 'space-between',
                    marginBottom: 12,
                  }}>
-                   <Text style={{ fontSize: 14, color: '#64748b' }}>
+                   <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                      Network Fee
                    </Text>
-                   <Text style={{ fontSize: 14, color: '#1e293b', fontWeight: '600' }}>
+                   <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>
                      ~{formatCurrency(parseFloat(mockQuote.feeUSD))}
                    </Text>
                  </View>
@@ -757,10 +757,10 @@ export const SwapScreen: React.FC = () => {
                    alignItems: 'center',
                    justifyContent: 'space-between',
                  }}>
-                   <Text style={{ fontSize: 14, color: '#64748b' }}>
+                   <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                      Minimum Received
                    </Text>
-                   <Text style={{ fontSize: 14, color: '#1e293b', fontWeight: '600' }}>
+                   <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '600' }}>
                      {outputAmount} {selectedOutputToken.symbol}
                    </Text>
                  </View>
@@ -802,7 +802,7 @@ export const SwapScreen: React.FC = () => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
           {/* Modal Header */}
           <View style={{
             flexDirection: 'row',
@@ -813,7 +813,7 @@ export const SwapScreen: React.FC = () => {
             borderBottomWidth: 1,
             borderBottomColor: '#e2e8f0',
           }}>
-            <Text style={{ fontSize: 20, fontWeight: '600', color: '#1e293b' }}>
+            <Text style={{ fontSize: 20, fontWeight: '600', color: '#FFFFFF' }}>
               Select Token
             </Text>
             <TouchableOpacity
@@ -822,14 +822,14 @@ export const SwapScreen: React.FC = () => {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: '#ffffff',
+                backgroundColor: '#111827',
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 1,
-                borderColor: '#e2e8f0',
+                borderColor: '#1f2937',
               }}
             >
-              <Ionicons name="close" size={20} color="#64748b" />
+              <Ionicons name="close" size={20} color="#94A3B8" />
             </TouchableOpacity>
           </View>
 
@@ -838,14 +838,14 @@ export const SwapScreen: React.FC = () => {
             <View style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: '#ffffff',
+              backgroundColor: '#111827',
               borderRadius: 12,
               paddingHorizontal: 16,
               paddingVertical: 12,
               borderWidth: 1,
-              borderColor: '#e2e8f0',
+              borderColor: '#1f2937',
             }}>
-              <Ionicons name="search" size={20} color="#64748b" />
+              <Ionicons name="search" size={20} color="#94A3B8" />
               <TextInput
                 placeholder="Search tokens..."
                 value={searchQuery}
@@ -854,7 +854,7 @@ export const SwapScreen: React.FC = () => {
                   flex: 1,
                   marginLeft: 12,
                   fontSize: 16,
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                 }}
                 placeholderTextColor="#64748b"
               />
@@ -881,10 +881,10 @@ export const SwapScreen: React.FC = () => {
                   {getTokenLogo(item)}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                     {item.symbol}
                   </Text>
-                  <Text style={{ fontSize: 14, color: '#64748b' }}>
+                  <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                     {item.name}
                   </Text>
                   {item.currentPrice && (
@@ -895,7 +895,7 @@ export const SwapScreen: React.FC = () => {
                 </View>
                 {tokenSelectionType === 'input' && item.balance && parseFloat(item.balance) > 0 && (
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 14, color: '#64748b' }}>
+                    <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                       {parseFloat(item.balance).toFixed(4)}
                     </Text>
                     {item.currentPrice && (

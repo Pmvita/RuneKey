@@ -177,7 +177,7 @@ export const CoinDetailsCard: React.FC<CoinDetailsCardProps> = ({
           {/* Market Cap */}
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center">
-              <Ionicons name="trending-up" size={20} color="#64748b" />
+              <Ionicons name="trending-up" size={20} color="#94A3B8" />
               <Text className="text-ice-600 dark:text-ice-400 ml-2">
                 Market Cap
               </Text>
@@ -209,7 +209,7 @@ export const CoinDetailsCard: React.FC<CoinDetailsCardProps> = ({
           {/* Volume */}
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center">
-              <Ionicons name="bar-chart" size={20} color="#64748b" />
+              <Ionicons name="bar-chart" size={20} color="#94A3B8" />
               <Text className="text-ice-600 dark:text-ice-400 ml-2">
                 24h Volume
               </Text>
@@ -222,7 +222,7 @@ export const CoinDetailsCard: React.FC<CoinDetailsCardProps> = ({
           {/* Rank */}
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center">
-              <Ionicons name="trophy" size={20} color="#64748b" />
+              <Ionicons name="trophy" size={20} color="#94A3B8" />
               <Text className="text-ice-600 dark:text-ice-400 ml-2">
                 Market Rank
               </Text>
@@ -235,7 +235,7 @@ export const CoinDetailsCard: React.FC<CoinDetailsCardProps> = ({
           {/* Supply */}
           <View className="flex-row justify-between items-center">
             <View className="flex-row items-center">
-              <Ionicons name="wallet" size={20} color="#64748b" />
+              <Ionicons name="wallet" size={20} color="#94A3B8" />
               <Text className="text-ice-600 dark:text-ice-400 ml-2">
                 Circulating Supply
               </Text>

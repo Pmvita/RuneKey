@@ -23,7 +23,7 @@ export const TabSelector: React.FC<TabSelectorProps> = ({
   return (
     <View style={[styles.container, style]}>
       <LinearGradient
-        colors={['#e8eff3', '#f1f5f9']}
+        colors={['#111827', '#020617']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientBackground}
@@ -56,10 +56,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+    backgroundColor: '#000000',
   },
   gradientBackground: {
     flexDirection: 'row',
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedTab: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#111827',
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -84,10 +85,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748b',
+    color: '#94A3B8',
     textTransform: 'capitalize',
   },
   selectedTabText: {
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
 });

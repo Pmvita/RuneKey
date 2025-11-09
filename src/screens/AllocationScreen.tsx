@@ -392,14 +392,14 @@ export const AllocationScreen: React.FC = () => {
           <Text style={{
             fontSize: 24,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
           }}>
             {data.length}
           </Text>
           <Text style={{
             fontSize: 14,
             fontWeight: '500',
-            color: '#64748b',
+            color: '#94A3B8',
             marginTop: 2,
           }}>
             assets
@@ -424,7 +424,7 @@ export const AllocationScreen: React.FC = () => {
         alignItems: 'center',
         paddingVertical: 16,
         paddingHorizontal: 20,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#111827',
         marginBottom: 8,
         borderRadius: 12,
         shadowColor: '#000',
@@ -465,14 +465,14 @@ export const AllocationScreen: React.FC = () => {
           <Text style={{
             fontSize: 16,
             fontWeight: '600',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 2,
           }}>
             {item.token.name}
           </Text>
           <Text style={{
             fontSize: 14,
-            color: '#64748b',
+            color: '#94A3B8',
           }}>
             {formattedBalance} {item.token.symbol}
           </Text>
@@ -483,14 +483,14 @@ export const AllocationScreen: React.FC = () => {
           <Text style={{
             fontSize: 16,
             fontWeight: '600',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 2,
           }}>
             {item.percentage.toFixed(2)}%
           </Text>
           <Text style={{
             fontSize: 14,
-            color: '#64748b',
+            color: '#94A3B8',
           }}>
             {item.usdValue >= 1000000 
               ? formatLargeCurrency(item.usdValue)
@@ -506,7 +506,7 @@ export const AllocationScreen: React.FC = () => {
           left: 0,
           right: 0,
           height: 3,
-          backgroundColor: '#f1f5f9',
+          backgroundColor: '#0b1120',
           borderBottomLeftRadius: 12,
           borderBottomRightRadius: 12,
         }}>
@@ -542,7 +542,7 @@ export const AllocationScreen: React.FC = () => {
             <Text style={{
               marginTop: 16,
               fontSize: 16,
-              color: '#64748b',
+              color: '#94A3B8',
               fontWeight: '500',
             }}>
               {isConnectingWallet ? 'Connecting wallet...' : 'Loading allocation data...'}
@@ -562,7 +562,7 @@ export const AllocationScreen: React.FC = () => {
           alignItems: 'center', 
           paddingHorizontal: 20, 
           paddingVertical: 16,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           borderBottomWidth: 1,
           borderBottomColor: '#e2e8f0',
         }, headerAnimatedStyle]}>
@@ -577,13 +577,13 @@ export const AllocationScreen: React.FC = () => {
               marginRight: 16,
             }}
           >
-            <Ionicons name="arrow-back" size={24} color="#1e293b" />
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           
           <Text style={{
             fontSize: 20,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             flex: 1,
           }}>
             Allocation
@@ -595,7 +595,7 @@ export const AllocationScreen: React.FC = () => {
         <Animated.View style={[{
           alignItems: 'center',
           paddingVertical: 60,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           marginBottom: 20,
           marginTop: 20,
         }, chartAnimatedStyle]}>
@@ -615,14 +615,14 @@ export const AllocationScreen: React.FC = () => {
             <View style={{
               alignItems: 'center',
               paddingVertical: 40,
-              backgroundColor: '#ffffff',
+              backgroundColor: '#111827',
               borderRadius: 12,
             }}>
-              <Ionicons name="wallet-outline" size={48} color="#64748b" />
+              <Ionicons name="wallet-outline" size={48} color="#94A3B8" />
               <Text style={{
                 marginTop: 16,
                 fontSize: 16,
-                color: '#64748b',
+                color: '#94A3B8',
                 fontWeight: '500',
               }}>
                 No assets found

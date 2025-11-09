@@ -160,7 +160,7 @@ export const BuyScreen: React.FC = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#1e293b" />
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Buy Crypto</Text>
           <View style={styles.headerSpacer} />
@@ -216,7 +216,7 @@ export const BuyScreen: React.FC = () => {
                     </Text>
                   </View>
                 </View>
-                <Ionicons name="chevron-down" size={20} color="#64748b" />
+                <Ionicons name="chevron-down" size={20} color="#94A3B8" />
               </TouchableOpacity>
               {errors.token && (
                 <Text style={styles.errorText}>{errors.token}</Text>
@@ -236,7 +236,7 @@ export const BuyScreen: React.FC = () => {
                   <Text style={styles.paymentName}>Credit/Debit Card</Text>
                   <Text style={styles.paymentInfo}>Visa •••• 4242</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#64748b" />
+                <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
               </View>
             </Card>
           </Animated.View>
@@ -293,13 +293,13 @@ export const BuyScreen: React.FC = () => {
           animationType="slide"
           presentationStyle="pageSheet"
         >
-          <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#111827' }}>
             <View style={styles.modalHeader}>
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() => setShowTokenModal(false)}
               >
-                <Ionicons name="close" size={24} color="#1e293b" />
+                <Ionicons name="close" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Select Token</Text>
               <View style={styles.modalSpacer} />
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   headerSpacer: {
     width: 40,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   amountInputContainer: {
@@ -373,14 +373,14 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginRight: 8,
   },
   amountInput: {
     flex: 1,
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
     paddingVertical: 8,
   },
   tokenSelector: {
@@ -411,11 +411,11 @@ const styles = StyleSheet.create({
   tokenName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   tokenSymbol: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     marginTop: 2,
   },
   paymentMethod: {
@@ -438,21 +438,21 @@ const styles = StyleSheet.create({
   paymentName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   paymentInfo: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     marginTop: 2,
   },
   summaryCard: {
     padding: 20,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#000000',
   },
   summaryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   summaryRow: {
@@ -463,12 +463,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#94A3B8',
   },
   summaryValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   summaryTotal: {
     borderTopWidth: 1,
@@ -479,12 +479,12 @@ const styles = StyleSheet.create({
   summaryTotalLabel: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   summaryTotalValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   buyButton: {
     backgroundColor: '#3b82f6',
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   modalSpacer: {
     width: 40,
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   },
   tokenBalance: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     fontWeight: '500',
   },
 });

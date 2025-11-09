@@ -26,7 +26,7 @@ export const TokenDetailsScreen: React.FC = () => {
       <UniversalBackground>
         <SafeAreaView style={{ flex: 1 }}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-            <Text style={{ fontSize: 18, color: '#64748b', textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, color: '#94A3B8', textAlign: 'center' }}>
               Invalid token data. Please try again.
             </Text>
           </View>
@@ -445,7 +445,7 @@ export const TokenDetailsScreen: React.FC = () => {
           justifyContent: 'space-between',
           paddingHorizontal: 20,
           paddingVertical: 16,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           borderBottomWidth: 1,
           borderBottomColor: '#e2e8f0',
         }}>
@@ -456,13 +456,13 @@ export const TokenDetailsScreen: React.FC = () => {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
               }}
             >
-              <Ionicons name="arrow-back" size={20} color="#64748b" />
+              <Ionicons name="arrow-back" size={20} color="#94A3B8" />
             </TouchableOpacity>
             
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -497,10 +497,10 @@ export const TokenDetailsScreen: React.FC = () => {
               )}
               
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF' }}>
                   {token.name || token.symbol}
                 </Text>
-                <Text style={{ fontSize: 14, color: '#64748b' }}>
+                <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                   {token.symbol?.toUpperCase()}
                 </Text>
               </View>
@@ -545,12 +545,12 @@ export const TokenDetailsScreen: React.FC = () => {
         <View style={{
           paddingHorizontal: 20,
           paddingVertical: 24,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
         }}>
           <Text style={{
             fontSize: 32,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 8,
           }}>
             {formatCurrency(currentPrice)}
@@ -577,12 +577,12 @@ export const TokenDetailsScreen: React.FC = () => {
         <View style={{
           paddingHorizontal: 20,
           paddingVertical: 24,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           marginBottom: 8,
         }}>
           <View style={{
             height: 200,
-            backgroundColor: '#f8fafc',
+            backgroundColor: '#000000',
             borderRadius: 12,
             padding: 16,
             marginBottom: 16,
@@ -603,7 +603,7 @@ export const TokenDetailsScreen: React.FC = () => {
                 <Text style={{
                   marginTop: 12,
                   fontSize: 14,
-                  color: '#64748b',
+                  color: '#94A3B8',
                   fontWeight: '500',
                 }}>
                   Loading chart data...
@@ -619,11 +619,11 @@ export const TokenDetailsScreen: React.FC = () => {
               />
             ) : (
               <View style={{ alignItems: 'center' }}>
-                <Ionicons name="trending-up" size={48} color="#64748b" />
+                <Ionicons name="trending-up" size={48} color="#94A3B8" />
                 <Text style={{
                   marginTop: 12,
                   fontSize: 14,
-                  color: '#64748b',
+                  color: '#94A3B8',
                   fontWeight: '500',
                 }}>
                   Chart data unavailable
@@ -635,7 +635,7 @@ export const TokenDetailsScreen: React.FC = () => {
           {/* Timeframe Selector */}
           <View style={{
             flexDirection: 'row',
-            backgroundColor: '#f1f5f9',
+            backgroundColor: '#0b1120',
             borderRadius: 8,
             padding: 4,
           }}>
@@ -668,7 +668,7 @@ export const TokenDetailsScreen: React.FC = () => {
         <View style={{
           paddingHorizontal: 20,
           paddingVertical: 24,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           marginBottom: 8,
         }}>
           <View style={{
@@ -707,19 +707,19 @@ export const TokenDetailsScreen: React.FC = () => {
             )}
             
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#1e293b' }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF' }}>
                 {token.name || token.symbol}
               </Text>
-              <Text style={{ fontSize: 14, color: '#64748b' }}>
+              <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                 {tokenBalance} {token.symbol?.toUpperCase()}
               </Text>
             </View>
             
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#1e293b' }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF' }}>
                 {formatCurrency(tokenUSDValue)}
               </Text>
-              <Text style={{ fontSize: 14, color: '#64748b' }}>
+              <Text style={{ fontSize: 14, color: '#94A3B8' }}>
                 {priceChangePercentage.toFixed(2)}%
               </Text>
             </View>
@@ -734,17 +734,17 @@ export const TokenDetailsScreen: React.FC = () => {
             justifyContent: 'space-between',
             paddingHorizontal: 20,
             paddingVertical: 16,
-            backgroundColor: '#ffffff',
+            backgroundColor: '#111827',
             marginBottom: 8,
           }}
           onPress={() => {
             logger.logButtonPress('Transactions', 'view transaction history');
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
             Transactions
           </Text>
-          <Ionicons name="chevron-forward" size={20} color="#64748b" />
+          <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
         </TouchableOpacity>
 
         {/* Action Buttons */}
@@ -752,7 +752,7 @@ export const TokenDetailsScreen: React.FC = () => {
           flexDirection: 'row',
           paddingHorizontal: 20,
           paddingVertical: 24,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           gap: 12,
         }}>
           <TouchableOpacity

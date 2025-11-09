@@ -85,7 +85,7 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
       <View style={{
         width: 40,
         height: 40,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#0b1120',
         borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
@@ -292,7 +292,7 @@ export const SettingsScreen: React.FC = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#000000',
       }} />
 
       {/* Subtle background pattern */}
@@ -311,7 +311,7 @@ export const SettingsScreen: React.FC = () => {
           <Text style={{
             fontSize: 32,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             textAlign: 'center',
             marginBottom: 4,
             letterSpacing: -0.5,
@@ -320,7 +320,7 @@ export const SettingsScreen: React.FC = () => {
           </Text>
           <Text style={{
             fontSize: 16,
-            color: '#64748b',
+            color: '#94A3B8',
             textAlign: 'center',
           }}>
             Manage your wallet preferences
@@ -357,14 +357,14 @@ export const SettingsScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 18,
                   fontWeight: 'bold',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                   marginBottom: 4,
                 }}>
                   Connected Wallet
                 </Text>
                 <Text style={{
                   fontSize: 14,
-                  color: '#64748b',
+                  color: '#94A3B8',
                   fontFamily: 'monospace',
                 }}>
                   {currentWallet ? truncateAddress(currentWallet.address) : 'No wallet connected'}
@@ -389,14 +389,14 @@ export const SettingsScreen: React.FC = () => {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={{
                 fontSize: 14,
-                color: '#64748b',
+                color: '#94A3B8',
               }}>
                 Network: {activeNetwork}
               </Text>
               <Text style={{
                 fontSize: 16,
                 fontWeight: 'bold',
-                color: '#1e293b',
+                color: '#FFFFFF',
               }}>
                 {currentWallet ? formatUSD(parseFloat(currentWallet.balance) * 3000) : '$0'}
               </Text>
@@ -409,7 +409,7 @@ export const SettingsScreen: React.FC = () => {
           <Text style={{
             fontSize: 20,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 16,
           }}>
             Quick Actions
@@ -454,7 +454,7 @@ export const SettingsScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 14,
                   fontWeight: '600',
-                  color: '#374151',
+                  color: '#FFFFFF',
                 }}>
                   Switch Network
                 </Text>
@@ -469,7 +469,7 @@ export const SettingsScreen: React.FC = () => {
                 <View style={{
                   width: 64,
                   height: 64,
-                  backgroundColor: '#f0fdf4',
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
                   borderRadius: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -487,7 +487,7 @@ export const SettingsScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 14,
                   fontWeight: '600',
-                  color: '#374151',
+                  color: '#FFFFFF',
                 }}>
                   Security
                 </Text>
@@ -520,7 +520,7 @@ export const SettingsScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 14,
                   fontWeight: '600',
-                  color: '#374151',
+                  color: '#FFFFFF',
                 }}>
                   Help
                 </Text>
@@ -534,7 +534,7 @@ export const SettingsScreen: React.FC = () => {
           <Text style={{
             fontSize: 20,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 16,
           }}>
             Preferences
@@ -563,26 +563,26 @@ export const SettingsScreen: React.FC = () => {
               <View style={{
                 width: 40,
                 height: 40,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 16,
               }}>
-                <Ionicons name="moon" size={20} color="#64748b" />
+                <Ionicons name="moon" size={20} color="#94A3B8" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{
                   fontSize: 16,
                   fontWeight: '600',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                   marginBottom: 4,
                 }}>
                   Dark Mode
                 </Text>
                 <Text style={{
                   fontSize: 14,
-                  color: '#64748b',
+                  color: '#94A3B8',
                 }}>
                   Switch between light and dark themes
                 </Text>
@@ -607,26 +607,26 @@ export const SettingsScreen: React.FC = () => {
               <View style={{
                 width: 40,
                 height: 40,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 16,
               }}>
-                <Ionicons name="notifications" size={20} color="#64748b" />
+                <Ionicons name="notifications" size={20} color="#94A3B8" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{
                   fontSize: 16,
                   fontWeight: '600',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                   marginBottom: 4,
                 }}>
                   Push Notifications
                 </Text>
                 <Text style={{
                   fontSize: 14,
-                  color: '#64748b',
+                  color: '#94A3B8',
                 }}>
                   Get alerts for transactions and price changes
                 </Text>
@@ -649,26 +649,26 @@ export const SettingsScreen: React.FC = () => {
               <View style={{
                 width: 40,
                 height: 40,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 16,
               }}>
-                <Ionicons name="finger-print" size={20} color="#64748b" />
+                <Ionicons name="finger-print" size={20} color="#94A3B8" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{
                   fontSize: 16,
                   fontWeight: '600',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                   marginBottom: 4,
                 }}>
                   Biometric
                 </Text>
                 <Text style={{
                   fontSize: 14,
-                  color: '#64748b',
+                  color: '#94A3B8',
                 }}>
                   Use fingerprint or face ID to unlock
                 </Text>
@@ -710,7 +710,7 @@ export const SettingsScreen: React.FC = () => {
               <View style={{
                 width: 40,
                 height: 40,
-                backgroundColor: '#fef2f2',
+                backgroundColor: 'rgba(248, 113, 113, 0.18)',
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',

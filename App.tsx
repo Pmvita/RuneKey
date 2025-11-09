@@ -17,7 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform } from 'react-native';
+import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle } from 'react-native';
 import { logger } from './src/utils/logger';
 
 // Screens
@@ -42,6 +42,23 @@ import { useWalletStore } from './src/stores/wallet/useWalletStore';
 // Types
 import { RootStackParamList } from './src/types';
 
+const existingTextStyle = Text.defaultProps?.style;
+const textColorStyle: TextStyle = { color: '#FFFFFF' };
+let newTextStyle: StyleProp<TextStyle>;
+
+if (Array.isArray(existingTextStyle)) {
+  newTextStyle = [...existingTextStyle, textColorStyle] as StyleProp<TextStyle>;
+} else if (existingTextStyle) {
+  newTextStyle = [existingTextStyle, textColorStyle] as StyleProp<TextStyle>;
+} else {
+  newTextStyle = textColorStyle;
+}
+
+Text.defaultProps = {
+  ...Text.defaultProps,
+  style: newTextStyle,
+};
+
 // Initialize React Query
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,8 +74,6 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 // Main Tab Navigator
 const TabNavigator = () => {
-  const colorScheme = useColorScheme();
-  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -91,11 +106,11 @@ const TabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#3b82f6',
+        tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopColor: '#e2e8f0',
+          backgroundColor: '#000000',
+          borderTopColor: '#1F2937',
           borderTopWidth: 1,
           height: 80,
           paddingBottom: 10,
@@ -106,9 +121,9 @@ const TabNavigator = () => {
           shadowOffset: { width: 0, height: -2 },
         },
         headerStyle: {
-          backgroundColor: colorScheme === 'dark' ? '#0f172a' : '#f8fafc',
+          backgroundColor: '#000000',
         },
-        headerTintColor: colorScheme === 'dark' ? '#f1f5f9' : '#0f172a',
+        headerTintColor: '#FFFFFF',
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -178,10 +193,10 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
         dark: actualTheme === 'dark',
         colors: {
           primary: '#3B82F6',
-          background: actualTheme === 'dark' ? '#111827' : '#F9FAFB',
-          card: actualTheme === 'dark' ? '#1F2937' : '#FFFFFF',
-          text: actualTheme === 'dark' ? '#F9FAFB' : '#111827',
-          border: actualTheme === 'dark' ? '#374151' : '#E5E7EB',
+          background: '#000000',
+          card: '#000000',
+          text: '#FFFFFF',
+          border: '#1F2937',
           notification: '#EF4444',
         },
       }}
@@ -254,7 +269,7 @@ class ErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#111827' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#000000' }}>
           <Text style={{ color: '#EF4444', fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>
             Something went wrong
           </Text>
@@ -318,7 +333,7 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
           <SafeAreaProvider>
             {shouldShowOnboarding ? (
               <OnboardingNavigator onComplete={handleOnboardingComplete} />
@@ -326,8 +341,8 @@ function App() {
               <AppNavigator actualTheme={actualTheme} />
             )}
             <StatusBar 
-              style={actualTheme === 'dark' ? 'light' : 'dark'} 
-              backgroundColor={actualTheme === 'dark' ? '#111827' : '#F9FAFB'}
+              style="light"
+              backgroundColor="#000000"
             />
           </SafeAreaProvider>
         </GestureHandlerRootView>

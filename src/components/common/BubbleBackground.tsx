@@ -25,28 +25,28 @@ interface Bubble {
 }
 
 const bubbles: Bubble[] = [
-  // Large bubbles - more vibrant colors
-  { id: 1, size: 150, x: screenWidth * 0.1, y: screenHeight * 0.2, delay: 0, duration: 8000, opacity: 0.4, color: '#ffffff' },
-  { id: 2, size: 100, x: screenWidth * 0.8, y: screenHeight * 0.3, delay: 2000, duration: 10000, opacity: 0.35, color: '#f0f9ff' },
-  { id: 3, size: 120, x: screenWidth * 0.2, y: screenHeight * 0.7, delay: 4000, duration: 12000, opacity: 0.45, color: '#ffffff' },
-  
+  // Large bubbles - subtle highlights
+  { id: 1, size: 150, x: screenWidth * 0.1, y: screenHeight * 0.2, delay: 0, duration: 8000, opacity: 0.4, color: 'rgba(255, 255, 255, 0.12)' },
+  { id: 2, size: 100, x: screenWidth * 0.8, y: screenHeight * 0.3, delay: 2000, duration: 10000, opacity: 0.35, color: 'rgba(148, 163, 184, 0.25)' },
+  { id: 3, size: 120, x: screenWidth * 0.2, y: screenHeight * 0.7, delay: 4000, duration: 12000, opacity: 0.45, color: 'rgba(226, 232, 240, 0.18)' },
+
   // Medium bubbles
-  { id: 4, size: 80, x: screenWidth * 0.7, y: screenHeight * 0.1, delay: 1000, duration: 9000, opacity: 0.5, color: '#f0fdfa' },
-  { id: 5, size: 70, x: screenWidth * 0.3, y: screenHeight * 0.5, delay: 3000, duration: 11000, opacity: 0.4, color: '#ffffff' },
-  { id: 6, size: 90, x: screenWidth * 0.9, y: screenHeight * 0.6, delay: 5000, duration: 13000, opacity: 0.35, color: '#fef3c7' },
-  
+  { id: 4, size: 80, x: screenWidth * 0.7, y: screenHeight * 0.1, delay: 1000, duration: 9000, opacity: 0.5, color: 'rgba(59, 130, 246, 0.18)' },
+  { id: 5, size: 70, x: screenWidth * 0.3, y: screenHeight * 0.5, delay: 3000, duration: 11000, opacity: 0.4, color: 'rgba(148, 163, 184, 0.2)' },
+  { id: 6, size: 90, x: screenWidth * 0.9, y: screenHeight * 0.6, delay: 5000, duration: 13000, opacity: 0.35, color: 'rgba(14, 116, 144, 0.2)' },
+
   // Small bubbles
-  { id: 7, size: 50, x: screenWidth * 0.5, y: screenHeight * 0.2, delay: 1500, duration: 7000, opacity: 0.6, color: '#fef2f2' },
-  { id: 8, size: 40, x: screenWidth * 0.1, y: screenHeight * 0.8, delay: 2500, duration: 8500, opacity: 0.5, color: '#ffffff' },
-  { id: 9, size: 60, x: screenWidth * 0.6, y: screenHeight * 0.4, delay: 3500, duration: 9500, opacity: 0.45, color: '#fdf4ff' },
-  { id: 10, size: 55, x: screenWidth * 0.4, y: screenHeight * 0.9, delay: 4500, duration: 10500, opacity: 0.5, color: '#f0f9ff' },
-  
+  { id: 7, size: 50, x: screenWidth * 0.5, y: screenHeight * 0.2, delay: 1500, duration: 7000, opacity: 0.45, color: 'rgba(148, 163, 184, 0.3)' },
+  { id: 8, size: 40, x: screenWidth * 0.1, y: screenHeight * 0.8, delay: 2500, duration: 8500, opacity: 0.4, color: 'rgba(226, 232, 240, 0.2)' },
+  { id: 9, size: 60, x: screenWidth * 0.6, y: screenHeight * 0.4, delay: 3500, duration: 9500, opacity: 0.35, color: 'rgba(59, 130, 246, 0.2)' },
+  { id: 10, size: 55, x: screenWidth * 0.4, y: screenHeight * 0.9, delay: 4500, duration: 10500, opacity: 0.4, color: 'rgba(226, 232, 240, 0.18)' },
+
   // Extra small bubbles for detail
-  { id: 11, size: 35, x: screenWidth * 0.85, y: screenHeight * 0.15, delay: 600, duration: 6000, opacity: 0.65, color: '#ffffff' },
-  { id: 12, size: 30, x: screenWidth * 0.15, y: screenHeight * 0.35, delay: 1800, duration: 7200, opacity: 0.55, color: '#f0fdfa' },
-  { id: 13, size: 25, x: screenWidth * 0.75, y: screenHeight * 0.75, delay: 3200, duration: 8800, opacity: 0.7, color: '#fef3c7' },
-  { id: 14, size: 45, x: screenWidth * 0.25, y: screenHeight * 0.25, delay: 4800, duration: 10400, opacity: 0.45, color: '#ffffff' },
-  { id: 15, size: 20, x: screenWidth * 0.95, y: screenHeight * 0.45, delay: 2800, duration: 7600, opacity: 0.75, color: '#fef2f2' },
+  { id: 11, size: 35, x: screenWidth * 0.85, y: screenHeight * 0.15, delay: 600, duration: 6000, opacity: 0.5, color: 'rgba(255, 255, 255, 0.18)' },
+  { id: 12, size: 30, x: screenWidth * 0.15, y: screenHeight * 0.35, delay: 1800, duration: 7200, opacity: 0.45, color: 'rgba(148, 163, 184, 0.25)' },
+  { id: 13, size: 25, x: screenWidth * 0.75, y: screenHeight * 0.75, delay: 3200, duration: 8800, opacity: 0.55, color: 'rgba(59, 130, 246, 0.22)' },
+  { id: 14, size: 45, x: screenWidth * 0.25, y: screenHeight * 0.25, delay: 4800, duration: 10400, opacity: 0.4, color: 'rgba(226, 232, 240, 0.22)' },
+  { id: 15, size: 20, x: screenWidth * 0.95, y: screenHeight * 0.45, delay: 2800, duration: 7600, opacity: 0.55, color: 'rgba(255, 255, 255, 0.24)' },
 ];
 
 const BubbleBackground: React.FC = () => {
@@ -131,7 +131,7 @@ const BubbleBackground: React.FC = () => {
     <View style={styles.container}>
       {/* Gradient Background */}
       <LinearGradient
-        colors={['#f8fafc', '#e2e8f0', '#cbd5e1']}
+        colors={['#020617', '#0b1120', '#111827']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBackground}
@@ -160,13 +160,13 @@ const styles = StyleSheet.create({
   bubble: {
     position: 'absolute',
     borderRadius: 1000, // Large value to ensure perfect circles
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowColor: 'rgba(15, 118, 110, 0.6)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.1)',
+    borderColor: 'rgba(148, 163, 184, 0.2)',
   },
 });
 

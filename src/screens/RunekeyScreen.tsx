@@ -328,7 +328,7 @@ export const RunekeyScreen: React.FC = () => {
                           style={styles.dismissButton}
                           activeOpacity={0.7}
                         >
-                          <Ionicons name="close" size={20} color="#64748b" />
+                          <Ionicons name="close" size={20} color="#94A3B8" />
                         </TouchableOpacity>
                       </View>
                       
@@ -393,7 +393,7 @@ export const RunekeyScreen: React.FC = () => {
                 >
                   <View style={styles.statContent}>
                     <View style={styles.statIcon}>
-                      <Ionicons name={stat.icon as any} size={20} color="#64748b" />
+                      <Ionicons name={stat.icon as any} size={20} color="#94A3B8" />
                     </View>
                     <View style={styles.statText}>
                       <Text style={styles.statLabel}>{stat.label}</Text>
@@ -477,11 +477,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   subtitle: {
     fontSize: 18,
-    color: '#64748b',
+    color: '#94A3B8',
     marginTop: 4,
   },
   cardContainer: {
@@ -500,13 +500,13 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -541,12 +541,12 @@ const styles = StyleSheet.create({
   bannerTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   bannerDescription: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     lineHeight: 20,
   },
   dismissButton: {
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   featuresGrid: {
@@ -602,12 +602,12 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     lineHeight: 20,
   },
   statsGrid: {
@@ -631,13 +631,13 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#94A3B8',
     marginBottom: 4,
   },
   statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
   },
   actionsContainer: {
     paddingHorizontal: 24,
@@ -646,13 +646,13 @@ const styles = StyleSheet.create({
   actionsTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
   },
   actionsSubtitle: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#94A3B8',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,

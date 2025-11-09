@@ -25,9 +25,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+    backgroundColor: '#000000',
   },
   content: {
     flex: 1,
     zIndex: 1,
+    backgroundColor: 'transparent',
   },
 });

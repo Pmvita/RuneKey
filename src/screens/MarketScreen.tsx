@@ -291,7 +291,7 @@ export const MarketScreen: React.FC = () => {
               <Text style={{
                 fontSize: 28,
                 fontWeight: 'bold',
-                color: '#1e293b',
+                color: '#FFFFFF',
                 marginRight: 12,
               }}>
                 Wallet
@@ -304,7 +304,7 @@ export const MarketScreen: React.FC = () => {
                   logger.logButtonPress('Balance Visibility', 'toggle visibility');
                 }}
               >
-                <Ionicons name="eye" size={20} color="#64748b" />
+                <Ionicons name="eye" size={20} color="#94A3B8" />
               </TouchableOpacity>
             </View>
             
@@ -318,7 +318,7 @@ export const MarketScreen: React.FC = () => {
                   logger.logButtonPress('Calendar', 'open calendar');
                 }}
               >
-                <Ionicons name="calendar-outline" size={20} color="#64748b" />
+                <Ionicons name="calendar-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -330,7 +330,7 @@ export const MarketScreen: React.FC = () => {
                   logger.logButtonPress('Chart', 'open chart');
                 }}
               >
-                <Ionicons name="trending-up-outline" size={20} color="#64748b" />
+                <Ionicons name="trending-up-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -342,7 +342,7 @@ export const MarketScreen: React.FC = () => {
                   logger.logButtonPress('Notifications', 'open notifications');
                 }}
               >
-                <Ionicons name="notifications-outline" size={20} color="#64748b" />
+                <Ionicons name="notifications-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -353,7 +353,7 @@ export const MarketScreen: React.FC = () => {
                   logger.logButtonPress('Settings', 'open settings');
                 }}
               >
-                <Ionicons name="settings-outline" size={20} color="#64748b" />
+                <Ionicons name="settings-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
             </View>
           </View>
@@ -363,14 +363,14 @@ export const MarketScreen: React.FC = () => {
         <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, headerAnimatedStyle]}>
           <View style={{
             flexDirection: 'row',
-            backgroundColor: '#f1f5f9',
+            backgroundColor: '#0b1120',
             borderRadius: 8,
             padding: 2,
           }}>
             <TouchableOpacity
               style={{
                 flex: 1,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 borderRadius: 6,
                 paddingVertical: 8,
                 alignItems: 'center',
@@ -383,7 +383,7 @@ export const MarketScreen: React.FC = () => {
               <Text style={{
                 fontSize: 14,
                 fontWeight: '600',
-                color: '#64748b',
+                color: '#94A3B8',
               }}>
                 Crypto
               </Text>
@@ -417,20 +417,20 @@ export const MarketScreen: React.FC = () => {
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: '#f8fafc',
+            backgroundColor: '#000000',
             borderRadius: 12,
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderWidth: 1,
-            borderColor: '#e2e8f0',
+            borderColor: '#1f2937',
           }}>
-            <Ionicons name="search" size={20} color="#64748b" />
+            <Ionicons name="search" size={20} color="#94A3B8" />
             <TextInput
               style={{
                 flex: 1,
                 marginLeft: 12,
                 fontSize: 16,
-                color: '#1e293b',
+                color: '#FFFFFF',
               }}
               placeholder="Search"
               placeholderTextColor="#94a3b8"
@@ -469,7 +469,7 @@ export const MarketScreen: React.FC = () => {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 20,
@@ -479,7 +479,7 @@ export const MarketScreen: React.FC = () => {
               <Text style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#64748b',
+                color: '#94A3B8',
                 marginRight: 4,
               }}>
                 Sort Rank {sortBy === 'market_cap_rank' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
@@ -490,7 +490,7 @@ export const MarketScreen: React.FC = () => {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 20,
@@ -500,7 +500,7 @@ export const MarketScreen: React.FC = () => {
               <Text style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#64748b',
+                color: '#94A3B8',
               }}>
                 Time 1Y
               </Text>
@@ -510,7 +510,7 @@ export const MarketScreen: React.FC = () => {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#0b1120',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 20,
@@ -519,7 +519,7 @@ export const MarketScreen: React.FC = () => {
               <Text style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#64748b',
+                color: '#94A3B8',
               }}>
                 Currency USD
               </Text>
@@ -562,7 +562,7 @@ export const MarketScreen: React.FC = () => {
                     width: 40,
                     height: 40,
                     borderRadius: 20,
-                    backgroundColor: '#f1f5f9',
+                    backgroundColor: '#0b1120',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 12,
@@ -578,14 +578,14 @@ export const MarketScreen: React.FC = () => {
                     <Text style={{
                       fontSize: 16,
                       fontWeight: '600',
-                      color: '#1e293b',
+                      color: '#FFFFFF',
                       marginBottom: 2,
                     }}>
                       {coin.name} ({coin.symbol.toUpperCase()})
                     </Text>
                     <Text style={{
                       fontSize: 14,
-                      color: '#64748b',
+                      color: '#94A3B8',
                     }}>
                       {coin.market_cap_rank} {formatLargeCurrency(coin.market_cap)}
                     </Text>
@@ -596,7 +596,7 @@ export const MarketScreen: React.FC = () => {
                     <Text style={{
                       fontSize: 16,
                       fontWeight: '600',
-                      color: '#1e293b',
+                      color: '#FFFFFF',
                       marginBottom: 2,
                     }}>
                       ${coin.current_price.toLocaleString()}
@@ -640,7 +640,7 @@ export const MarketScreen: React.FC = () => {
               }}>
                 <Ionicons name="search" size={48} color="#94a3b8" />
                 <Text style={{
-                  color: '#64748b',
+                  color: '#94A3B8',
                   textAlign: 'center',
                   marginTop: 16,
                   fontSize: 16,

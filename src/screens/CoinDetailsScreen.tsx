@@ -216,7 +216,7 @@ export const CoinDetailsScreen: React.FC = () => {
                 onPress={() => navigation.goBack()}
                 style={{ padding: 8 }}
               >
-                <Ionicons name="arrow-back" size={24} color="#1e293b" />
+                <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
@@ -224,7 +224,7 @@ export const CoinDetailsScreen: React.FC = () => {
                   source={{ uri: coinData.image }}
                   style={{ width: 32, height: 32, marginRight: 12 }}
                 />
-                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1e293b' }}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>
                   {coinData.name}
                 </Text>
               </View>
@@ -247,7 +247,7 @@ export const CoinDetailsScreen: React.FC = () => {
             <Text style={{ 
               fontSize: 48, 
               fontWeight: 'bold', 
-              color: '#1e293b',
+              color: '#FFFFFF',
               marginBottom: 8 
             }}>
               {formatLargeCurrency(coinData.current_price || 0)}
@@ -282,7 +282,7 @@ export const CoinDetailsScreen: React.FC = () => {
             {/* Timeframe Selector */}
             <View style={{ 
               flexDirection: 'row', 
-              backgroundColor: '#f1f5f9', 
+              backgroundColor: '#0b1120', 
               borderRadius: 8, 
               padding: 4,
               marginBottom: 30 
@@ -329,7 +329,7 @@ export const CoinDetailsScreen: React.FC = () => {
                   key={action.label}
                   style={{
                     flex: 1,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#111827',
                     borderRadius: 12,
                     paddingVertical: 16,
                     alignItems: 'center',
@@ -364,14 +364,14 @@ export const CoinDetailsScreen: React.FC = () => {
             <Text style={{ 
               fontSize: 18, 
               fontWeight: 'bold', 
-              color: '#1e293b',
+              color: '#FFFFFF',
               marginBottom: 16 
             }}>
               PRICE STATISTICS
             </Text>
             
             <View style={{ 
-              backgroundColor: '#ffffff', 
+              backgroundColor: '#111827', 
               borderRadius: 12, 
               padding: 16,
               shadowColor: '#000',
@@ -386,9 +386,9 @@ export const CoinDetailsScreen: React.FC = () => {
                 alignItems: 'center',
                 marginBottom: 12 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Price</Text>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Price</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b', marginRight: 8 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF', marginRight: 8 }}>
                     {formatLargeCurrency(coinData.current_price || 0)}
                   </Text>
                   <Ionicons 
@@ -412,8 +412,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 alignItems: 'center',
                 marginBottom: 12 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Trading volume</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Trading volume</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {formatLargeCurrency(coinData.total_volume || 0)}
                 </Text>
               </View>
@@ -424,8 +424,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 alignItems: 'center',
                 marginBottom: 12 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>24h Low / 24h High</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>24h Low / 24h High</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {formatLargeCurrency(coinData.low_24h || 0)} / {formatLargeCurrency(coinData.high_24h || 0)}
                 </Text>
               </View>
@@ -435,8 +435,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 justifyContent: 'space-between', 
                 alignItems: 'center' 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>All time high</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>All time high</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {formatLargeCurrency(coinData.ath || 0)}
                 </Text>
               </View>
@@ -448,14 +448,14 @@ export const CoinDetailsScreen: React.FC = () => {
             <Text style={{ 
               fontSize: 18, 
               fontWeight: 'bold', 
-              color: '#1e293b',
+              color: '#FFFFFF',
               marginBottom: 16 
             }}>
               MARKET CAP
             </Text>
             
             <View style={{ 
-              backgroundColor: '#ffffff', 
+              backgroundColor: '#111827', 
               borderRadius: 12, 
               padding: 16,
               shadowColor: '#000',
@@ -470,8 +470,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 alignItems: 'center',
                 marginBottom: 12 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Market cap</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Market cap</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {formatLargeCurrency(coinData.market_cap || 0)}
                 </Text>
               </View>
@@ -481,8 +481,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 justifyContent: 'space-between', 
                 alignItems: 'center' 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Market cap rank</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Market cap rank</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   #{coinData.market_cap_rank || 'N/A'}
                 </Text>
               </View>
@@ -494,14 +494,14 @@ export const CoinDetailsScreen: React.FC = () => {
             <Text style={{ 
               fontSize: 18, 
               fontWeight: 'bold', 
-              color: '#1e293b',
+              color: '#FFFFFF',
               marginBottom: 16 
             }}>
               SUPPLY
             </Text>
             
             <View style={{ 
-              backgroundColor: '#ffffff', 
+              backgroundColor: '#111827', 
               borderRadius: 12, 
               padding: 16,
               shadowColor: '#000',
@@ -516,8 +516,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 alignItems: 'center',
                 marginBottom: 12 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Circulating supply</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Circulating supply</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {coinData.circulating_supply ? `${coinData.circulating_supply.toLocaleString()} ${coinData.symbol.toUpperCase()}` : 'N/A'}
                 </Text>
               </View>
@@ -528,8 +528,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 alignItems: 'center',
                 marginBottom: 12 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Total supply</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Total supply</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {coinData.total_supply ? `${coinData.total_supply.toLocaleString()} ${coinData.symbol.toUpperCase()}` : 'N/A'}
                 </Text>
               </View>
@@ -539,8 +539,8 @@ export const CoinDetailsScreen: React.FC = () => {
                 justifyContent: 'space-between', 
                 alignItems: 'center' 
               }}>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Max supply</Text>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b' }}>
+                <Text style={{ fontSize: 16, color: '#94A3B8' }}>Max supply</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
                   {coinData.max_supply ? `${coinData.max_supply.toLocaleString()} ${coinData.symbol.toUpperCase()}` : 'N/A'}
                 </Text>
               </View>

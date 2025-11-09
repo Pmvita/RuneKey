@@ -687,7 +687,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 28,
                 fontWeight: 'bold',
-                color: '#1e293b',
+                color: '#FFFFFF',
                 marginRight: 12,
               }}>
                 Wallet
@@ -701,7 +701,7 @@ export const HomeScreen: React.FC = () => {
                   logger.logButtonPress('Balance Visibility', 'toggle visibility');
                 }}
               >
-                <Ionicons name="eye" size={20} color="#64748b" />
+                <Ionicons name="eye" size={20} color="#94A3B8" />
               </TouchableOpacity>
             </View>
             
@@ -715,7 +715,7 @@ export const HomeScreen: React.FC = () => {
                   logger.logButtonPress('Calendar', 'open calendar');
                 }}
               >
-                <Ionicons name="calendar-outline" size={20} color="#64748b" />
+                <Ionicons name="calendar-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -727,7 +727,7 @@ export const HomeScreen: React.FC = () => {
                   logger.logButtonPress('Chart', 'open chart');
                 }}
               >
-                <Ionicons name="trending-up-outline" size={20} color="#64748b" />
+                <Ionicons name="trending-up-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -739,7 +739,7 @@ export const HomeScreen: React.FC = () => {
                   logger.logButtonPress('Notifications', 'open notifications');
                 }}
               >
-                <Ionicons name="notifications-outline" size={20} color="#64748b" />
+                <Ionicons name="notifications-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -751,7 +751,7 @@ export const HomeScreen: React.FC = () => {
                   navigation.navigate('Settings' as never);
                 }}
               >
-                <Ionicons name="settings-outline" size={20} color="#64748b" />
+                <Ionicons name="settings-outline" size={20} color="#94A3B8" />
               </TouchableOpacity>
             </View>
           </View>
@@ -761,7 +761,7 @@ export const HomeScreen: React.FC = () => {
         <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, headerAnimatedStyle]}>
           <View style={{
             flexDirection: 'row',
-            backgroundColor: '#f1f5f9',
+            backgroundColor: '#111827',
             borderRadius: 8,
             padding: 2,
           }}>
@@ -789,7 +789,7 @@ export const HomeScreen: React.FC = () => {
             <TouchableOpacity
               style={{
                 flex: 1,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: '#111827',
                 borderRadius: 6,
                 paddingVertical: 8,
                 alignItems: 'center',
@@ -802,7 +802,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 14,
                 fontWeight: '600',
-                color: '#64748b',
+                color: '#94A3B8',
               }}>
                 Market
               </Text>
@@ -824,7 +824,7 @@ export const HomeScreen: React.FC = () => {
                   style={{
                     fontSize: 44,
                     fontWeight: 'bold',
-                    color: '#1e293b',
+                    color: '#FFFFFF',
                     letterSpacing: -1,
                     textAlign: 'center',
                   }}
@@ -889,7 +889,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 48,
                 fontWeight: 'bold',
-                color: '#1e293b',
+                color: '#FFFFFF',
                 letterSpacing: -1,
                 textAlign: 'center',
                 marginBottom: 8,
@@ -898,7 +898,7 @@ export const HomeScreen: React.FC = () => {
               </Text>
               <Text style={{
                 fontSize: 14,
-                color: '#64748b',
+                color: '#94A3B8',
                 fontWeight: '500',
                 marginBottom: 16,
               }}>
@@ -961,20 +961,20 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 56,
                 height: 56,
-                backgroundColor: '#f8fafc',
+                backgroundColor: '#000000',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 8,
                 borderWidth: 1,
-                borderColor: '#e2e8f0',
+                borderColor: '#1f2937',
               }}>
-                <Ionicons name="add" size={24} color="#64748b" />
+                <Ionicons name="add" size={24} color="#94A3B8" />
               </View>
               <Text style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#374151',
+                color: '#FFFFFF',
               }}>
                 Buy
               </Text>
@@ -998,20 +998,20 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 56,
                 height: 56,
-                backgroundColor: '#f8fafc',
+                backgroundColor: '#000000',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 8,
                 borderWidth: 1,
-                borderColor: '#e2e8f0',
+                borderColor: '#1f2937',
               }}>
-                <Ionicons name="arrow-up" size={24} color="#64748b" />
+                <Ionicons name="arrow-up" size={24} color="#94A3B8" />
               </View>
               <Text style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#374151',
+                color: '#FFFFFF',
               }}>
                 Send
               </Text>
@@ -1035,20 +1035,20 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 56,
                 height: 56,
-                backgroundColor: '#f8fafc',
+                backgroundColor: '#000000',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 8,
                 borderWidth: 1,
-                borderColor: '#e2e8f0',
+                borderColor: '#1f2937',
               }}>
-                <Ionicons name="arrow-down" size={24} color="#64748b" />
+                <Ionicons name="arrow-down" size={24} color="#94A3B8" />
               </View>
               <Text style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#374151',
+                color: '#FFFFFF',
               }}>
                 Receive
               </Text>
@@ -1061,7 +1061,7 @@ export const HomeScreen: React.FC = () => {
           <Text style={{
             fontSize: 18,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
           }}>
             Assets
           </Text>
@@ -1081,7 +1081,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 marginTop: 12,
                 fontSize: 14,
-                color: '#64748b',
+                color: '#94A3B8',
                 fontWeight: '500',
               }}>
                 Loading market data...
@@ -1092,9 +1092,9 @@ export const HomeScreen: React.FC = () => {
           {/* Live Price Indicator */}
           {isLoadingPrices && !loadingMarketData && (
             <View style={{
-              backgroundColor: '#f0fdf4',
+              backgroundColor: 'rgba(34, 197, 94, 0.15)',
               borderWidth: 1,
-              borderColor: '#bbf7d0',
+              borderColor: 'rgba(34, 197, 94, 0.35)',
               borderRadius: 12,
               padding: 16,
               marginBottom: 16,
@@ -1110,7 +1110,7 @@ export const HomeScreen: React.FC = () => {
                 marginRight: 8,
               }} />
               <Text style={{
-                color: '#166534',
+                color: '#22c55e',
                 fontWeight: '600',
                 fontSize: 14,
               }}>
@@ -1122,9 +1122,9 @@ export const HomeScreen: React.FC = () => {
           {/* Fallback Data Indicator */}
           {!isLoadingPrices && !loadingMarketData && marketData.length === 0 && (
             <View style={{
-              backgroundColor: '#fef3c7',
+              backgroundColor: 'rgba(250, 204, 21, 0.18)',
               borderWidth: 1,
-              borderColor: '#fbbf24',
+              borderColor: 'rgba(250, 204, 21, 0.5)',
               borderRadius: 12,
               padding: 16,
               marginBottom: 16,
@@ -1135,7 +1135,7 @@ export const HomeScreen: React.FC = () => {
               <Ionicons name="warning" size={16} color="#d97706" style={{ marginRight: 8 }} />
               <Text style={{
                 fontSize: 14,
-                color: '#92400e',
+                color: '#facc15',
                 fontWeight: '500',
               }}>
                 Using fallback data - API rate limited
@@ -1184,7 +1184,7 @@ export const HomeScreen: React.FC = () => {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  backgroundColor: '#f1f5f9',
+                  backgroundColor: '#111827',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
@@ -1200,14 +1200,14 @@ export const HomeScreen: React.FC = () => {
                   <Text style={{
                     fontSize: 16,
                     fontWeight: '600',
-                    color: '#1e293b',
+                    color: '#FFFFFF',
                     marginBottom: 2,
                   }}>
                     {token.symbol}
                   </Text>
                   <Text style={{
                     fontSize: 14,
-                    color: '#64748b',
+                    color: '#94A3B8',
                   }}>
                     {formatTokenBalance(token.balance, token.decimals || 18)} {token.symbol}
                   </Text>
@@ -1218,7 +1218,7 @@ export const HomeScreen: React.FC = () => {
                   <Text style={{
                     fontSize: 16,
                     fontWeight: '600',
-                    color: '#1e293b',
+                    color: '#FFFFFF',
                     marginBottom: 2,
                   }}>
                     {formatLargeCurrency(usdValue)}
@@ -1251,7 +1251,7 @@ export const HomeScreen: React.FC = () => {
             }}>
               <Ionicons name="wallet-outline" size={48} color="#94a3b8" />
               <Text style={{
-                color: '#64748b',
+                color: '#94A3B8',
                 textAlign: 'center',
                 marginTop: 16,
                 fontSize: 16,
@@ -1267,7 +1267,7 @@ export const HomeScreen: React.FC = () => {
           <Text style={{
             fontSize: 18,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 16,
           }}>
             ALLOCATION
@@ -1282,7 +1282,7 @@ export const HomeScreen: React.FC = () => {
               width: 120,
               height: 120,
               borderRadius: 60,
-              backgroundColor: '#f1f5f9',
+              backgroundColor: '#111827',
               alignItems: 'center',
               justifyContent: 'center',
               marginRight: 20,
@@ -1293,14 +1293,14 @@ export const HomeScreen: React.FC = () => {
                 width: 80,
                 height: 80,
                 borderRadius: 40,
-                backgroundColor: '#ffffff',
+                backgroundColor: '#111827',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
                 <Text style={{
                   fontSize: 12,
                   fontWeight: '600',
-                  color: '#64748b',
+                  color: '#94A3B8',
                 }}>
                   Portfolio
                 </Text>
@@ -1329,7 +1329,7 @@ export const HomeScreen: React.FC = () => {
                     <Text style={{
                       fontSize: 14,
                       fontWeight: '500',
-                      color: '#1e293b',
+                      color: '#FFFFFF',
                     }}>
                       {token.symbol}
                     </Text>
@@ -1345,7 +1345,7 @@ export const HomeScreen: React.FC = () => {
                 navigation.navigate('Allocation');
               }}
             >
-              <Ionicons name="chevron-forward" size={20} color="#64748b" />
+              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
             </TouchableOpacity>
           </View>
         </Animated.View>

@@ -359,7 +359,7 @@ export const SearchScreen: React.FC = () => {
     if (isNaN(change) || change === null || change === undefined) {
       return {
         value: '0.00',
-        color: '#64748b',
+        color: '#94A3B8',
         icon: 'remove',
       };
     }
@@ -427,7 +427,7 @@ export const SearchScreen: React.FC = () => {
           width: 40,
           height: 40,
           borderRadius: 20,
-          backgroundColor: '#f1f5f9',
+          backgroundColor: '#0b1120',
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: 16,
@@ -447,7 +447,7 @@ export const SearchScreen: React.FC = () => {
           <Text style={{
             fontSize: 16,
             fontWeight: '600',
-            color: '#1e293b',
+            color: '#FFFFFF',
             marginBottom: 4,
           }}>
             {token.name}
@@ -455,7 +455,7 @@ export const SearchScreen: React.FC = () => {
           {selectedCategory === 'tokens' && (
             <Text style={{
               fontSize: 12,
-              color: '#64748b',
+              color: '#94A3B8',
             }}>
               #{(token as CoinInfo).market_cap_rank || 'N/A'}
             </Text>
@@ -468,7 +468,7 @@ export const SearchScreen: React.FC = () => {
             <Text style={{
               fontSize: 14,
               fontWeight: '500',
-              color: '#1e293b',
+              color: '#FFFFFF',
               marginBottom: 4,
             }}>
               {formatCurrency(currentPrice)}
@@ -492,7 +492,7 @@ export const SearchScreen: React.FC = () => {
           <Text style={{
             fontSize: 14,
             fontWeight: '500',
-            color: '#64748b',
+            color: '#94A3B8',
           }}>
             {token.symbol}
           </Text>
@@ -520,7 +520,7 @@ export const SearchScreen: React.FC = () => {
           width: 48,
           height: 48,
           borderRadius: 24,
-          backgroundColor: '#f1f5f9',
+          backgroundColor: '#0b1120',
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: 16,
@@ -541,14 +541,14 @@ export const SearchScreen: React.FC = () => {
             <Text style={{
               fontSize: 16,
               fontWeight: '600',
-              color: '#1e293b',
+              color: '#FFFFFF',
               marginRight: 8,
             }}>
               {dapp.name}
             </Text>
             {dapp.trending && (
               <View style={{
-                backgroundColor: '#fef3c7',
+                backgroundColor: 'rgba(250, 204, 21, 0.18)',
                 paddingHorizontal: 6,
                 paddingVertical: 2,
                 borderRadius: 8,
@@ -566,7 +566,7 @@ export const SearchScreen: React.FC = () => {
           
           <Text style={{
             fontSize: 14,
-            color: '#64748b',
+            color: '#94A3B8',
             marginBottom: 4,
           }}>
             {dapp.description}
@@ -581,7 +581,7 @@ export const SearchScreen: React.FC = () => {
               <Ionicons name="star" size={12} color="#fbbf24" />
               <Text style={{
                 fontSize: 12,
-                color: '#64748b',
+                color: '#94A3B8',
                 marginLeft: 4,
               }}>
                 {dapp.rating}
@@ -593,10 +593,10 @@ export const SearchScreen: React.FC = () => {
               alignItems: 'center',
               marginRight: 12,
             }}>
-              <Ionicons name="people" size={12} color="#64748b" />
+              <Ionicons name="people" size={12} color="#94A3B8" />
               <Text style={{
                 fontSize: 12,
-                color: '#64748b',
+                color: '#94A3B8',
                 marginLeft: 4,
               }}>
                 {formatNumber(dapp.users)}
@@ -624,7 +624,7 @@ export const SearchScreen: React.FC = () => {
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={{
             fontSize: 12,
-            color: '#64748b',
+            color: '#94A3B8',
             marginBottom: 4,
           }}>
             {formatVolume(dapp.volume_24h)}
@@ -741,7 +741,7 @@ export const SearchScreen: React.FC = () => {
       }}>
         <Text style={{
           fontSize: 14,
-          color: '#64748b',
+          color: '#94A3B8',
         }}>
           Showing {topTokens.length} of {hasMorePages ? 'many' : totalTokens} tokens
         </Text>
@@ -749,7 +749,7 @@ export const SearchScreen: React.FC = () => {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{
             fontSize: 14,
-            color: '#64748b',
+            color: '#94A3B8',
             marginRight: 8,
           }}>
             Page {currentPage}
@@ -814,7 +814,7 @@ export const SearchScreen: React.FC = () => {
           <Text style={{
             fontSize: 32,
             fontWeight: 'bold',
-            color: '#1e293b',
+            color: '#FFFFFF',
             textAlign: 'center',
             marginBottom: 8,
             letterSpacing: -0.5,
@@ -840,12 +840,12 @@ export const SearchScreen: React.FC = () => {
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0.8)',
           }}>
-            <Ionicons name="search" size={20} color="#64748b" style={{ marginRight: 12 }} />
+            <Ionicons name="search" size={20} color="#94A3B8" style={{ marginRight: 12 }} />
             <TextInput
               style={{
                 flex: 1,
                 fontSize: 16,
-                color: '#1e293b',
+                color: '#FFFFFF',
                 backgroundColor: 'transparent',
               }}
               placeholder="Search tokens, DApps, NFTs..."
@@ -928,7 +928,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 20,
                   fontWeight: 'bold',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                 }}>
                   Top Tokens
                 </Text>
@@ -964,7 +964,7 @@ export const SearchScreen: React.FC = () => {
                 }}>
                   <LoadingSpinner size={32} color="#3B82F6" />
                   <Text style={{
-                    color: '#64748b',
+                    color: '#94A3B8',
                     marginTop: 16,
                     fontSize: 14,
                     fontWeight: '500',
@@ -980,7 +980,7 @@ export const SearchScreen: React.FC = () => {
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
                   <Ionicons name="ellipse-outline" size={48} color="#94a3b8" />
                   <Text style={{
-                    color: '#64748b',
+                    color: '#94A3B8',
                     textAlign: 'center',
                     marginTop: 16,
                     fontSize: 16,
@@ -1013,7 +1013,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 20,
                   fontWeight: 'bold',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                 }}>
                   Decentralized Apps
                 </Text>
@@ -1052,7 +1052,7 @@ export const SearchScreen: React.FC = () => {
                 }}>
                   <LoadingSpinner size={32} color="#3B82F6" />
                   <Text style={{
-                    color: '#64748b',
+                    color: '#94A3B8',
                     marginTop: 16,
                     fontSize: 14,
                     fontWeight: '500',
@@ -1068,7 +1068,7 @@ export const SearchScreen: React.FC = () => {
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
                   <Ionicons name="apps-outline" size={48} color="#94a3b8" />
                   <Text style={{
-                    color: '#64748b',
+                    color: '#94A3B8',
                     textAlign: 'center',
                     marginTop: 16,
                     fontSize: 16,
@@ -1099,7 +1099,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 20,
                   fontWeight: 'bold',
-                  color: '#1e293b',
+                  color: '#FFFFFF',
                 }}>
                   Trending Tokens
                 </Text>
@@ -1130,7 +1130,7 @@ export const SearchScreen: React.FC = () => {
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={{
                   fontSize: 12,
-                  color: '#64748b',
+                  color: '#94A3B8',
                   marginRight: 8,
                 }}>
                   Last updated: {lastUpdated ? formatTime(lastUpdated) : 'Never'}
@@ -1160,7 +1160,7 @@ export const SearchScreen: React.FC = () => {
                 }}>
                   <LoadingSpinner size={32} color="#3B82F6" />
                   <Text style={{
-                    color: '#64748b',
+                    color: '#94A3B8',
                     marginTop: 16,
                     fontSize: 14,
                     fontWeight: '500',
@@ -1176,7 +1176,7 @@ export const SearchScreen: React.FC = () => {
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
                   <Ionicons name="trending-down" size={48} color="#94a3b8" />
                   <Text style={{
-                    color: '#64748b',
+                    color: '#94A3B8',
                     textAlign: 'center',
                     marginTop: 16,
                     fontSize: 16,

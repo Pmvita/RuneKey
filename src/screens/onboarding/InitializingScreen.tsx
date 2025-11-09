@@ -69,13 +69,13 @@ export const InitializingScreen: React.FC<InitializingScreenProps> = ({ onComple
         <ActivityIndicator size="large" color="#38bdf8" />
         
         <View style={{ marginTop: 32, gap: 8 }}>
-          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center' }}>
+          <Text style={{ fontSize: 14, color: '#94A3B8', textAlign: 'center' }}>
             • Establishing secure connection
           </Text>
-          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center' }}>
+          <Text style={{ fontSize: 14, color: '#94A3B8', textAlign: 'center' }}>
             • Loading blockchain networks
           </Text>
-          <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center' }}>
+          <Text style={{ fontSize: 14, color: '#94A3B8', textAlign: 'center' }}>
             • Preparing wallet interface
           </Text>
         </View>
