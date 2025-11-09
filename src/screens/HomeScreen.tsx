@@ -1078,7 +1078,6 @@ export const HomeScreen: React.FC = () => {
               </Text>
 
               <View style={{
-                flexDirection: 'row',
                 alignItems: 'center',
               }}>
                 <View style={{
@@ -1088,7 +1087,6 @@ export const HomeScreen: React.FC = () => {
                   backgroundColor: '#111827',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: 16,
                   borderWidth: 6,
                   borderColor: '#3b82f6',
                 }}>
@@ -1110,31 +1108,54 @@ export const HomeScreen: React.FC = () => {
                   </View>
                 </View>
 
-                <View style={{ flex: 1 }}>
-                  {getFilteredMarketData().slice(0, 3).map((token: any, index: number) => {
-                    const colors = ['#3b82f6', '#22c55e', '#f59e0b'];
-                    const color = colors[index] || '#64748b';
+                <View style={{
+                  width: '100%',
+                  marginTop: 16,
+                  alignItems: 'center',
+                }}>
+                  {[
+                    getFilteredMarketData().slice(0, 3),
+                    getFilteredMarketData().slice(3, 6),
+                  ].map((group, columnIndex) => {
+                    const colorPalette = columnIndex === 0
+                      ? ['#3b82f6', '#22c55e', '#f59e0b']
+                      : ['#6366f1', '#14b8a6', '#f97316'];
 
                     return (
-                      <View key={token.symbol} style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginBottom: 6,
-                      }}>
-                        <View style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 5,
-                          backgroundColor: color,
-                          marginRight: 8,
-                        }} />
-                        <Text style={{
-                          fontSize: 13,
-                          fontWeight: '500',
-                          color: '#FFFFFF',
-                        }}>
-                          {token.symbol}
-                        </Text>
+                      <View
+                        key={`allocation-column-${columnIndex}`}
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginBottom: columnIndex === 0 ? 8 : 0,
+                        }}
+                      >
+                        {group.map((token: any, index: number) => {
+                          const color = colorPalette[index] || '#64748b';
+
+                          return (
+                            <View key={`${token.symbol}-${columnIndex}`} style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                                marginRight: index < group.length - 1 ? 16 : 0,
+                            }}>
+                              <View style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 5,
+                                backgroundColor: color,
+                                marginRight: 6,
+                              }} />
+                                <Text style={{
+                                  fontSize: 11,
+                                  fontWeight: '500',
+                                  color: '#FFFFFF',
+                                }}>
+                                {token.symbol}
+                              </Text>
+                            </View>
+                          );
+                        })}
                       </View>
                     );
                   })}
@@ -1145,6 +1166,7 @@ export const HomeScreen: React.FC = () => {
                     logger.logButtonPress('Allocation', 'view detailed allocation');
                     navigation.navigate('Allocation');
                   }}
+                  style={{ alignSelf: 'flex-end', marginTop: 12 }}
                 >
                   <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
                 </TouchableOpacity>
@@ -1207,10 +1229,10 @@ export const HomeScreen: React.FC = () => {
                 <View style={{
                   marginTop: 20,
                 }}>
-                  {[
-                    { label: 'Auto-Invest', status: 'Running' },
-                    { label: 'Yield Vault', status: 'Compounding' },
-                  ].map((item) => (
+                    {[
+                      { label: 'Auto-Invest', status: 'Running' },
+                      { label: 'Yield Vault', status: 'Compounding' },
+                    ].map((item) => (
                     <View
                       key={item.label}
                       style={{
@@ -1220,15 +1242,15 @@ export const HomeScreen: React.FC = () => {
                         paddingVertical: 6,
                       }}
                     >
-                      <Text style={{
-                        fontSize: 14,
-                        color: '#FFFFFF',
-                        fontWeight: '500',
-                      }}>
+                        <Text style={{
+                          fontSize: 12,
+                          color: '#FFFFFF',
+                          fontWeight: '500',
+                        }}>
                         {item.label}
                       </Text>
                       <Text style={{
-                        fontSize: 12,
+                          fontSize: 10,
                         color: '#94A3B8',
                       }}>
                         {item.status}
