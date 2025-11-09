@@ -63,7 +63,7 @@ export const mapTrendingResponse = (
     return {
       id: item.id ?? `token-${fallbackStartIndex + index}`,
       symbol,
-      name: item.name ?? item.slug ?? symbol || `Token ${fallbackStartIndex + index + 1}`,
+      name: (item.name ?? item.slug ?? symbol) || `Token ${fallbackStartIndex + index + 1}`,
       image: item.large ?? item.thumb ?? item.image ?? '',
       current_price: price ?? 0,
       price_change_percentage_24h: priceChange ?? 0,
