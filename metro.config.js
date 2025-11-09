@@ -9,8 +9,11 @@ config.server = {
 };
 
 // Configure transformer
+// Explicitly ensure we're using Expo's default transformer (not a custom one)
 config.transformer = {
   ...config.transformer,
+  // Explicitly set to Expo's transformer to avoid any cached references
+  babelTransformerPath: require.resolve('@expo/metro-config/build/babel-transformer'),
   minifierConfig: {
     keep_fnames: true,
     mangle: {
@@ -32,8 +35,6 @@ config.transformer = {
       platform: isWeb ? 'web' : undefined,
     };
   },
-  // Custom transformer to ensure import.meta is transformed in all files including node_modules
-  babelTransformerPath: require.resolve('./metro-transformer.js'),
 };
 
 // Function to check if we're bundling for web
@@ -62,6 +63,20 @@ config.resolver.resolveRequest = (context, realModuleName, platform, moduleName)
     }
     // Also stub wagmi on web since it depends on viem
     if (realModuleName === 'wagmi' || realModuleName.startsWith('wagmi/')) {
+      return {
+        filePath: path.resolve(__dirname, 'web-stubs/viem-stub.js'), // Use same stub
+        type: 'sourceFile',
+      };
+    }
+    // Block ox package (dependency of viem/wagmi) which uses import.meta
+    if (realModuleName === 'ox' || realModuleName.startsWith('ox/')) {
+      return {
+        filePath: path.resolve(__dirname, 'web-stubs/viem-stub.js'), // Use same stub
+        type: 'sourceFile',
+      };
+    }
+    // Block @base-org/account which depends on ox
+    if (realModuleName === '@base-org/account' || realModuleName.startsWith('@base-org/account/')) {
       return {
         filePath: path.resolve(__dirname, 'web-stubs/viem-stub.js'), // Use same stub
         type: 'sourceFile',
@@ -108,9 +123,13 @@ config.resolver = {
     ...(config.resolver.blockList || []),
     /node_modules\/ws\/lib\/stream\.js$/,
     /node_modules\/ws\/wrapper\.mjs$/,
-    // Block @noble/hashes crypto.js file that uses import.meta on web
-    ...(process.env.EXPO_PLATFORM === 'web' ? [/node_modules\/@noble\/hashes\/crypto\.js$/] : []),
-    // Note: viem is handled by custom resolver above (stubbed on web, allowed on native)
+    // Block packages that use import.meta on web
+    ...(process.env.EXPO_PLATFORM === 'web' ? [
+      /node_modules\/@noble\/hashes\/crypto\.js$/,
+      /node_modules\/ox\/.*\.js$/, // Block ox package files that use import.meta
+      /node_modules\/@base-org\/account\/.*\.js$/, // Block @base-org/account
+    ] : []),
+    // Note: viem, wagmi, ox, and @base-org/account are handled by custom resolver above (stubbed on web, allowed on native)
   ],
   // Support for dynamic imports in packages like viem
   unstable_enablePackageExports: true,
