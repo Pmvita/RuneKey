@@ -1056,6 +1056,91 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
 
+        {/* Allocation Section */}
+        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, assetsAnimatedStyle]}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#FFFFFF',
+            marginBottom: 16,
+          }}>
+            ALLOCATION
+          </Text>
+
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+            <View style={{
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              backgroundColor: '#111827',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 20,
+              borderWidth: 8,
+              borderColor: '#3b82f6',
+            }}>
+              <View style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: '#111827',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Text style={{
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: '#94A3B8',
+                }}>
+                  Portfolio
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              {getFilteredMarketData().slice(0, 3).map((token: any, index: number) => {
+                const colors = ['#3b82f6', '#22c55e', '#f59e0b'];
+                const color = colors[index] || '#64748b';
+
+                return (
+                  <View key={token.symbol} style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 8,
+                  }}>
+                    <View style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: color,
+                      marginRight: 8,
+                    }} />
+                    <Text style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#FFFFFF',
+                    }}>
+                      {token.symbol}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              onPress={() => {
+                logger.logButtonPress('Allocation', 'view detailed allocation');
+                navigation.navigate('Allocation');
+              }}
+            >
+              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
         {/* Assets Title */}
         <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, actionsAnimatedStyle]}>
           <Text style={{
