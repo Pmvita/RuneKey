@@ -21,6 +21,7 @@ import { formatCurrency, formatLargeCurrency } from '../utils/formatters';
 import { UniversalBackground } from '../components';
 import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
+import topCoinsMock from '../../mockData/api/top-coins.json';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -81,96 +82,24 @@ export const AllocationScreen: React.FC = () => {
 
   // Load market data from CoinGecko
   const loadMarketData = async () => {
+    const applyMockMarketData = () => {
+      const fallbackData = (topCoinsMock as CoinInfo[]).map((coin) => ({
+        ...coin,
+        last_updated: coin.last_updated || new Date().toISOString(),
+      }));
+      setMarketData(fallbackData);
+    };
+
     try {
       const result = await priceService.fetchMarketData(20);
       if (result.success && result.data) {
         setMarketData(result.data);
       } else {
-        // Use fallback data if API fails
-        console.log('⚠️ Using fallback market data due to API failure');
-        setMarketData([
-          {
-            id: 'bitcoin',
-            symbol: 'btc',
-            name: 'Bitcoin',
-            image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
-            current_price: 51200,
-            market_cap: 1000000000000,
-            market_cap_rank: 1,
-            total_volume: 25000000000,
-            high_24h: 52000,
-            low_24h: 50000,
-            price_change_24h: 1200,
-            price_change_percentage_24h: 2.4,
-            market_cap_change_24h: 24000000000,
-            market_cap_change_percentage_24h: 2.4,
-            circulating_supply: 19500000,
-            total_supply: 21000000,
-            max_supply: 21000000,
-            ath: 69000,
-            ath_change_percentage: -25.8,
-            ath_date: '2021-11-10T14:24:11.849Z',
-            atl: 67.81,
-            atl_change_percentage: 75400.0,
-            atl_date: '2013-07-06T00:00:00.000Z',
-            last_updated: new Date().toISOString(),
-          },
-          {
-            id: 'ethereum',
-            symbol: 'eth',
-            name: 'Ethereum',
-            image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
-            current_price: 3200,
-            market_cap: 400000000000,
-            market_cap_rank: 2,
-            total_volume: 15000000000,
-            high_24h: 3300,
-            low_24h: 3100,
-            price_change_24h: 100,
-            price_change_percentage_24h: 3.2,
-            market_cap_change_24h: 12000000000,
-            market_cap_change_percentage_24h: 3.2,
-            circulating_supply: 120000000,
-            total_supply: 120000000,
-            max_supply: 0,
-            ath: 4800,
-            ath_change_percentage: -33.3,
-            ath_date: '2021-11-10T14:24:11.849Z',
-            atl: 0.432979,
-            atl_change_percentage: 740000.0,
-            atl_date: '2015-10-20T00:00:00.000Z',
-            last_updated: new Date().toISOString(),
-          },
-          {
-            id: 'ripple',
-            symbol: 'xrp',
-            name: 'XRP',
-            image: 'https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png',
-            current_price: 0.52,
-            market_cap: 28000000000,
-            market_cap_rank: 6,
-            total_volume: 2000000000,
-            high_24h: 0.53,
-            low_24h: 0.51,
-            price_change_24h: 0.01,
-            price_change_percentage_24h: 1.96,
-            market_cap_change_24h: 500000000,
-            market_cap_change_percentage_24h: 1.96,
-            circulating_supply: 54000000000,
-            total_supply: 100000000000,
-            max_supply: 100000000000,
-            ath: 3.40,
-            ath_change_percentage: -84.7,
-            ath_date: '2018-01-07T00:00:00.000Z',
-            atl: 0.00268621,
-            atl_change_percentage: 19200.0,
-            atl_date: '2014-05-22T00:00:00.000Z',
-            last_updated: new Date().toISOString(),
-          }
-        ]);
+        applyMockMarketData();
       }
     } catch (error) {
       console.error('Failed to load market data:', error);
+      applyMockMarketData();
     }
   };
 
@@ -231,38 +160,22 @@ export const AllocationScreen: React.FC = () => {
       
       // Calculate USD values for all tokens
       const tokensWithValues = filteredTokens.map((token) => {
-        // Handle balance conversion - dev wallet has raw token amounts
-        let balance = parseFloat(token.balance || '0');
-        
-        // For dev wallet, the balances are already in the correct units
-        // BTC: 40000 = 0.0004 BTC (divide by 100000000 for 8 decimals)
-        // ETH: 220000 = 0.00022 ETH (divide by 1000000000000000000 for 18 decimals)
-        // XRP: 100500000 = 100.5 XRP (divide by 1000000 for 6 decimals)
-        
-        if (token.symbol === 'BTC') {
-          balance = balance / Math.pow(10, 8); // 8 decimals
-        } else if (token.symbol === 'ETH') {
-          balance = balance / Math.pow(10, 18); // 18 decimals
-        } else if (token.symbol === 'XRP') {
-          balance = balance / Math.pow(10, 6); // 6 decimals
-        } else if (token.symbol === 'SOL') {
-          balance = balance / Math.pow(10, 9); // 9 decimals
-        } else if (token.symbol === 'USDT' || token.symbol === 'USDC') {
-          balance = balance / Math.pow(10, 6); // 6 decimals
-        } else {
-          // Default to 18 decimals for other tokens
-          balance = balance / Math.pow(10, 18);
-        }
-        
-        const price = token.currentPrice || 0;
-        const usdValue = balance * price;
-        
-        console.log(`🔍 AllocationScreen: ${token.symbol} - Raw Balance: ${token.balance}, Adjusted Balance: ${balance}, Price: ${price}, USD Value: ${usdValue}`);
-        
+        const balance = parseFloat(token.balance || '0') || 0;
+        const price = token.currentPrice && token.currentPrice > 0
+          ? token.currentPrice
+          : (token.usdValue && balance > 0 ? token.usdValue / balance : 0);
+        const usdValue = token.usdValue && token.usdValue > 0
+          ? token.usdValue
+          : balance * price;
+
+        console.log(`🔍 AllocationScreen: ${token.symbol} - Balance: ${token.balance}, Price: ${price}, USD Value: ${usdValue}`);
+
         return {
           token: {
             ...token,
-            balance: balance.toString(), // Update token with adjusted balance
+            balance: balance.toString(),
+            currentPrice: price,
+            usdValue,
           },
           balance,
           price,
@@ -562,9 +475,6 @@ export const AllocationScreen: React.FC = () => {
           alignItems: 'center', 
           paddingHorizontal: 20, 
           paddingVertical: 16,
-          backgroundColor: '#111827',
-          borderBottomWidth: 1,
-          borderBottomColor: '#e2e8f0',
         }, headerAnimatedStyle]}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -595,7 +505,6 @@ export const AllocationScreen: React.FC = () => {
         <Animated.View style={[{
           alignItems: 'center',
           paddingVertical: 60,
-          backgroundColor: '#111827',
           marginBottom: 20,
           marginTop: 20,
         }, chartAnimatedStyle]}>

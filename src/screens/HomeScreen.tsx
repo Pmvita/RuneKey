@@ -1059,7 +1059,13 @@ export const HomeScreen: React.FC = () => {
         {/* Allocation Section */}
         <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, assetsAnimatedStyle]}>
           <View style={{ flexDirection: 'row' }}>
-            <View style={{
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => {
+                logger.logButtonPress('Allocation', 'view detailed allocation');
+                navigation.navigate('Allocation' as never);
+              }}
+              style={{
               flex: 1,
               backgroundColor: '#0b1120',
               borderRadius: 16,
@@ -1067,7 +1073,8 @@ export const HomeScreen: React.FC = () => {
               borderColor: '#1f2937',
               padding: 20,
               marginRight: 16,
-            }}>
+            }}
+            >
               <Text style={{
                 fontSize: 18,
                 fontWeight: 'bold',
@@ -1161,17 +1168,11 @@ export const HomeScreen: React.FC = () => {
                   })}
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => {
-                    logger.logButtonPress('Allocation', 'view detailed allocation');
-                    navigation.navigate('Allocation');
-                  }}
-                  style={{ alignSelf: 'flex-end', marginTop: 12 }}
-                >
+                <View style={{ alignSelf: 'flex-end', marginTop: 12 }}>
                   <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-                </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             <View style={{
               flex: 1,
