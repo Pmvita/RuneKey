@@ -1058,86 +1058,186 @@ export const HomeScreen: React.FC = () => {
 
         {/* Allocation Section */}
         <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, assetsAnimatedStyle]}>
-          <Text style={{
-            fontSize: 18,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            marginBottom: 16,
-          }}>
-            ALLOCATION
-          </Text>
-
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}>
+          <View style={{ flexDirection: 'row' }}>
             <View style={{
-              width: 120,
-              height: 120,
-              borderRadius: 60,
-              backgroundColor: '#111827',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 20,
-              borderWidth: 8,
-              borderColor: '#3b82f6',
+              flex: 1,
+              backgroundColor: '#0b1120',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#1f2937',
+              padding: 20,
+              marginRight: 16,
             }}>
-              <View style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: '#111827',
-                alignItems: 'center',
-                justifyContent: 'center',
+              <Text style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: '#FFFFFF',
+                marginBottom: 16,
               }}>
-                <Text style={{
-                  fontSize: 12,
-                  fontWeight: '600',
-                  color: '#94A3B8',
+                ALLOCATION
+              </Text>
+
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}>
+                <View style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
+                  backgroundColor: '#111827',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 16,
+                  borderWidth: 6,
+                  borderColor: '#3b82f6',
                 }}>
-                  Portfolio
-                </Text>
+                  <View style={{
+                    width: 70,
+                    height: 70,
+                    borderRadius: 35,
+                    backgroundColor: '#111827',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Text style={{
+                      fontSize: 11,
+                      fontWeight: '600',
+                      color: '#94A3B8',
+                    }}>
+                      Portfolio
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  {getFilteredMarketData().slice(0, 3).map((token: any, index: number) => {
+                    const colors = ['#3b82f6', '#22c55e', '#f59e0b'];
+                    const color = colors[index] || '#64748b';
+
+                    return (
+                      <View key={token.symbol} style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 6,
+                      }}>
+                        <View style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 5,
+                          backgroundColor: color,
+                          marginRight: 8,
+                        }} />
+                        <Text style={{
+                          fontSize: 13,
+                          fontWeight: '500',
+                          color: '#FFFFFF',
+                        }}>
+                          {token.symbol}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    logger.logButtonPress('Allocation', 'view detailed allocation');
+                    navigation.navigate('Allocation');
+                  }}
+                >
+                  <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+                </TouchableOpacity>
               </View>
             </View>
 
-            <View style={{ flex: 1 }}>
-              {getFilteredMarketData().slice(0, 3).map((token: any, index: number) => {
-                const colors = ['#3b82f6', '#22c55e', '#f59e0b'];
-                const color = colors[index] || '#64748b';
+            <View style={{
+              flex: 1,
+              backgroundColor: '#0b1120',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#1f2937',
+              padding: 20,
+            }}>
+              <Text style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: '#FFFFFF',
+                marginBottom: 16,
+              }}>
+                INVESTING
+              </Text>
 
-                return (
-                  <View key={token.symbol} style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginBottom: 8,
+              <View style={{
+                flex: 1,
+                justifyContent: 'space-between',
+              }}>
+                <View>
+                  <Text style={{
+                    fontSize: 32,
+                    fontWeight: '700',
+                    color: '#FFFFFF',
                   }}>
-                    <View style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 6,
-                      backgroundColor: color,
-                      marginRight: 8,
-                    }} />
-                    <Text style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#FFFFFF',
-                    }}>
-                      {token.symbol}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
+                    $2.6M
+                  </Text>
+                  <Text style={{
+                    fontSize: 14,
+                    color: '#94A3B8',
+                    marginTop: 4,
+                  }}>
+                    Active capital
+                  </Text>
+                </View>
 
-            <TouchableOpacity
-              onPress={() => {
-                logger.logButtonPress('Allocation', 'view detailed allocation');
-                navigation.navigate('Allocation');
-              }}
-            >
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-            </TouchableOpacity>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: 16,
+                }}>
+                  <Ionicons name="trending-up" size={16} color="#22c55e" style={{ marginRight: 6 }} />
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#22c55e',
+                  }}>
+                    +4.2% today
+                  </Text>
+                </View>
+
+                <View style={{
+                  marginTop: 20,
+                }}>
+                  {[
+                    { label: 'Auto-Invest', status: 'Running' },
+                    { label: 'Yield Vault', status: 'Compounding' },
+                  ].map((item) => (
+                    <View
+                      key={item.label}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <Text style={{
+                        fontSize: 14,
+                        color: '#FFFFFF',
+                        fontWeight: '500',
+                      }}>
+                        {item.label}
+                      </Text>
+                      <Text style={{
+                        fontSize: 12,
+                        color: '#94A3B8',
+                      }}>
+                        {item.status}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </View>
           </View>
         </Animated.View>
 
