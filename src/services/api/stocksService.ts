@@ -5,6 +5,7 @@ export interface TrendingStock {
   price: number;
   changePercent: number;
   volume: number;
+  exchange?: string;
 }
 
 export interface StockNewsItem {
@@ -17,6 +18,15 @@ export interface StockNewsItem {
   text?: string;
 }
 
+export interface SymbolSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string;
+  currency?: string;
+  price?: number;
+  changePercent?: number;
+}
+
 const FMP_BASE = 'https://financialmodelingprep.com/api/v3';
 const FMP_API_KEY = 'demo'; // Replace with a secure key for production use
 
@@ -27,6 +37,7 @@ const FALLBACK_TRENDING: TrendingStock[] = [
     price: 178.23,
     changePercent: 1.24,
     volume: 51234567,
+    exchange: 'NASDAQ',
   },
   {
     symbol: 'MSFT',
@@ -34,6 +45,7 @@ const FALLBACK_TRENDING: TrendingStock[] = [
     price: 328.71,
     changePercent: -0.52,
     volume: 29876543,
+    exchange: 'NASDAQ',
   },
   {
     symbol: 'NVDA',
@@ -41,6 +53,7 @@ const FALLBACK_TRENDING: TrendingStock[] = [
     price: 472.55,
     changePercent: 3.12,
     volume: 45678123,
+    exchange: 'NASDAQ',
   },
 ];
 
@@ -91,6 +104,7 @@ class StocksService {
           typeof item.volume === 'number'
             ? item.volume
             : Number(item.volume) || 0,
+        exchange: item.exchange || item.stockExchange,
       }));
     } catch (error) {
       console.warn('stocksService.fetchTrending: using fallback data', error);
@@ -120,6 +134,33 @@ class StocksService {
     } catch (error) {
       console.warn('stocksService.fetchNews: using fallback data', error);
       return FALLBACK_NEWS;
+    }
+  }
+
+  async searchSymbols(query: string): Promise<SymbolSearchResult[]> {
+    if (!query) {
+      return [];
+    }
+
+    try {
+      const url = `${FMP_BASE}/search?query=${encodeURIComponent(query)}&limit=10&apikey=${FMP_API_KEY}`;
+      const response = await axios.get(url);
+      const data = Array.isArray(response.data) ? response.data : [];
+
+      return data.map((item: any) => ({
+        symbol: (item.symbol || item.ticker || '').toUpperCase(),
+        name: item.name || item.companyName || item.symbol || 'Unknown',
+        exchange: item.exchangeShortName || item.exchange || 'MARKET',
+        currency: item.currency,
+        price: typeof item.price === 'number' ? item.price : Number(item.price),
+      }));
+    } catch (error) {
+      console.warn('stocksService.searchSymbols: using fallback search data', error);
+      return [
+        { symbol: 'AAPL', name: 'Apple Inc.', exchange: 'NASDAQ' },
+        { symbol: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ' },
+        { symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust', exchange: 'NYSEARCA' },
+      ];
     }
   }
 

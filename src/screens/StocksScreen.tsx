@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -21,8 +22,13 @@ import investingData from '../../mockData/investing.json';
 import { Investment, InvestmentHolding } from '../types';
 import { investingService } from '../services/api/investingService';
 import { formatLargeCurrency } from '../utils/formatters';
-import { SparklineChart, UniversalBackground } from '../components';
-import { stocksService, StockNewsItem, TrendingStock } from '../services/api/stocksService';
+import { SparklineChart, TabSelector, UniversalBackground } from '../components';
+import {
+  stocksService,
+  StockNewsItem,
+  SymbolSearchResult,
+  TrendingStock,
+} from '../services/api/stocksService';
 
 const investments: Investment[] = Array.isArray((investingData as any)?.investments)
   ? ((investingData as any).investments as Investment[])
@@ -30,7 +36,48 @@ const investments: Investment[] = Array.isArray((investingData as any)?.investme
 
 const DEFAULT_RANGE = '1mo';
 
+const buildTradingViewHtml = (symbol: string) => `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+      html, body, #chart-container {
+        margin: 0;
+        padding: 0;
+        background: #020617;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chart-container"></div>
+    <script type="text/javascript">
+      new TradingView.widget({
+        autosize: true,
+        symbol: "${symbol}",
+        interval: "60",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "3",
+        locale: "en",
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        allow_symbol_change: false,
+        container_id: "chart-container",
+        calendar: true,
+        studies: ["RSI@tv-basicstudies"],
+        drawings_access: { type: 'full', tools: ['Trend Line', 'Horizontal Line', 'Fib Retracement'] }
+      });
+    </script>
+  </body>
+</html>
+`;
+
 export const StocksScreen: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'chart'>('overview');
   const [holdings, setHoldings] = useState<InvestmentHolding[]>(() =>
     investments.map((investment) => ({
       ...investment,
@@ -39,6 +86,7 @@ export const StocksScreen: React.FC = () => {
       marketValue: 0,
     }))
   );
+  const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
   const [featuredChart, setFeaturedChart] = useState<number[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isChartLoading, setIsChartLoading] = useState(false);
@@ -54,29 +102,56 @@ export const StocksScreen: React.FC = () => {
   const [featuredOverride, setFeaturedOverride] = useState<
     (Partial<InvestmentHolding> & { symbol: string }) | null
   >(null);
+  const [chartSearchQuery, setChartSearchQuery] = useState('');
+  const [chartSearchResults, setChartSearchResults] = useState<SymbolSearchResult[]>([]);
+  const [isSearchingSymbols, setIsSearchingSymbols] = useState(false);
 
-  const featuredHolding = useMemo(() => holdings[0] ?? null, [holdings]);
+  const resolvedActiveSymbol = useMemo(() => activeSymbol ?? holdings[0]?.symbol ?? 'AAPL', [
+    activeSymbol,
+    holdings,
+  ]);
+
   const featuredInstrument = useMemo(() => {
-    if (!featuredOverride) {
-      return featuredHolding;
+    const symbol = resolvedActiveSymbol?.toUpperCase();
+    if (!symbol) {
+      return null;
     }
 
-    const backing = holdings.find(
-      (holding) => holding.symbol === featuredOverride.symbol.toUpperCase()
-    );
+    const baseHolding =
+      holdings.find((holding) => holding.symbol === symbol) ??
+      (featuredOverride?.symbol === symbol
+        ? ({
+            id: symbol,
+            symbol,
+            name: featuredOverride?.name ?? symbol,
+            market: featuredOverride?.market ?? 'MARKET',
+            quantity: featuredOverride?.quantity ?? 0,
+            averagePrice:
+              featuredOverride?.averagePrice ?? featuredOverride?.currentPrice ?? 0,
+            currentPrice: featuredOverride?.currentPrice ?? 0,
+            changePercent: featuredOverride?.changePercent ?? 0,
+            marketValue:
+              (featuredOverride?.quantity ?? 0) *
+              (featuredOverride?.currentPrice ?? 0),
+          } as InvestmentHolding)
+        : null);
 
-    return {
-      ...(backing || {
-        id: featuredOverride.symbol,
-        symbol: featuredOverride.symbol,
-        name: featuredOverride.name ?? featuredOverride.symbol,
-        market: backing?.market ?? 'MARKET',
-        quantity: featuredOverride.quantity ?? 0,
-        averagePrice: featuredOverride.averagePrice ?? featuredOverride.currentPrice ?? 0,
-      }),
-      ...featuredOverride,
-    } as InvestmentHolding;
-  }, [featuredHolding, featuredOverride, holdings]);
+    if (!baseHolding) {
+      return null;
+    }
+
+    if (featuredOverride?.symbol === symbol) {
+      return {
+        ...baseHolding,
+        ...featuredOverride,
+        marketValue:
+          (featuredOverride.quantity ?? baseHolding.quantity) *
+          (featuredOverride.currentPrice ?? baseHolding.currentPrice),
+      };
+    }
+
+    return baseHolding;
+  }, [featuredOverride, holdings, resolvedActiveSymbol]);
 
   const loadQuotes = useCallback(async () => {
     if (investments.length === 0) {
@@ -137,26 +212,12 @@ export const StocksScreen: React.FC = () => {
         const closes = response.data.points.map((point) => point.close);
         setFeaturedChart(closes);
 
-        if (overrides) {
-          setFeaturedOverride((prev) => {
-            if (!prev || prev.symbol.toUpperCase() !== symbol.toUpperCase()) {
-              return prev;
-            }
-            const next = {
-              ...prev,
-              ...overrides,
-              symbol: symbol.toUpperCase(),
-            };
-            if (
-              next.currentPrice === prev.currentPrice &&
-              next.changePercent === prev.changePercent &&
-              next.name === prev.name &&
-              next.market === prev.market
-            ) {
-              return prev;
-            }
-            return next;
-          });
+        if (overrides && symbol.toUpperCase() === resolvedActiveSymbol.toUpperCase()) {
+          setFeaturedOverride((prev) => ({
+            symbol: symbol.toUpperCase(),
+            ...prev,
+            ...overrides,
+          }));
         }
       } catch (error: any) {
         setChartError(error?.message || 'Unable to load chart data.');
@@ -215,24 +276,27 @@ export const StocksScreen: React.FC = () => {
   }, [featuredInstrument?.symbol, loadFeaturedChart]);
 
   useEffect(() => {
-    if (!featuredOverride) return;
-    const match = holdings.find((holding) => holding.symbol === featuredOverride.symbol.toUpperCase());
-    if (match) {
-      setFeaturedOverride((prev) => {
-        if (!prev) return prev;
-        if (
-          prev.symbol === match.symbol &&
-          prev.currentPrice === match.currentPrice &&
-          prev.changePercent === match.changePercent &&
-          prev.quantity === match.quantity &&
-          prev.market === match.market
-        ) {
-          return prev;
-        }
-        return { ...prev, ...match, symbol: match.symbol };
-      });
+    if (!activeSymbol && holdings.length > 0) {
+      setActiveSymbol(holdings[0].symbol);
     }
-  }, [holdings, featuredOverride?.symbol]);
+  }, [activeSymbol, holdings]);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (chartSearchQuery.trim().length >= 2) {
+      timeout = setTimeout(async () => {
+        setIsSearchingSymbols(true);
+        const results = await stocksService.searchSymbols(chartSearchQuery.trim());
+        setChartSearchResults(results);
+        setIsSearchingSymbols(false);
+      }, 400);
+    } else {
+      setChartSearchResults([]);
+    }
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [chartSearchQuery]);
 
   useEffect(() => {
     loadMarketExtras();
@@ -249,6 +313,7 @@ export const StocksScreen: React.FC = () => {
     setTradeType(side);
     setTradeQuantity('1');
     setTradeModalVisible(true);
+    setActiveSymbol(holding.symbol);
   };
 
   const handleConfirmTrade = async () => {
@@ -392,6 +457,41 @@ export const StocksScreen: React.FC = () => {
             <Text style={{ color: '#F87171', fontWeight: '600', fontSize: 13 }}>Sell</Text>
           </TouchableOpacity>
         </View>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => openTradeModal(item, 'buy')}
+            style={{
+              flex: 1,
+              marginRight: 8,
+              paddingVertical: 10,
+              borderRadius: 12,
+              backgroundColor: 'rgba(59, 130, 246, 0.16)',
+              borderWidth: 1,
+              borderColor: 'rgba(59, 130, 246, 0.35)',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#3B82F6', fontWeight: '600', fontSize: 13 }}>Buy</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => openTradeModal(item, 'sell')}
+            style={{
+              flex: 1,
+              marginLeft: 8,
+              paddingVertical: 10,
+              borderRadius: 12,
+              backgroundColor: 'rgba(248, 113, 113, 0.16)',
+              borderWidth: 1,
+              borderColor: 'rgba(248, 113, 113, 0.45)',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#F87171', fontWeight: '600', fontSize: 13 }}>Sell</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -399,40 +499,53 @@ export const StocksScreen: React.FC = () => {
   return (
     <UniversalBackground>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 24, paddingBottom: 48 }}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={refreshAll} tintColor="#3B82F6" />
-          }
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '700' }}>Markets</Text>
-              <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 4 }}>
-                Live equity, ETF, forex & commodity signals
-              </Text>
-            </View>
+        <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '700', marginBottom: 6 }}>
+            Markets
+          </Text>
+          <Text style={{ color: '#94A3B8', fontSize: 13, marginBottom: 16 }}>
+            Live equity, ETF, forex & commodity signals
+          </Text>
+
+          <TabSelector
+            options={[
+              { key: 'overview', label: 'Overview' },
+              { key: 'chart', label: 'Chart' },
+            ]}
+            selectedKey={activeTab}
+            onSelect={(key) => setActiveTab(key as 'overview' | 'chart')}
+            style={{ marginBottom: 24 }}
+          />
+        </View>
+
+        {activeTab === 'overview' ? (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refreshAll}
+                tintColor="#3B82F6"
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          >
             <TouchableOpacity
               onPress={refreshAll}
+              activeOpacity={0.8}
               style={{
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: 'rgba(59, 130, 246, 0.35)',
-                backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 18,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="refresh" size={16} color="#3B82F6" />
-                <Text style={{ color: '#3B82F6', fontSize: 12, fontWeight: '600', marginLeft: 6 }}>
-                  Refresh
-                </Text>
-              </View>
+              <Ionicons name="refresh" size={16} color="#3B82F6" />
+              <Text style={{ color: '#3B82F6', fontSize: 12, fontWeight: '600', marginLeft: 6 }}>
+                Refresh data
+              </Text>
             </TouchableOpacity>
-          </View>
 
           {featuredInstrument && (
             <View
@@ -541,28 +654,11 @@ export const StocksScreen: React.FC = () => {
                         borderColor: 'rgba(30, 41, 59, 0.6)',
                       }}
                       onPress={() => {
-                        const holdingMatch = holdings.find((h) => h.symbol === stock.symbol.toUpperCase());
-                        if (holdingMatch) {
-                          setHoldings((prev) =>
-                            prev
-                              .map((h) =>
-                                h.symbol === stock.symbol.toUpperCase()
-                                  ? {
-                                      ...h,
-                                      currentPrice: stock.price,
-                                      changePercent: stock.changePercent,
-                                      marketValue: stock.price * h.quantity,
-                                    }
-                                  : h
-                              )
-                              .sort((a, b) => b.marketValue - a.marketValue)
-                          );
-                        }
-
+                        setActiveSymbol(stock.symbol.toUpperCase());
                         setFeaturedOverride({
                           symbol: stock.symbol.toUpperCase(),
                           name: stock.name,
-                          market: holdingMatch?.market ?? 'MARKET',
+                          market: stock.exchange ?? 'MARKET',
                           currentPrice: stock.price,
                           changePercent: stock.changePercent,
                         });
@@ -607,19 +703,19 @@ export const StocksScreen: React.FC = () => {
             </ScrollView>
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
             <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700' }}>Watchlist</Text>
             <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600' }}>AUTO-SYNCED</Text>
-          </View>
+            </View>
 
-          <FlatList
-            data={holdings.slice(0, 10)}
-            keyExtractor={(item) => item.id}
-            renderItem={renderHolding}
-            scrollEnabled={false}
-          />
+            <FlatList
+              data={holdings.slice(0, 10)}
+              keyExtractor={(item) => item.id}
+              renderItem={renderHolding}
+              scrollEnabled={false}
+            />
 
-          <View style={{ marginTop: 32 }}>
+            <View style={{ marginTop: 32 }}>
             <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginBottom: 16 }}>
               Market News
             </Text>
@@ -668,8 +764,122 @@ export const StocksScreen: React.FC = () => {
                 ) : null}
               </TouchableOpacity>
             ))}
-          </View>
-        </ScrollView>
+            </View>
+          </ScrollView>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 36 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View
+              style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: 'rgba(30, 41, 59, 0.55)',
+                padding: 20,
+                marginBottom: 24,
+              }}
+            >
+              <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.75 }}>
+                ACTIVE SYMBOL
+              </Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '700', marginTop: 8 }}>
+                {featuredInstrument?.symbol ?? resolvedActiveSymbol}
+              </Text>
+              <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 2 }}>
+                {featuredInstrument?.name ?? 'Search for a symbol to begin charting'}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: 'rgba(30, 41, 59, 0.6)',
+                paddingHorizontal: 16,
+                paddingVertical: Platform.OS === 'ios' ? 16 : 10,
+                marginBottom: 16,
+              }}
+            >
+              <Text style={{ color: '#64748B', fontSize: 12, marginBottom: 4 }}>Search symbol</Text>
+              <TextInput
+                value={chartSearchQuery}
+                onChangeText={setChartSearchQuery}
+                placeholder="e.g. NVDA, TSLA, GBPUSD"
+                placeholderTextColor="#475569"
+                autoCapitalize="characters"
+                style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}
+              />
+              {isSearchingSymbols && (
+                <View style={{ paddingVertical: 8 }}>
+                  <ActivityIndicator color="#3B82F6" size="small" />
+                </View>
+              )}
+              {chartSearchResults.length > 0 && (
+                <View style={{ marginTop: 12 }}>
+                  {chartSearchResults.slice(0, 6).map((result) => (
+                    <TouchableOpacity
+                      key={`${result.symbol}-${result.exchange}`}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        setActiveSymbol(result.symbol.toUpperCase());
+                        setFeaturedOverride({
+                          symbol: result.symbol.toUpperCase(),
+                          name: result.name,
+                          market: result.exchange,
+                          currentPrice: result.price ?? featuredInstrument?.currentPrice ?? 0,
+                          changePercent: result.changePercent ?? featuredInstrument?.changePercent ?? 0,
+                        });
+                        setChartSearchQuery('');
+                        setChartSearchResults([]);
+                      }}
+                      style={{
+                        paddingVertical: 10,
+                        borderBottomWidth: 1,
+                        borderColor: 'rgba(30, 41, 59, 0.65)',
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
+                        {result.symbol}
+                      </Text>
+                      <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                        {result.name} • {result.exchange}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View
+              style={{
+                height: 460,
+                borderRadius: 20,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: 'rgba(30, 41, 59, 0.55)',
+                backgroundColor: '#020617',
+              }}
+            >
+              <WebView
+                key={resolvedActiveSymbol}
+                source={{ html: buildTradingViewHtml(resolvedActiveSymbol) }}
+                style={{ flex: 1, backgroundColor: '#020617' }}
+                originWhitelist={['*']}
+                javaScriptEnabled
+                startInLoadingState
+                renderLoading={() => (
+                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator color="#3B82F6" />
+                  </View>
+                )}
+              />
+            </View>
+          </ScrollView>
+        )}
 
         <Modal
           visible={tradeModalVisible}
