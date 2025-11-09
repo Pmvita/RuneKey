@@ -681,26 +681,25 @@ export const TokenDetailsScreen: React.FC = () => {
             paddingHorizontal: 20,
             paddingVertical: 24,
             backgroundColor: 'transparent',
-            marginBottom: 8,
+            marginBottom: 0,
           }}
         >
           <View
             style={{
-              height: canRenderTradingView ? 320 : 200,
-              backgroundColor: '#000000',
-              borderRadius: 12,
-              padding: canRenderTradingView ? 0 : 16,
-              marginBottom: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
+              height: 520,
+              borderRadius: 20,
               overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: 'rgba(30, 41, 59, 0.55)',
+              backgroundColor: '#020617',
+              marginBottom: 16,
             }}
           >
             {canRenderTradingView ? (
               <WebView
                 key={tradingViewSymbol || 'fallback-chart'}
                 source={{ html: tradingViewHtml! }}
-                style={{ flex: 1, alignSelf: 'stretch', backgroundColor: '#000000' }}
+                style={{ flex: 1, backgroundColor: '#020617' }}
                 originWhitelist={['*']}
                 javaScriptEnabled
                 startInLoadingState
@@ -710,88 +709,62 @@ export const TokenDetailsScreen: React.FC = () => {
                   </View>
                 )}
               />
-            ) : isLoadingChart ? (
-              <View style={{ alignItems: 'center' }}>
-                <ActivityIndicator color="#3b82f6" />
-                <Text
-                  style={{
-                    marginTop: 12,
-                    fontSize: 14,
-                    color: '#94A3B8',
-                    fontWeight: '500',
-                  }}
-                >
-                  Loading chart data...
-                </Text>
-              </View>
-            ) : chartDataPoints.length > 0 ? (
-              <SparklineChart
-                data={chartDataPoints}
-                width={screenWidth - 72}
-                height={168}
-                color={isPositive ? '#22c55e' : '#ef4444'}
-                strokeWidth={2}
-              />
             ) : (
-              <View style={{ alignItems: 'center' }}>
-                <Ionicons name="trending-up" size={48} color="#94A3B8" />
-                <Text
-                  style={{
-                    marginTop: 12,
-                    fontSize: 14,
-                    color: '#94A3B8',
-                    fontWeight: '500',
-                  }}
-                >
-                  Chart data unavailable
-                </Text>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+                {isLoadingChart ? (
+                  <>
+                    <ActivityIndicator color="#3b82f6" />
+                    <Text
+                      style={{
+                        marginTop: 12,
+                        fontSize: 14,
+                        color: '#94A3B8',
+                        fontWeight: '500',
+                      }}
+                    >
+                      Loading chart data...
+                    </Text>
+                  </>
+                ) : chartDataPoints.length > 0 ? (
+                  <SparklineChart
+                    data={chartDataPoints}
+                    width={screenWidth - 120}
+                    height={260}
+                    color={isPositive ? '#22c55e' : '#ef4444'}
+                    strokeWidth={2}
+                  />
+                ) : (
+                  <>
+                    <Ionicons name="trending-up" size={48} color="#94A3B8" />
+                    <Text
+                      style={{
+                        marginTop: 12,
+                        fontSize: 14,
+                        color: '#94A3B8',
+                        fontWeight: '500',
+                      }}
+                    >
+                      Chart data unavailable
+                    </Text>
+                  </>
+                )}
               </View>
             )}
           </View>
           
-          {/* Timeframe Selector */}
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: '#0b1120',
-            borderRadius: 8,
-            padding: 4,
-          }}>
-            {timeframes.map((timeframe) => (
-              <TouchableOpacity
-                key={timeframe.key}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 6,
-                  backgroundColor: selectedTimeframe === timeframe.key ? '#3b82f6' : 'transparent',
-                  alignItems: 'center',
-                }}
-                onPress={() => setSelectedTimeframe(timeframe.key as any)}
-              >
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: selectedTimeframe === timeframe.key ? '#ffffff' : '#64748b',
-                }}>
-                  {timeframe.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
         </View>
 
         {/* Holdings Section */}
         <View style={{
           paddingHorizontal: 20,
-          paddingVertical: 24,
+          paddingVertical: 0,
           backgroundColor: 'transparent',
-          marginBottom: 8,
+          marginBottom: 0,
         }}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
-            marginBottom: 16,
+            marginBottom: 10,
           }}>
             {getTokenLogoURI() ? (
               <Image 
