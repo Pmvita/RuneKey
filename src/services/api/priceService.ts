@@ -326,20 +326,18 @@ class PriceService {
         return { data: [], success: true };
       }
 
-      const response = await this.makeRateLimitedRequest(() =>
-        axios.get(`${this.baseURL}/coins/markets`, {
-          params: {
-            vs_currency: 'usd',
-            ids: uniqueIds.join(','),
-            order: 'market_cap_desc',
-            per_page: uniqueIds.length,
-            page: 1,
-            sparkline: false,
-            price_change_percentage: '24h',
-            locale: 'en',
-          },
-        })
-      );
+      const response = await axios.get(`${this.baseURL}/coins/markets`, {
+        params: {
+          vs_currency: 'usd',
+          ids: uniqueIds.join(','),
+          order: 'market_cap_desc',
+          per_page: uniqueIds.length,
+          page: 1,
+          sparkline: false,
+          price_change_percentage: '24h',
+          locale: 'en',
+        },
+      });
 
       return {
         data: response.data,
