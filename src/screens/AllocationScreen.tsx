@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { 
@@ -23,7 +23,7 @@ import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import topCoinsMock from '../../mockData/api/top-coins.json';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface AllocationData {
   token: Token;
@@ -37,6 +37,7 @@ export const AllocationScreen: React.FC = () => {
   const { calculateUSDValue, getTokenPrice } = usePrices();
   const { connectDevWallet, refreshDevWallet } = useDevWallet();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   
   const [allocationData, setAllocationData] = useState<AllocationData[]>([]);
   const [totalValue, setTotalValue] = useState(0);
@@ -500,20 +501,31 @@ export const AllocationScreen: React.FC = () => {
           </Text>
         </Animated.View>
 
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 8,
+            flexGrow: 1,
+            minHeight: Math.max(screenHeight - (insets.top + insets.bottom), 0),
+            paddingBottom: 40 + insets.bottom,
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+        >
         {/* Donut Chart Section */}
         <Animated.View style={[{
           alignItems: 'center',
-          paddingVertical: 60,
-          marginBottom: 20,
-          marginTop: 20,
+          paddingTop: 30,
+          paddingBottom: 40,
+          marginBottom: 12,
         }, chartAnimatedStyle]}>
           <DonutChart data={allocationData} size={220} />
         </Animated.View>
 
         {/* Asset List Section */}
         <Animated.View style={[{
-          paddingHorizontal: 20,
           paddingBottom: 20,
         }, listAnimatedStyle]}>
           {allocationData.length > 0 ? (
@@ -547,7 +559,7 @@ export const AllocationScreen: React.FC = () => {
             </View>
           )}
         </Animated.View>
-      </ScrollView>
+      </Animated.ScrollView>
       </SafeAreaView>
     </UniversalBackground>
   );

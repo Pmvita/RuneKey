@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -630,6 +630,30 @@ export const HomeScreen: React.FC = () => {
     return sortedTokens;
   };
 
+  const activeCapitalValue = useMemo(() => {
+    if (!currentWallet?.tokens) {
+      return 0;
+    }
+
+    const stableToken = currentWallet.tokens.find(
+      (token: any) => token.symbol?.toUpperCase() === 'USDT'
+    );
+
+    if (!stableToken) {
+      return 0;
+    }
+
+    const balance = parseFloat(stableToken.balance || '0') || 0;
+    const price =
+      stableToken.currentPrice ||
+      getTokenPrice(stableToken.address) ||
+      1;
+
+    const usdValue = balance * price;
+
+    return Number.isFinite(usdValue) ? usdValue : 0;
+  }, [currentWallet?.tokens, getTokenPrice]);
+
   const generateSparklineData = (priceChange: number) => {
     // Generate mock sparkline data based on price change
     const basePrice = 100;
@@ -1201,7 +1225,7 @@ export const HomeScreen: React.FC = () => {
                     fontWeight: '700',
                     color: '#FFFFFF',
                   }}>
-                    $2.6M
+                    {formatLargeCurrency(activeCapitalValue)}
                   </Text>
                   <Text style={{
                     fontSize: 14,

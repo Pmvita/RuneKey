@@ -16,7 +16,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons as IoniconSet } from '@expo/vector-icons';
 import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle } from 'react-native';
 import { logger } from './src/utils/logger';
 
@@ -78,7 +78,7 @@ const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
+          let iconName: keyof typeof IoniconSet.glyphMap;
 
           if (route.name === 'Wallet') {
             iconName = focused ? 'wallet' : 'wallet-outline';
@@ -104,7 +104,7 @@ const TabNavigator = () => {
             iconName = 'ellipse-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <IoniconSet name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: '#94a3b8',

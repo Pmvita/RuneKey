@@ -128,7 +128,7 @@ const BubbleBackground: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents="none">
       {/* Gradient Background */}
       <LinearGradient
         colors={['#020617', '#0b1120', '#111827']}
