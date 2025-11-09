@@ -1,28 +1,28 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import * as SecureStore from 'expo-secure-store';
 import { WalletState, Wallet, Transaction, SupportedNetwork } from '../../types';
 import { NETWORK_CONFIGS, DEFAULT_NETWORK, STORAGE_KEYS } from '../../constants';
+import { secureStore } from '../../utils/secureStorage';
 
 // Secure storage adapter for Zustand
 const secureStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
-      return await SecureStore.getItemAsync(name);
+      return await secureStore.getItem(name);
     } catch {
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
     try {
-      await SecureStore.setItemAsync(name, value);
+      await secureStore.setItem(name, value);
     } catch (error) {
       console.error('Failed to save to secure storage:', error);
     }
   },
   removeItem: async (name: string): Promise<void> => {
     try {
-      await SecureStore.deleteItemAsync(name);
+      await secureStore.deleteItem(name);
     } catch (error) {
       console.error('Failed to remove from secure storage:', error);
     }

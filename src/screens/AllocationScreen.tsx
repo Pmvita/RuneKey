@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Dimensions, FlatList } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -436,6 +436,34 @@ export const AllocationScreen: React.FC = () => {
     );
   };
 
+const EmptyAllocationsState = () => (
+  <View style={{
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: '#111827',
+    borderRadius: 12,
+    marginTop: 12,
+  }}>
+    <Ionicons name="wallet-outline" size={48} color="#94A3B8" />
+    <Text style={{
+      marginTop: 16,
+      fontSize: 16,
+      color: '#94A3B8',
+      fontWeight: '500',
+    }}>
+      No assets found
+    </Text>
+    <Text style={{
+      marginTop: 8,
+      fontSize: 14,
+      color: '#94a3b8',
+      textAlign: 'center',
+    }}>
+      Connect your wallet to view asset allocation
+    </Text>
+  </View>
+);
+
   if (isLoading || isConnectingWallet) {
     return (
       <UniversalBackground>
@@ -501,65 +529,34 @@ export const AllocationScreen: React.FC = () => {
           </Text>
         </Animated.View>
 
-        <Animated.ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingTop: 8,
-            flexGrow: 1,
-            minHeight: Math.max(screenHeight - (insets.top + insets.bottom), 0),
-            paddingBottom: 40 + insets.bottom,
-          }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          scrollEventThrottle={16}
-        >
-        {/* Donut Chart Section */}
-        <Animated.View style={[{
-          alignItems: 'center',
-          paddingTop: 30,
-          paddingBottom: 40,
-          marginBottom: 12,
-        }, chartAnimatedStyle]}>
-          <DonutChart data={allocationData} size={220} />
+        <Animated.View style={[{ flex: 1 }, listAnimatedStyle]}>
+          <FlatList
+            data={allocationData}
+            keyExtractor={(item, index) => `${item.token.symbol}-${index}`}
+            renderItem={({ item, index }) => (
+              <AssetListItem item={item} index={index} />
+            )}
+            ListHeaderComponent={
+              <Animated.View style={[{
+                alignItems: 'center',
+                paddingTop: 30,
+                paddingBottom: 40,
+                marginBottom: 12,
+              }, chartAnimatedStyle]}>
+                <DonutChart data={allocationData} size={220} />
+              </Animated.View>
+            }
+            ListEmptyComponent={<EmptyAllocationsState />}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingTop: 8,
+              paddingBottom: 40 + insets.bottom,
+              minHeight: Math.max(screenHeight - (insets.top + insets.bottom), 0),
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          />
         </Animated.View>
-
-        {/* Asset List Section */}
-        <Animated.View style={[{
-          paddingBottom: 20,
-        }, listAnimatedStyle]}>
-          {allocationData.length > 0 ? (
-            allocationData.map((item, index) => (
-              <AssetListItem key={index} item={item} index={index} />
-            ))
-          ) : (
-            <View style={{
-              alignItems: 'center',
-              paddingVertical: 40,
-              backgroundColor: '#111827',
-              borderRadius: 12,
-            }}>
-              <Ionicons name="wallet-outline" size={48} color="#94A3B8" />
-              <Text style={{
-                marginTop: 16,
-                fontSize: 16,
-                color: '#94A3B8',
-                fontWeight: '500',
-              }}>
-                No assets found
-              </Text>
-              <Text style={{
-                marginTop: 8,
-                fontSize: 14,
-                color: '#94a3b8',
-                textAlign: 'center',
-              }}>
-                Connect your wallet to view asset allocation
-              </Text>
-            </View>
-          )}
-        </Animated.View>
-      </Animated.ScrollView>
       </SafeAreaView>
     </UniversalBackground>
   );
