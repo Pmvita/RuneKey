@@ -1,15 +1,59 @@
 {
   "investments": [
     {
+      "id": "SPY",
+      "symbol": "SPY",
+      "name": "SPDR S&P 500 ETF Trust",
+      "type": "etf",
+      "market": "NYSEARCA",
+      "currency": "USD",
+      "quantity": 300,
+      "averagePrice": 428.75,
+      "icon": "https://logo.clearbit.com/ssga.com"
+    },
+    {
+      "id": "VOO",
+      "symbol": "VOO",
+      "name": "Vanguard S&P 500 ETF",
+      "type": "etf",
+      "market": "NYSEARCA",
+      "currency": "USD",
+      "quantity": 250,
+      "averagePrice": 428.75,
+      "icon": "https://logo.clearbit.com/vanguard.com"
+    },
+    {
+      "id": "QQQ",
+      "symbol": "QQQ",
+      "name": "Invesco QQQ Trust",
+      "type": "etf",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 200,
+      "averagePrice": 315.1,
+      "icon": "https://logo.clearbit.com/invesco.com"
+    },
+    {
       "id": "AAPL",
       "symbol": "AAPL",
       "name": "Apple Inc.",
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 150,
-      "averagePrice": 172.45,
-      "mockPrice": 189.82
+      "quantity": 400,
+      "averagePrice": 172.35,
+      "icon": "https://logo.clearbit.com/apple.com"
+    },
+    {
+      "id": "GOOG",
+      "symbol": "GOOG",
+      "name": "Alphabet Inc.",
+      "type": "stock",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 400,
+      "averagePrice": 261.44,
+      "icon": "https://logo.clearbit.com/google.com"
     },
     {
       "id": "MSFT",
@@ -18,20 +62,9 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 95,
-      "averagePrice": 318.17,
-      "mockPrice": 402.11
-    },
-    {
-      "id": "SPY",
-      "symbol": "SPY",
-      "name": "SPDR S&P 500 ETF Trust",
-      "type": "etf",
-      "market": "NYSEARCA",
-      "currency": "USD",
-      "quantity": 220,
-      "averagePrice": 427.62,
-      "mockPrice": 520.33
+      "quantity": 300,
+      "averagePrice": 315.1,
+      "icon": "https://logo.clearbit.com/microsoft.com"
     },
     {
       "id": "EURUSD=X",
@@ -41,8 +74,8 @@
       "market": "FX",
       "currency": "USD",
       "quantity": 125000,
-      "averagePrice": 1.0785,
-      "mockPrice": 1.0932
+      "averagePrice": 1.0845,
+      "icon": "https://flagcdn.com/w80/eu.png"
     },
     {
       "id": "XAUUSD=X",
@@ -51,9 +84,9 @@
       "type": "commodity",
       "market": "FX",
       "currency": "USD",
-      "quantity": 85,
-      "averagePrice": 1978.50,
-      "mockPrice": 2145.75
+      "quantity": 100,
+      "averagePrice": 1920.4,
+      "icon": "https://logo.clearbit.com/gold.org"
     }
   ]
 }

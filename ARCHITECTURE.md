@@ -38,10 +38,12 @@ RuneKey/
 │   │   └── qr/             # QR code functionality
 │   │
 │   ├── screens/            # Main application screens
-│   │   ├── HomeScreen.tsx  # Portfolio overview
-│   │   ├── SwapScreen.tsx  # Token swapping interface
-│   │   ├── WalletScreen.tsx # Wallet management
-│   │   └── SettingsScreen.tsx # App settings
+│   │   ├── HomeScreen.tsx              # Crypto portfolio overview
+│   │   ├── SwapScreen.tsx              # Token swapping interface
+│   │   ├── SearchScreen.tsx            # Discovery surface
+│   │   ├── InvestingScreen.tsx         # Traditional markets dashboard
+│   │   ├── InvestmentDetailsScreen.tsx # Live market detail view
+│   │   └── SettingsScreen.tsx          # App settings
 │   │
 │   ├── hooks/              # Custom React hooks
 │   │   ├── wallet/         # Wallet management hooks
@@ -50,8 +52,9 @@ RuneKey/
 │   │
 │   ├── services/           # External service integrations
 │   │   ├── api/            # API service classes
-│   │   │   ├── priceService.ts   # Price fetching
-│   │   │   └── swapService.ts    # Swap quotes & execution
+│   │   │   ├── priceService.ts        # CoinGecko integration
+│   │   │   ├── investingService.ts    # Stooq & Yahoo Finance integration
+│   │   │   └── swapService.ts         # Swap quotes & execution
 │   │   └── blockchain/     # Blockchain interaction
 │   │       ├── walletService.ts  # Wallet operations
 │   │       ├── solanaService.ts  # Solana-specific
@@ -96,6 +99,13 @@ RuneKey/
 - **Solana Web3.js**: Solana blockchain interaction
 - **Jupiter API**: Solana DEX aggregation
 - **0x Protocol**: EVM DEX aggregation
+
+### Market Data Providers
+- **CoinGecko**: Primary source for cryptocurrency pricing and market metrics
+- **Stooq**: Live equity, ETF, forex, and commodity quotes for the investing module
+- **Yahoo Finance**: Historical candles powering investing charts
+- **AllOrigins Proxy**: Browser-safe CORS passthrough for Stooq/Yahoo requests in web builds
+- **USDT Reserve Accounting**: Active capital for traditional markets is calculated from the wallet’s USDT holdings
 
 ### Security
 - **Expo SecureStore**: Encrypted local storage
@@ -380,17 +390,23 @@ Swap Flow:
 
 ## 📊 Data Flow Architecture
 
-### Price Data Flow
+### Market Data Flow
 ```
-Price Updates:
-CoinGecko API ──▶ PriceService ──▶ PriceStore ──▶ UI Components
-     │               │               │               │
-     │               ▼               ▼               ▼
-     │         Error Handling   Automatic         Real-time
-     │                         Refresh         Price Display
-     ▼
-Rate Limiting
-& Caching
+Crypto Tokens
+CoinGecko API ──▶ priceService ──▶ usePriceStore ──▶ Token & portfolio UI
+      │                │                │                  │
+      │                ▼                ▼                  ▼
+      │        Error handling      Interval refresh   Animated displays
+      ▼
+  Local cache (rate-limit friendly)
+
+Traditional Markets
+Stooq API ──▶ investingService ──▶ Investing state ──▶ Home/Investing screens
+   ▲              │                        │                    │
+   │              ▼                        ▼                    ▼
+AllOrigins proxy (web)       Quote reconciliation     Animated numbers & charts
+
+Yahoo Finance ──▶ investingService ──▶ Chart data cache ──▶ SparklineChart
 ```
 
 ### Transaction Flow
@@ -405,6 +421,13 @@ User Action ──▶ Validation ──▶ Quote ──▶ Confirmation ──�
                                 ▼                           ▼
                            Warning Display            Status Tracking
 ```
+
+### Investing Module Overview
+- **Data Fetching**: `investingService` orchestrates Stooq spot quotes and Yahoo Finance chart pulls. On web, requests are routed through the AllOrigins proxy to bypass CORS restrictions.
+- **State Management**: Quotes hydrate lightweight in-memory state that powers both the Home investing tile and the full Investing screens.
+- **Fallback Strategy**: Mock data keeps UI responsive if upstream providers rate limit or return incomplete payloads; previous successful quotes are retained until fresh data arrives.
+- **Animations**: Price deltas flow into animated number and chart components for smooth transitions during refresh cycles.
+- **Funding Model**: The investing totals treat the wallet’s USDT balance as deployable capital for synthetic allocations into equities/ETFs/forex/commodities.
 
 ## 🎨 Theming Architecture
 

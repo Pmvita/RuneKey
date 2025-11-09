@@ -8,19 +8,21 @@
 ## ✨ Features
 
 ### Core Functionality
-- 🔐 **Secure Wallet Management** - Generate, import, and manage crypto wallets
-- 🌐 **Multi-Chain Support** - Ethereum, Polygon, BSC, Avalanche, Arbitrum, Optimism, and Solana
-- 💱 **Token Swaps** - Integrated DEX aggregators (Jupiter for Solana, 0x for EVM chains)
-- 💰 **Real-time Prices** - Live token prices via CoinGecko API
-- 📱 **QR Code Scanning** - Easy wallet address scanning
-- 📊 **Portfolio Tracking** - Complete portfolio overview with USD values
+- 🔐 **Secure Wallet Management** – Generate, import, and manage crypto wallets
+- 🌐 **Multi-Chain Support** – Ethereum, Polygon, BSC, Avalanche, Arbitrum, Optimism, and Solana
+- 💱 **Token Swaps** – Integrated DEX aggregators (Jupiter for Solana, 0x for EVM chains)
+- 💰 **Real-time Prices** – Live crypto pricing via CoinGecko with in-app caching
+- 📱 **QR Code Scanning** – Easy wallet address scanning
+- 📊 **Portfolio Tracking** – Complete portfolio overview with USD values
+- 📈 **Investing Dashboard** – Allocate USDT reserves into synthetic equity, ETF, forex, and commodity positions with live quotes (Stooq) and market charts (Yahoo Finance)
 
 ### Advanced Features
-- 🔄 **Monetization Ready** - Built-in swap fee integration (0.5-1% spread)
-- 🌙 **Dark Mode Support** - Automatic theme switching
-- 🔒 **Secure Storage** - Private keys encrypted with Expo SecureStore
-- 🏗️ **Scalable Architecture** - Modular design for easy feature additions
-- 🎛️ **Feature Flags** - Toggle features on/off for different user segments
+- 🔄 **Monetization Ready** – Built-in swap fee integration (0.5-1% spread)
+- 🌙 **Dark Mode Support** – Automatic theme switching
+- 🔒 **Secure Storage** – Private keys encrypted with Expo SecureStore
+- 🏗️ **Scalable Architecture** – Modular design for easy feature additions
+- 🎛️ **Feature Flags** – Toggle features on/off for different user segments
+- 🧪 **Developer Wallet Mode** – One-tap connection to a pre-funded dev wallet for demo data
 
 ### Coming Soon
 - 🏦 **Staking Support** - Stake tokens to earn rewards
@@ -38,6 +40,7 @@
 - **Navigation**: React Navigation
 - **Security**: Expo SecureStore
 - **API**: Axios with React Query
+- **Data Providers**: CoinGecko (crypto pricing), Stooq (equity/FX/commodity quotes), Yahoo Finance (historical charts), AllOrigins (CORS passthrough for web builds)
 
 ## 📱 Supported Platforms
 
@@ -147,12 +150,21 @@ RuneKey/
 │   │   ├── token/          # Token display components
 │   │   └── qr/             # QR code components
 │   ├── screens/            # Main app screens
+│   │   ├── HomeScreen.tsx              # Crypto portfolio overview
+│   │   ├── SwapScreen.tsx              # Token swapping interface
+│   │   ├── SearchScreen.tsx            # Discovery experience
+│   │   ├── InvestingScreen.tsx         # Traditional markets dashboard
+│   │   ├── InvestmentDetailsScreen.tsx # Live market detail view
+│   │   └── SettingsScreen.tsx          # App preferences
 │   ├── hooks/              # Custom React hooks
 │   │   ├── wallet/         # Wallet management hooks
 │   │   ├── token/          # Token and price hooks
 │   │   └── swap/           # Swap functionality hooks
 │   ├── services/           # External service integrations
 │   │   ├── api/            # API service classes
+│   │   │   ├── priceService.ts        # CoinGecko integration
+│   │   │   ├── investingService.ts    # Stooq & Yahoo Finance integration
+│   │   │   └── swapService.ts         # DEX aggregation (Jupiter / 0x)
 │   │   └── blockchain/     # Blockchain interaction services
 │   ├── stores/             # Zustand state stores
 │   │   ├── wallet/         # Wallet state management
@@ -164,6 +176,15 @@ RuneKey/
 ├── App.tsx                 # Main app component
 └── package.json           # Dependencies and scripts
 ```
+
+## 📈 Live Market Data Overview
+
+- **Crypto Tokens** – CoinGecko API powers token pricing with a 30-second refresh cadence and local caching to respect rate limits.
+- **Traditional Markets** – Stooq provides spot quotes for equities, ETFs, forex, and commodities (routed through AllOrigins on web, direct fetch on native). Yahoo Finance supplies historical candles for charts.
+- **Developer Wallet Auto-Refresh** – The preconfigured developer wallet refreshes on focus to ensure live values populate demo environments.
+- **Fallbacks** – Structured mock data keeps screens responsive whenever upstream APIs are unavailable or rate-limited.
+- **Capital Source** – Active capital is derived from the wallet’s USDT balance; investing allocations simulate deploying those stablecoin reserves into traditional assets.
+- **Deep Dive** – See [`docs/Investing_Data_Flow.md`](docs/Investing_Data_Flow.md) for architecture and provider details.
 
 ## 🔧 Configuration
 
@@ -180,6 +201,8 @@ EXPO_PUBLIC_ETHEREUM_RPC_URL=https://ethereum.rpc.thirdweb.com
 EXPO_PUBLIC_POLYGON_RPC_URL=https://polygon.rpc.thirdweb.com
 EXPO_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 ```
+
+> **Heads-up:** Web builds default to the public [AllOrigins](https://allorigins.win/) proxy for CORS-safe requests to Stooq and Yahoo Finance. For production deployments you should supply your own proxy or relay service to guarantee uptime and rate-limit control.
 
 ### Customization
 

@@ -683,41 +683,65 @@ export const HomeScreen: React.FC = () => {
     }, 0);
   }, []);
 
-  const initialInvestingMarket = useMemo(() => {
-    return investingHoldings.reduce((total, holding) => {
-      const referencePrice = holding.mockPrice || holding.averagePrice;
-      return total + holding.quantity * referencePrice;
-    }, 0);
-  }, []);
-
   const [investingTotals, setInvestingTotals] = useState({
     cost: initialInvestingCost,
-    market: initialInvestingMarket,
+    market: 0,
   });
 
   const refreshInvestingTotals = useCallback(async () => {
     if (investingHoldings.length === 0) {
+      setInvestingTotals({ cost: 0, market: 0 });
       return;
     }
 
-    const symbols = investingHoldings.map((holding) => holding.symbol.toUpperCase());
-    const response = await investingService.fetchQuotes(symbols);
+    const response = await investingService.fetchQuotes(investingHoldings);
     const quotes = response.data || {};
 
-    setInvestingTotals({
-      cost: initialInvestingCost,
-      market: investingHoldings.reduce((total, holding) => {
+    const { totalMarket, missingSymbols } = investingHoldings.reduce(
+      (acc, holding) => {
         const symbol = holding.symbol.toUpperCase();
         const quote = quotes[symbol];
-        const price = quote?.price || holding.mockPrice || holding.averagePrice;
-        return total + holding.quantity * price;
-      }, 0),
+        if (typeof quote?.price === 'number' && Number.isFinite(quote.price)) {
+          acc.totalMarket += holding.quantity * quote.price;
+        } else {
+          acc.missingSymbols.push(symbol);
+        }
+        return acc;
+      },
+      { totalMarket: 0, missingSymbols: [] as string[] }
+    );
+
+    if (missingSymbols.length > 0) {
+      console.warn(
+        '⚠️ Missing live investing quotes for symbols:',
+        missingSymbols.join(', ')
+      );
+    }
+
+    setInvestingTotals((prev) => {
+      if (!response.success) {
+        return {
+          cost: initialInvestingCost,
+          market: prev.market,
+        };
+      }
+
+      return {
+        cost: initialInvestingCost,
+        market: totalMarket,
+      };
     });
   }, [initialInvestingCost]);
 
   useEffect(() => {
     refreshInvestingTotals();
   }, [refreshInvestingTotals]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshInvestingTotals();
+    }, [refreshInvestingTotals])
+  );
 
   return (
     <UniversalBackground>
@@ -1053,6 +1077,43 @@ export const HomeScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
 
+            {/* Swap Button */}
+            <TouchableOpacity
+              style={{
+                alignItems: 'center',
+                paddingVertical: 16,
+                paddingHorizontal: 20,
+              }}
+              onPress={() => {
+                logger.logButtonPress('Swap Shortcut', 'navigate to swap screen');
+                setShowParticles(true);
+                setTimeout(() => setShowParticles(false), 2000);
+                navigation.navigate('Swap' as never);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={{
+                width: 56,
+                height: 56,
+                backgroundColor: '#000000',
+                borderRadius: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+                borderWidth: 1,
+                borderColor: '#1f2937',
+              }}>
+                <Ionicons name="swap-horizontal" size={24} color="#94A3B8" />
+              </View>
+              <Text style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: '#FFFFFF',
+              }}>
+                Swap
+              </Text>
+            </TouchableOpacity>
+
             {/* Send Button */}
             <TouchableOpacity
               style={{
@@ -1323,9 +1384,6 @@ export const HomeScreen: React.FC = () => {
                   <View
                     key={item.label}
                     style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
                       paddingVertical: 6,
                     }}
                   >
@@ -1340,6 +1398,7 @@ export const HomeScreen: React.FC = () => {
                       fontSize: 12,
                       color: '#94A3B8',
                       fontWeight: '500',
+                      marginTop: 4,
                     }}>
                       {item.value}
                     </Text>

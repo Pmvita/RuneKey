@@ -150,6 +150,9 @@ export type RootStackParamList = {
   TransactionHistory: undefined;
   WalletConnect: undefined;
   Investing: undefined;
+  InvestmentDetails: {
+    holding: InvestmentHolding;
+  };
 };
 
 // Component Props Types
@@ -191,6 +194,7 @@ export interface Investment {
   quantity: number;
   averagePrice: number;
   mockPrice?: number;
+  icon?: string;
 }
 
 export interface InvestmentHolding extends Investment {

@@ -6,6 +6,9 @@ export const API_ENDPOINTS = {
   JUPITER: 'https://quote-api.jup.ag/v6',
   ZEROX: 'https://api.0x.org',
   YAHOO_FINANCE: 'https://query1.finance.yahoo.com/v7/finance/quote',
+  YAHOO_FINANCE_CHART: 'https://query1.finance.yahoo.com/v8/finance/chart',
+  STOOQ_QUOTE: 'https://stooq.com/q/l/',
+  CORS_PROXY: 'https://api.allorigins.win/raw?url=',
 } as const;
 
 // App Configuration

@@ -172,7 +172,18 @@ RuneKey features a modern, frosty design with:
 
 ---
 
-### 12. Coin Details (Dev Mode)
+### 12. Investing Dashboard _(screenshot coming soon)_
+
+**Description**: Traditional markets overview with live quotes for tracked equities, ETFs, forex pairs, and commodities.
+
+**Key Features**:
+- Live active capital, cost basis, and market value metrics
+- Holdings list with market value, quantity, entry price, and 24h change
+- Quick access to detailed quote pages
+
+---
+
+### 13. Coin Details (Dev Mode)
 ![Coin Details](/assets/screenshots/coin-details.png)
 
 **Description**: Advanced cryptocurrency information with real-time data from CoinGecko API.
