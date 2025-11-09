@@ -77,6 +77,28 @@ const FALLBACK_NEWS: StockNewsItem[] = [
 ];
 
 class StocksService {
+  private mapMarketMover(item: any): TrendingStock {
+    return {
+      symbol: item.symbol || item.ticker || '',
+      name: item.name || item.companyName || item.symbol || 'Unknown',
+      price: typeof item.price === 'number' ? item.price : Number(item.price) || 0,
+      changePercent:
+        typeof item.changesPercentage === 'number'
+          ? item.changesPercentage
+          : Number(
+              String(item.changesPercentage ?? '0')
+                .replace('(', '')
+                .replace(')', '')
+                .replace('%', '')
+            ) || 0,
+      volume:
+        typeof item.volume === 'number'
+          ? item.volume
+          : Number(item.volume) || 0,
+      exchange: item.exchange || item.stockExchange,
+    };
+  }
+
   async fetchTrending(): Promise<TrendingStock[]> {
     try {
       const url = `${FMP_BASE}/stock_market/gainers?apikey=${FMP_API_KEY}`;
@@ -87,28 +109,50 @@ class StocksService {
         return FALLBACK_TRENDING;
       }
 
-      return data.slice(0, 12).map((item: any) => ({
-        symbol: item.symbol || item.ticker || '',
-        name: item.name || item.companyName || item.symbol || 'Unknown',
-        price: typeof item.price === 'number' ? item.price : Number(item.price) || 0,
-        changePercent:
-          typeof item.changesPercentage === 'number'
-            ? item.changesPercentage
-            : Number(
-                String(item.changesPercentage ?? '0')
-                  .replace('(', '')
-                  .replace(')', '')
-                  .replace('%', '')
-              ) || 0,
-        volume:
-          typeof item.volume === 'number'
-            ? item.volume
-            : Number(item.volume) || 0,
-        exchange: item.exchange || item.stockExchange,
-      }));
+      return data.slice(0, 12).map((item: any) => this.mapMarketMover(item));
     } catch (error) {
       console.warn('stocksService.fetchTrending: using fallback data', error);
       return FALLBACK_TRENDING;
+    }
+  }
+
+  async fetchTopGainers(limit: number = 50): Promise<TrendingStock[]> {
+    try {
+      const url = `${FMP_BASE}/stock_market/gainers?apikey=${FMP_API_KEY}`;
+      const response = await axios.get(url);
+      const data = Array.isArray(response.data) ? response.data : [];
+
+      if (data.length === 0) {
+        return FALLBACK_TRENDING.slice(0, limit);
+      }
+
+      return data.slice(0, limit).map((item: any) => this.mapMarketMover(item));
+    } catch (error) {
+      console.warn('stocksService.fetchTopGainers: using fallback data', error);
+      return FALLBACK_TRENDING.slice(0, limit);
+    }
+  }
+
+  async fetchTopLosers(limit: number = 50): Promise<TrendingStock[]> {
+    try {
+      const url = `${FMP_BASE}/stock_market/losers?apikey=${FMP_API_KEY}`;
+      const response = await axios.get(url);
+      const data = Array.isArray(response.data) ? response.data : [];
+
+      if (data.length === 0) {
+        return FALLBACK_TRENDING.slice(0, limit).map((item) => ({
+          ...item,
+          changePercent: item.changePercent * -1,
+        }));
+      }
+
+      return data.slice(0, limit).map((item: any) => this.mapMarketMover(item));
+    } catch (error) {
+      console.warn('stocksService.fetchTopLosers: using fallback data', error);
+      return FALLBACK_TRENDING.slice(0, limit).map((item) => ({
+        ...item,
+        changePercent: item.changePercent * -1,
+      }));
     }
   }
 

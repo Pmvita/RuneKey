@@ -35,6 +35,7 @@ const investments: Investment[] = Array.isArray((investingData as any)?.investme
   : [];
 
 const DEFAULT_RANGE = '1mo';
+const TOP_MOVERS_PAGE_SIZE = 10;
 
 const buildTradingViewHtml = (symbol: string) => `
 <!DOCTYPE html>
@@ -94,6 +95,12 @@ export const StocksScreen: React.FC = () => {
   const [trendingStocks, setTrendingStocks] = useState<TrendingStock[]>([]);
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [newsItems, setNewsItems] = useState<StockNewsItem[]>([]);
+  const [topGainers, setTopGainers] = useState<TrendingStock[]>([]);
+  const [topLosers, setTopLosers] = useState<TrendingStock[]>([]);
+  const [gainersPage, setGainersPage] = useState(0);
+  const [losersPage, setLosersPage] = useState(0);
+  const [isLoadingTopMovers, setIsLoadingTopMovers] = useState(false);
+  const [topMoversTab, setTopMoversTab] = useState<'gainers' | 'losers'>('gainers');
   const [selectedHolding, setSelectedHolding] = useState<InvestmentHolding | null>(null);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [tradeQuantity, setTradeQuantity] = useState<string>('1');
@@ -245,14 +252,33 @@ export const StocksScreen: React.FC = () => {
     }
   }, []);
 
+  const loadTopMovers = useCallback(async () => {
+    setIsLoadingTopMovers(true);
+    try {
+      const [gainers, losers] = await Promise.all([
+        stocksService.fetchTopGainers(50),
+        stocksService.fetchTopLosers(50),
+      ]);
+      setTopGainers(gainers);
+      setTopLosers(losers);
+      setGainersPage(0);
+      setLosersPage(0);
+      setTopMoversTab('gainers');
+    } catch (error) {
+      console.warn('StocksScreen: failed to fetch top movers', error);
+    } finally {
+      setIsLoadingTopMovers(false);
+    }
+  }, []);
+
   const refreshAll = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([loadQuotes(), loadMarketExtras()]);
+      await Promise.all([loadQuotes(), loadMarketExtras(), loadTopMovers()]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [loadQuotes, loadMarketExtras]);
+  }, [loadQuotes, loadMarketExtras, loadTopMovers]);
 
   useEffect(() => {
     loadQuotes();
@@ -300,12 +326,31 @@ export const StocksScreen: React.FC = () => {
 
   useEffect(() => {
     loadMarketExtras();
-  }, [loadMarketExtras]);
+    loadTopMovers();
+  }, [loadMarketExtras, loadTopMovers]);
 
   useFocusEffect(
     useCallback(() => {
       loadMarketExtras();
-    }, [loadMarketExtras])
+      loadTopMovers();
+    }, [loadMarketExtras, loadTopMovers])
+  );
+
+  const gainersMaxPage = Math.max(
+    Math.ceil(topGainers.length / TOP_MOVERS_PAGE_SIZE) - 1,
+    0
+  );
+  const losersMaxPage = Math.max(
+    Math.ceil(topLosers.length / TOP_MOVERS_PAGE_SIZE) - 1,
+    0
+  );
+  const visibleGainers = topGainers.slice(
+    gainersPage * TOP_MOVERS_PAGE_SIZE,
+    gainersPage * TOP_MOVERS_PAGE_SIZE + TOP_MOVERS_PAGE_SIZE
+  );
+  const visibleLosers = topLosers.slice(
+    losersPage * TOP_MOVERS_PAGE_SIZE,
+    losersPage * TOP_MOVERS_PAGE_SIZE + TOP_MOVERS_PAGE_SIZE
   );
 
   const openTradeModal = (holding: InvestmentHolding, side: 'buy' | 'sell') => {
@@ -766,6 +811,99 @@ export const StocksScreen: React.FC = () => {
               <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 2 }}>
                 {featuredInstrument?.name ?? 'Search for a symbol to begin charting'}
               </Text>
+              {featuredInstrument ? (
+                <>
+                  <View
+                    style={{
+                      marginTop: 20,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-end',
+                    }}
+                  >
+                    <View>
+                      <Text style={{ color: '#64748B', fontSize: 12 }}>Last Price</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '700', marginTop: 4 }}>
+                        {formatLargeCurrency(featuredInstrument.currentPrice)}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ color: '#64748B', fontSize: 12 }}>Change</Text>
+                      <Text
+                        style={{
+                          color: featuredInstrument.changePercent >= 0 ? '#34D399' : '#F87171',
+                          fontSize: 16,
+                          fontWeight: '700',
+                          marginTop: 4,
+                        }}
+                      >
+                        {featuredInstrument.changePercent >= 0 ? '+' : ''}
+                        {featuredInstrument.changePercent.toFixed(2)}%
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      marginTop: 20,
+                      padding: 16,
+                      borderRadius: 16,
+                      backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(30, 41, 59, 0.5)',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <View style={{ flex: 1, marginRight: 12 }}>
+                      <Text style={{ color: '#64748B', fontSize: 11 }}>Market Value</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginTop: 4 }}>
+                        {formatLargeCurrency(featuredInstrument.marketValue ?? 0)}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1, marginHorizontal: 12 }}>
+                      <Text style={{ color: '#64748B', fontSize: 11 }}>Quantity</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginTop: 4 }}>
+                        {Number.isFinite(featuredInstrument.quantity)
+                          ? (featuredInstrument.quantity ?? 0).toLocaleString()
+                          : '—'}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 12, alignItems: 'flex-end' }}>
+                      <Text style={{ color: '#64748B', fontSize: 11 }}>Avg Price</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginTop: 4 }}>
+                        {formatLargeCurrency(featuredInstrument.averagePrice ?? featuredInstrument.currentPrice)}
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              ) : null}
+            </View>
+
+            <View
+              style={{
+                height: 460,
+                borderRadius: 20,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: 'rgba(30, 41, 59, 0.55)',
+                backgroundColor: '#020617',
+                marginBottom: 16,
+              }}
+            >
+              <WebView
+                key={resolvedActiveSymbol}
+                source={{ html: buildTradingViewHtml(resolvedActiveSymbol) }}
+                style={{ flex: 1, backgroundColor: '#020617' }}
+                originWhitelist={['*']}
+                javaScriptEnabled
+                startInLoadingState
+                renderLoading={() => (
+                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator color="#3B82F6" />
+                  </View>
+                )}
+              />
             </View>
 
             <View
@@ -776,7 +914,6 @@ export const StocksScreen: React.FC = () => {
                 borderColor: 'rgba(30, 41, 59, 0.6)',
                 paddingHorizontal: 16,
                 paddingVertical: Platform.OS === 'ios' ? 16 : 10,
-                marginBottom: 16,
               }}
             >
               <Text style={{ color: '#64748B', fontSize: 12, marginBottom: 4 }}>Search symbol</Text>
@@ -831,27 +968,250 @@ export const StocksScreen: React.FC = () => {
 
             <View
               style={{
-                height: 460,
-                borderRadius: 20,
-                overflow: 'hidden',
+                marginTop: 20,
+                backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                borderRadius: 16,
                 borderWidth: 1,
-                borderColor: 'rgba(30, 41, 59, 0.55)',
-                backgroundColor: '#020617',
+                borderColor: 'rgba(30, 41, 59, 0.6)',
+                padding: 16,
               }}
             >
-              <WebView
-                key={resolvedActiveSymbol}
-                source={{ html: buildTradingViewHtml(resolvedActiveSymbol) }}
-                style={{ flex: 1, backgroundColor: '#020617' }}
-                originWhitelist={['*']}
-                javaScriptEnabled
-                startInLoadingState
-                renderLoading={() => (
-                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator color="#3B82F6" />
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700' }}>Top Movers</Text>
+                <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4 }}>
+                  Explore the biggest winners and losers across the market
+                </Text>
+              </View>
+
+              {isLoadingTopMovers ? (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <ActivityIndicator color="#3B82F6" />
+                </View>
+              ) : (
+                <>
+                  <View style={{ marginBottom: 16 }}>
+                    <TabSelector
+                      options={[
+                        { key: 'gainers', label: 'Top Gainers' },
+                        { key: 'losers', label: 'Top Losers' },
+                      ]}
+                      selectedKey={topMoversTab}
+                      onSelect={(key) => {
+                        const nextKey = key as 'gainers' | 'losers';
+                        setTopMoversTab(nextKey);
+                        if (nextKey === 'gainers') {
+                          setGainersPage(0);
+                        } else {
+                          setLosersPage(0);
+                        }
+                      }}
+                      style={{ marginBottom: 0 }}
+                    />
                   </View>
-                )}
-              />
+
+                  {topMoversTab === 'gainers' ? (
+                    <View>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: 12,
+                        }}
+                      >
+                        <Text style={{ color: '#34D399', fontSize: 15, fontWeight: '700' }}>
+                          Biggest winners today
+                        </Text>
+                        <View style={{ flexDirection: 'row' }}>
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() => setGainersPage((prev) => Math.max(prev - 1, 0))}
+                            disabled={gainersPage === 0}
+                            style={{
+                              paddingVertical: 6,
+                              paddingHorizontal: 12,
+                              borderRadius: 10,
+                              borderWidth: 1,
+                              borderColor:
+                                gainersPage === 0 ? 'rgba(52, 211, 153, 0.2)' : 'rgba(52, 211, 153, 0.35)',
+                              marginRight: 8,
+                              opacity: gainersPage === 0 ? 0.5 : 1,
+                            }}
+                          >
+                            <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '600' }}>Prev</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() =>
+                              setGainersPage((prev) => Math.min(prev + 1, gainersMaxPage))
+                            }
+                            disabled={gainersPage >= gainersMaxPage}
+                            style={{
+                              paddingVertical: 6,
+                              paddingHorizontal: 12,
+                              borderRadius: 10,
+                              borderWidth: 1,
+                              borderColor:
+                                gainersPage >= gainersMaxPage
+                                  ? 'rgba(52, 211, 153, 0.2)'
+                                  : 'rgba(52, 211, 153, 0.35)',
+                              opacity: gainersPage >= gainersMaxPage ? 0.5 : 1,
+                            }}
+                          >
+                            <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '600' }}>Next</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {visibleGainers.length === 0 ? (
+                        <Text style={{ color: '#64748B', fontSize: 13 }}>No gainers data available.</Text>
+                      ) : (
+                        visibleGainers.map((stock) => (
+                          <TouchableOpacity
+                            key={`gainer-${stock.symbol}`}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              setActiveSymbol(stock.symbol.toUpperCase());
+                              setFeaturedOverride({
+                                symbol: stock.symbol.toUpperCase(),
+                                name: stock.name,
+                                market: stock.exchange ?? 'MARKET',
+                                currentPrice: stock.price,
+                                changePercent: stock.changePercent,
+                              });
+                            }}
+                            style={{
+                              paddingVertical: 10,
+                              borderBottomWidth: 1,
+                              borderColor: 'rgba(30, 41, 59, 0.45)',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <View>
+                              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
+                                {stock.symbol}
+                              </Text>
+                              <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                                {stock.name}
+                              </Text>
+                            </View>
+                            <View style={{ alignItems: 'flex-end' }}>
+                              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                                {formatLargeCurrency(stock.price)}
+                              </Text>
+                              <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '600', marginTop: 4 }}>
+                                +{stock.changePercent.toFixed(2)}%
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </View>
+                  ) : (
+                    <View>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: 12,
+                        }}
+                      >
+                        <Text style={{ color: '#F87171', fontSize: 15, fontWeight: '700' }}>
+                          Biggest pullbacks today
+                        </Text>
+                        <View style={{ flexDirection: 'row' }}>
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() => setLosersPage((prev) => Math.max(prev - 1, 0))}
+                            disabled={losersPage === 0}
+                            style={{
+                              paddingVertical: 6,
+                              paddingHorizontal: 12,
+                              borderRadius: 10,
+                              borderWidth: 1,
+                              borderColor:
+                                losersPage === 0 ? 'rgba(248, 113, 113, 0.2)' : 'rgba(248, 113, 113, 0.35)',
+                              marginRight: 8,
+                              opacity: losersPage === 0 ? 0.5 : 1,
+                            }}
+                          >
+                            <Text style={{ color: '#F87171', fontSize: 12, fontWeight: '600' }}>Prev</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() =>
+                              setLosersPage((prev) => Math.min(prev + 1, losersMaxPage))
+                            }
+                            disabled={losersPage >= losersMaxPage}
+                            style={{
+                              paddingVertical: 6,
+                              paddingHorizontal: 12,
+                              borderRadius: 10,
+                              borderWidth: 1,
+                              borderColor:
+                                losersPage >= losersMaxPage
+                                  ? 'rgba(248, 113, 113, 0.2)'
+                                  : 'rgba(248, 113, 113, 0.35)',
+                              opacity: losersPage >= losersMaxPage ? 0.5 : 1,
+                            }}
+                          >
+                            <Text style={{ color: '#F87171', fontSize: 12, fontWeight: '600' }}>Next</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {visibleLosers.length === 0 ? (
+                        <Text style={{ color: '#64748B', fontSize: 13 }}>No losers data available.</Text>
+                      ) : (
+                        visibleLosers.map((stock) => (
+                          <TouchableOpacity
+                            key={`loser-${stock.symbol}`}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              setActiveSymbol(stock.symbol.toUpperCase());
+                              setFeaturedOverride({
+                                symbol: stock.symbol.toUpperCase(),
+                                name: stock.name,
+                                market: stock.exchange ?? 'MARKET',
+                                currentPrice: stock.price,
+                                changePercent: stock.changePercent,
+                              });
+                            }}
+                            style={{
+                              paddingVertical: 10,
+                              borderBottomWidth: 1,
+                              borderColor: 'rgba(30, 41, 59, 0.45)',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <View>
+                              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>
+                                {stock.symbol}
+                              </Text>
+                              <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                                {stock.name}
+                              </Text>
+                            </View>
+                            <View style={{ alignItems: 'flex-end' }}>
+                              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                                {formatLargeCurrency(stock.price)}
+                              </Text>
+                              <Text style={{ color: '#F87171', fontSize: 12, fontWeight: '600', marginTop: 4 }}>
+                                {stock.changePercent.toFixed(2)}%
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </View>
+                  )}
+                </>
+              )}
             </View>
           </ScrollView>
         )}
