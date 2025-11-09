@@ -76,6 +76,32 @@ const FALLBACK_NEWS: StockNewsItem[] = [
   },
 ];
 
+const FALLBACK_TOP_GAINERS: TrendingStock[] = [
+  { symbol: 'AAPL', name: 'Apple Inc.', price: 178.23, changePercent: 1.24, volume: 51234567, exchange: 'NASDAQ' },
+  { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 472.55, changePercent: 3.12, volume: 45678123, exchange: 'NASDAQ' },
+  { symbol: 'META', name: 'Meta Platforms Inc.', price: 312.44, changePercent: 2.68, volume: 29811223, exchange: 'NASDAQ' },
+  { symbol: 'TSLA', name: 'Tesla Inc.', price: 268.92, changePercent: 4.75, volume: 60233451, exchange: 'NASDAQ' },
+  { symbol: 'AMD', name: 'Advanced Micro Devices Inc.', price: 124.83, changePercent: 3.91, volume: 40111223, exchange: 'NASDAQ' },
+  { symbol: 'SHOP', name: 'Shopify Inc.', price: 68.44, changePercent: 5.32, volume: 18876543, exchange: 'NYSE' },
+  { symbol: 'UBER', name: 'Uber Technologies Inc.', price: 49.78, changePercent: 2.97, volume: 33456789, exchange: 'NYSE' },
+  { symbol: 'ASML', name: 'ASML Holding NV', price: 688.55, changePercent: 1.89, volume: 5123456, exchange: 'NASDAQ' },
+  { symbol: 'NFLX', name: 'Netflix Inc.', price: 396.21, changePercent: 2.41, volume: 17890345, exchange: 'NASDAQ' },
+  { symbol: 'ADBE', name: 'Adobe Inc.', price: 528.12, changePercent: 1.72, volume: 9423456, exchange: 'NASDAQ' },
+];
+
+const FALLBACK_TOP_LOSERS: TrendingStock[] = [
+  { symbol: 'INTC', name: 'Intel Corporation', price: 32.14, changePercent: -2.35, volume: 44322112, exchange: 'NASDAQ' },
+  { symbol: 'BABA', name: 'Alibaba Group Holding Ltd.', price: 78.55, changePercent: -3.82, volume: 28900344, exchange: 'NYSE' },
+  { symbol: 'DIS', name: 'The Walt Disney Company', price: 83.21, changePercent: -1.94, volume: 22110987, exchange: 'NYSE' },
+  { symbol: 'CRM', name: 'Salesforce Inc.', price: 198.76, changePercent: -2.67, volume: 14566789, exchange: 'NYSE' },
+  { symbol: 'BA', name: 'The Boeing Company', price: 184.33, changePercent: -4.12, volume: 17654322, exchange: 'NYSE' },
+  { symbol: 'PYPL', name: 'PayPal Holdings Inc.', price: 58.44, changePercent: -3.51, volume: 19877654, exchange: 'NASDAQ' },
+  { symbol: 'SQ', name: 'Block Inc.', price: 52.17, changePercent: -2.98, volume: 15500234, exchange: 'NYSE' },
+  { symbol: 'COIN', name: 'Coinbase Global Inc.', price: 89.65, changePercent: -5.43, volume: 11234567, exchange: 'NASDAQ' },
+  { symbol: 'LYFT', name: 'Lyft Inc.', price: 9.34, changePercent: -4.27, volume: 3211098, exchange: 'NASDAQ' },
+  { symbol: 'PENN', name: 'PENN Entertainment Inc.', price: 24.78, changePercent: -3.12, volume: 4567732, exchange: 'NASDAQ' },
+];
+
 class StocksService {
   private mapMarketMover(item: any): TrendingStock {
     return {
@@ -123,13 +149,13 @@ class StocksService {
       const data = Array.isArray(response.data) ? response.data : [];
 
       if (data.length === 0) {
-        return FALLBACK_TRENDING.slice(0, limit);
+        return FALLBACK_TOP_GAINERS.slice(0, limit);
       }
 
       return data.slice(0, limit).map((item: any) => this.mapMarketMover(item));
     } catch (error) {
       console.warn('stocksService.fetchTopGainers: using fallback data', error);
-      return FALLBACK_TRENDING.slice(0, limit);
+      return FALLBACK_TOP_GAINERS.slice(0, limit);
     }
   }
 
@@ -140,19 +166,13 @@ class StocksService {
       const data = Array.isArray(response.data) ? response.data : [];
 
       if (data.length === 0) {
-        return FALLBACK_TRENDING.slice(0, limit).map((item) => ({
-          ...item,
-          changePercent: item.changePercent * -1,
-        }));
+        return FALLBACK_TOP_LOSERS.slice(0, limit);
       }
 
       return data.slice(0, limit).map((item: any) => this.mapMarketMover(item));
     } catch (error) {
       console.warn('stocksService.fetchTopLosers: using fallback data', error);
-      return FALLBACK_TRENDING.slice(0, limit).map((item) => ({
-        ...item,
-        changePercent: item.changePercent * -1,
-      }));
+      return FALLBACK_TOP_LOSERS.slice(0, limit);
     }
   }
 
