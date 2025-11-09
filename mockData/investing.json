@@ -1,0 +1,59 @@
+{
+  "investments": [
+    {
+      "id": "AAPL",
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "type": "stock",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 150,
+      "averagePrice": 172.45,
+      "mockPrice": 189.82
+    },
+    {
+      "id": "MSFT",
+      "symbol": "MSFT",
+      "name": "Microsoft Corporation",
+      "type": "stock",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 95,
+      "averagePrice": 318.17,
+      "mockPrice": 402.11
+    },
+    {
+      "id": "SPY",
+      "symbol": "SPY",
+      "name": "SPDR S&P 500 ETF Trust",
+      "type": "etf",
+      "market": "NYSEARCA",
+      "currency": "USD",
+      "quantity": 220,
+      "averagePrice": 427.62,
+      "mockPrice": 520.33
+    },
+    {
+      "id": "EURUSD=X",
+      "symbol": "EURUSD=X",
+      "name": "Euro / U.S. Dollar",
+      "type": "forex",
+      "market": "FX",
+      "currency": "USD",
+      "quantity": 125000,
+      "averagePrice": 1.0785,
+      "mockPrice": 1.0932
+    },
+    {
+      "id": "XAUUSD=X",
+      "symbol": "XAUUSD=X",
+      "name": "Gold Spot USD",
+      "type": "commodity",
+      "market": "FX",
+      "currency": "USD",
+      "quantity": 85,
+      "averagePrice": 1978.50,
+      "mockPrice": 2145.75
+    }
+  ]
+}

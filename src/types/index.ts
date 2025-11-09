@@ -149,6 +149,7 @@ export type RootStackParamList = {
   };
   TransactionHistory: undefined;
   WalletConnect: undefined;
+  Investing: undefined;
 };
 
 // Component Props Types
@@ -178,4 +179,22 @@ export interface SwapError {
   type: 'insufficient_balance' | 'slippage_exceeded' | 'network_error' | 'user_rejected';
   message: string;
   details?: any;
+}
+
+export interface Investment {
+  id: string;
+  symbol: string;
+  name: string;
+  type: 'stock' | 'etf' | 'forex' | 'commodity';
+  market: string;
+  currency: string;
+  quantity: number;
+  averagePrice: number;
+  mockPrice?: number;
+}
+
+export interface InvestmentHolding extends Investment {
+  currentPrice: number;
+  changePercent: number;
+  marketValue: number;
 }

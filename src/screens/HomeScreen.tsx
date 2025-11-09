@@ -38,6 +38,13 @@ import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { formatLargeCurrency } from '../utils/formatters';
+import investingData from '../../mockData/investing.json';
+import { investingService } from '../services/api/investingService';
+import { Investment } from '../types';
+
+const investingHoldings: Investment[] = Array.isArray((investingData as any)?.investments)
+  ? ((investingData as any).investments as Investment[])
+  : [];
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -670,6 +677,48 @@ export const HomeScreen: React.FC = () => {
     return data;
   };
 
+  const initialInvestingCost = useMemo(() => {
+    return investingHoldings.reduce((total, holding) => {
+      return total + holding.quantity * holding.averagePrice;
+    }, 0);
+  }, []);
+
+  const initialInvestingMarket = useMemo(() => {
+    return investingHoldings.reduce((total, holding) => {
+      const referencePrice = holding.mockPrice || holding.averagePrice;
+      return total + holding.quantity * referencePrice;
+    }, 0);
+  }, []);
+
+  const [investingTotals, setInvestingTotals] = useState({
+    cost: initialInvestingCost,
+    market: initialInvestingMarket,
+  });
+
+  const refreshInvestingTotals = useCallback(async () => {
+    if (investingHoldings.length === 0) {
+      return;
+    }
+
+    const symbols = investingHoldings.map((holding) => holding.symbol.toUpperCase());
+    const response = await investingService.fetchQuotes(symbols);
+    const quotes = response.data || {};
+
+    setInvestingTotals({
+      cost: initialInvestingCost,
+      market: investingHoldings.reduce((total, holding) => {
+        const symbol = holding.symbol.toUpperCase();
+        const quote = quotes[symbol];
+        const price = quote?.price || holding.mockPrice || holding.averagePrice;
+        return total + holding.quantity * price;
+      }, 0),
+    });
+  }, [initialInvestingCost]);
+
+  useEffect(() => {
+    refreshInvestingTotals();
+  }, [refreshInvestingTotals]);
+
   return (
     <UniversalBackground>
       <SafeAreaView style={{ flex: 1 }}>
@@ -1198,22 +1247,29 @@ export const HomeScreen: React.FC = () => {
               </View>
             </TouchableOpacity>
 
-            <View style={{
-              flex: 1,
-              backgroundColor: '#0b1120',
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: '#1f2937',
-              padding: 20,
-            }}>
-              <Text style={{
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: '#FFFFFF',
-                marginBottom: 16,
-              }}>
-                INVESTING
-              </Text>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Investing')}
+              style={{
+                flex: 1,
+                backgroundColor: '#0b1120',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#1f2937',
+                padding: 20,
+              }}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Text style={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#FFFFFF',
+                  marginBottom: 16,
+                }}>
+                  INVESTING
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+              </View>
 
               <View style={{
                 flex: 1,
@@ -1254,37 +1310,44 @@ export const HomeScreen: React.FC = () => {
                 <View style={{
                   marginTop: 20,
                 }}>
-                    {[
-                      { label: 'Auto-Invest', status: 'Running' },
-                      { label: 'Yield Vault', status: 'Compounding' },
-                    ].map((item) => (
-                    <View
-                      key={item.label}
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingVertical: 6,
-                      }}
-                    >
-                        <Text style={{
-                          fontSize: 12,
-                          color: '#FFFFFF',
-                          fontWeight: '500',
-                        }}>
-                        {item.label}
-                      </Text>
-                      <Text style={{
-                          fontSize: 10,
-                        color: '#94A3B8',
-                      }}>
-                        {item.status}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+                {[
+                  {
+                    label: 'Total Investment',
+                    value: formatLargeCurrency(investingTotals.cost),
+                  },
+                  {
+                    label: 'Current Market Value',
+                    value: formatLargeCurrency(investingTotals.market),
+                  },
+                ].map((item) => (
+                  <View
+                    key={item.label}
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingVertical: 6,
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 12,
+                      color: '#FFFFFF',
+                      fontWeight: '500',
+                    }}>
+                      {item.label}
+                    </Text>
+                    <Text style={{
+                      fontSize: 12,
+                      color: '#94A3B8',
+                      fontWeight: '500',
+                    }}>
+                      {item.value}
+                    </Text>
+                  </View>
+                ))}
               </View>
-            </View>
+              </View>
+            </TouchableOpacity>
           </View>
         </Animated.View>
 

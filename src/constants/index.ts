@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
   COINGECKO: 'https://api.coingecko.com/api/v3',
   JUPITER: 'https://quote-api.jup.ag/v6',
   ZEROX: 'https://api.0x.org',
+  YAHOO_FINANCE: 'https://query1.finance.yahoo.com/v7/finance/quote',
 } as const;
 
 // App Configuration

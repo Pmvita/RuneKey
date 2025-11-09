@@ -33,6 +33,7 @@ import { BuyScreen } from './src/screens/BuyScreen';
 import { MarketScreen } from './src/screens/MarketScreen';
 import { CoinDetailsScreen } from './src/screens/CoinDetailsScreen';
 import { AllocationScreen } from './src/screens/AllocationScreen';
+import { InvestingScreen } from './src/screens/InvestingScreen';
 import { OnboardingNavigator } from './src/screens/onboarding/OnboardingNavigator';
 
 // Hooks
@@ -240,6 +241,11 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
         <Stack.Screen 
           name="Allocation" 
           component={AllocationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Investing" 
+          component={InvestingScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
