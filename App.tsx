@@ -23,6 +23,7 @@ import { logger } from './src/utils/logger';
 // Screens
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SwapScreen } from './src/screens/SwapScreen';
+import { StocksScreen } from './src/screens/StocksScreen';
 import { RunekeyScreen } from './src/screens/RunekeyScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -84,8 +85,8 @@ const TabNavigator = () => {
 
           if (route.name === 'Wallet') {
             iconName = focused ? 'wallet' : 'wallet-outline';
-          } else if (route.name === 'Swap') {
-            iconName = focused ? 'swap-horizontal' : 'swap-horizontal-outline';
+          } else if (route.name === 'Stocks') {
+            iconName = focused ? 'trending-up' : 'trending-up-outline';
           } else if (route.name === 'Runekey') {
             // Use custom icon for Runekey tab
             return (
@@ -152,8 +153,8 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Swap" 
-        component={SwapScreen}
+        name="Stocks" 
+        component={StocksScreen}
         options={{
           title: '',
           headerShown: false,
@@ -227,6 +228,11 @@ const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
         <Stack.Screen 
           name="Buy" 
           component={BuyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Swap" 
+          component={SwapScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen 
