@@ -188,3 +188,6 @@ dist/
 
 # EAS
 .easignore
+
+# Private internal docs
+docs/Self_Funded_Launch_Plan.md
