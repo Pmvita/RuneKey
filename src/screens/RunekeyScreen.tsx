@@ -376,6 +376,7 @@ export const RunekeyScreen: React.FC = () => {
               cornerRadius={24}
               elasticity={0.2}
               className="p-6"
+              variant="transparent"
             >
               <View style={styles.heroHeader}>
                 <View>
@@ -418,7 +419,7 @@ export const RunekeyScreen: React.FC = () => {
                   activeOpacity={0.85}
                   onPress={() => handleQuickActionPress('deposit-usdt')}
                 >
-                  <Ionicons name="arrow-forward-circle" size={18} color="#0F172A" />
+                  <Ionicons name="arrow-forward-circle" size={18} color="#FFFFFF" />
                   <Text style={styles.heroFooterText}>Fund bridge</Text>
                 </TouchableOpacity>
               </View>
@@ -431,6 +432,7 @@ export const RunekeyScreen: React.FC = () => {
               cornerRadius={24}
               elasticity={0.2}
               className="p-6"
+              variant="transparent"
             >
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Bridge Status</Text>
@@ -491,6 +493,7 @@ export const RunekeyScreen: React.FC = () => {
                 cornerRadius={20}
                 elasticity={0.18}
                 className="p-5"
+                variant="transparent"
               >
                 <Text style={styles.cardHeading}>Crypto Positions</Text>
                 <View style={styles.positionList}>
@@ -525,6 +528,7 @@ export const RunekeyScreen: React.FC = () => {
                 cornerRadius={20}
                 elasticity={0.18}
                 className="p-5"
+                variant="transparent"
               >
                 <Text style={styles.cardHeading}>Stock Holdings</Text>
                 <View style={styles.positionList}>
@@ -569,6 +573,7 @@ export const RunekeyScreen: React.FC = () => {
                 cornerRadius={20}
                 elasticity={0.18}
                 className="p-5"
+                variant="transparent"
               >
                 <Text style={styles.cardHeading}>Crypto Movers</Text>
                 {cryptoMovers.map(item => (
@@ -595,6 +600,7 @@ export const RunekeyScreen: React.FC = () => {
                 cornerRadius={20}
                 elasticity={0.18}
                 className="p-5"
+                variant="transparent"
               >
                 <Text style={styles.cardHeading}>Equity Movers</Text>
                 {equityMovers.map(item => (
@@ -630,6 +636,7 @@ export const RunekeyScreen: React.FC = () => {
                   cornerRadius={18}
                   elasticity={0.16}
                   className="p-4"
+                  variant="transparent"
                 >
                   <View style={styles.activityRow}>
                     <View style={styles.activityIcon}>
@@ -652,6 +659,7 @@ export const RunekeyScreen: React.FC = () => {
               cornerRadius={24}
               elasticity={0.2}
               className="p-6"
+              variant="transparent"
             >
               <Text style={styles.actionsTitle}>Take Action</Text>
               <Text style={styles.actionsSubtitle}>
@@ -695,6 +703,7 @@ export const RunekeyScreen: React.FC = () => {
                     cornerRadius={20}
                     elasticity={0.18}
                     className="p-5"
+                    variant="transparent"
                   >
                     <View style={styles.educationCard}>
                       <View style={styles.educationIcon}>
@@ -730,8 +739,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 48,
-    height: 48,
+    width: 102,
+    height: 102,
     marginRight: 16,
     borderRadius: 12,
   },
@@ -847,7 +856,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F97316',
   },
   heroFooterText: {
-    color: '#0F172A',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -876,7 +885,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(56, 189, 248, 0.18)',
   },
   bridgeChipText: {
-    color: '#38BDF8',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 13,
   },
