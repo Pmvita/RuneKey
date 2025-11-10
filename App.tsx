@@ -17,7 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Ionicons as IoniconSet } from '@expo/vector-icons';
-import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle } from 'react-native';
+import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle, StyleSheet } from 'react-native';
 import { logger } from './src/utils/logger';
 
 // Screens
@@ -47,7 +47,8 @@ import { useWalletStore } from './src/stores/wallet/useWalletStore';
 import { RootStackParamList } from './src/types';
 import { SelectionHighlightProvider } from './src/components';
 
-const existingTextStyle = Text.defaultProps?.style;
+const TextComponent = Text as any;
+const existingTextStyle = TextComponent.defaultProps?.style;
 const textColorStyle: TextStyle = { color: '#FFFFFF' };
 let newTextStyle: StyleProp<TextStyle>;
 
@@ -59,8 +60,8 @@ if (Array.isArray(existingTextStyle)) {
   newTextStyle = textColorStyle;
 }
 
-Text.defaultProps = {
-  ...Text.defaultProps,
+TextComponent.defaultProps = {
+  ...TextComponent.defaultProps,
   style: newTextStyle,
 };
 
@@ -90,16 +91,21 @@ const TabNavigator = () => {
           } else if (route.name === 'Stocks') {
             iconName = focused ? 'trending-up' : 'trending-up-outline';
           } else if (route.name === 'Runekey') {
-            const scaledSize = size * 3;
+            const scaledSize = 80;
             return (
-              <Image 
-                source={require('./assets/icon.png')}
-                style={{ 
-                  width: scaledSize, 
-                  height: scaledSize,
-                  opacity: focused ? 1 : 0.6
-                }}
-              />
+              <View style={[styles.tabIconWrapper, focused && styles.tabIconFocused]}>
+                <Image 
+                  source={require('./assets/icon.png')}
+                  style={[
+                    styles.runekeyIcon, 
+                    { 
+                      width: scaledSize, 
+                      height: scaledSize,
+                      opacity: focused ? 1 : 0.75 
+                    }
+                  ]}
+                />
+              </View>
             );
           } else if (route.name === 'Search') {
             iconName = focused ? 'search' : 'search-outline';
@@ -109,22 +115,18 @@ const TabNavigator = () => {
             iconName = 'ellipse-outline';
           }
 
-          return <IoniconSet name={iconName} size={size} color={color} />;
+          return (
+            <View style={[styles.tabIconWrapper, focused && styles.tabIconFocused]}>
+              <IoniconSet name={iconName} size={22} color={focused ? '#ffffff' : color} />
+            </View>
+          );
         },
+        tabBarShowLabel: false,
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: '#94a3b8',
-        tabBarStyle: {
-          backgroundColor: '#000000',
-          borderTopColor: '#1F2937',
-          borderTopWidth: 1,
-          height: 80,
-          paddingBottom: 10,
-          paddingTop: 10,
-          elevation: 0,
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          shadowOffset: { width: 0, height: -2 },
-        },
+        tabBarStyle: styles.tabBar,
+        tabBarItemStyle: styles.tabBarItem,
+        tabBarLabelStyle: styles.tabLabel,
         headerStyle: {
           backgroundColor: '#000000',
         },
@@ -133,7 +135,7 @@ const TabNavigator = () => {
           fontWeight: 'bold',
         },
         tabBarButton: (props) => {
-          const { onPress, ...rest } = props;
+          const { onPress, style, ...rest } = props;
           return (
             <TouchableOpacity
               {...rest}
@@ -141,6 +143,8 @@ const TabNavigator = () => {
                 logger.logTabNavigation(route.name);
                 onPress?.(e);
               }}
+              activeOpacity={0.85}
+              style={[style, styles.tabButton]}
             />
           );
         },
@@ -382,3 +386,49 @@ function App() {
 AppRegistry.registerComponent('main', () => App);
 
 export default App;
+
+const styles = StyleSheet.create({
+  tabBar: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: Platform.select({ ios: 24, android: 18, default: 24 }),
+    height: 72,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: Platform.select({ ios: 18, android: 12, default: 16 }),
+    borderRadius: 28,
+    backgroundColor: 'rgba(30, 41, 59, 0.88)',
+    borderTopWidth: 0,
+    elevation: 12,
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  tabBarItem: {
+    borderRadius: 22,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIconWrapper: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIconFocused: {
+    backgroundColor: 'rgba(59, 130, 246, 0.18)',
+  },
+  runekeyIcon: {
+    borderRadius: 12,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
