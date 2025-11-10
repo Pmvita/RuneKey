@@ -90,13 +90,13 @@ const TabNavigator = () => {
           } else if (route.name === 'Stocks') {
             iconName = focused ? 'trending-up' : 'trending-up-outline';
           } else if (route.name === 'Runekey') {
-            // Use custom icon for Runekey tab
+            const scaledSize = size * 3;
             return (
               <Image 
                 source={require('./assets/icon.png')}
                 style={{ 
-                  width: size, 
-                  height: size,
+                  width: scaledSize, 
+                  height: scaledSize,
                   opacity: focused ? 1 : 0.6
                 }}
               />
