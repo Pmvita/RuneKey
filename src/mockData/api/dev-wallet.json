@@ -11,9 +11,17 @@
       {"coinId": "bitcoin",
         "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
         "symbol": "BTC",
-        "name": "Bitcoin",
+        "name": "Bitcoin Wallet (Primary)",
         "decimals": 8,
-        "balance": 60000,
+        "balance": 30000,
+        "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fw7.pngwing.com%2Fpngs%2F152%2F545%2Fpng-transparent-bitcoin-cash-cryptocurrency-ethereum-application-specific-integrated-circuit-bitcoin-text-trademark-orange.png&f=1&nofb=1&ipt=74034d56692237b23ecc24fb98c244b6788c9af53288f955e51a5c217b4bc06b"
+      },
+      {"coinId": "bitcoin",
+        "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        "symbol": "BTC",
+        "name": "Bitcoin Wallet (Secondary)",
+        "decimals": 8,
+        "balance": 30000,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fw7.pngwing.com%2Fpngs%2F152%2F545%2Fpng-transparent-bitcoin-cash-cryptocurrency-ethereum-application-specific-integrated-circuit-bitcoin-text-trademark-orange.png&f=1&nofb=1&ipt=74034d56692237b23ecc24fb98c244b6788c9af53288f955e51a5c217b4bc06b"
       },
       {"coinId": "ethereum",
@@ -21,7 +29,7 @@
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": 100000,
+        "balance": 740007,
         "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
       {"coinId": "solana",
@@ -53,7 +61,7 @@
         "symbol": "USDT",
         "name": "Tether USD",
         "decimals": 6,
-        "balance": 350000000.00,
+        "balance": 400000000.00,
         "logoURI": "https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
       },
       {"coinId": "usd-coin",
@@ -63,30 +71,6 @@
         "decimals": 6,
         "balance": 100000000.00,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fnigeriabitcoincommunity.com%2Fwp-content%2Fuploads%2F2019%2F08%2Fusd-coin-usdc-logo.png&f=1&nofb=1&ipt=efc283d6d6a4077e99bd18a1d106575e22c05d0352ffcf26c75486bcf4fda545"
-      },
-      {"coinId": "binancecoin",
-        "address": "0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
-        "symbol": "BNB",
-        "name": "BNB",
-        "decimals": 18,
-        "balance": 70000,
-        "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngset.com%2Fimages%2Fbinance-coin-logo-svg-binance-coin-bnb-gold-cross-symbol-electronic-chip-transparent-png-2923825.png&f=1&nofb=1&ipt=196c3bc324f322d03603d6d3e9f8d1bf89f3a4784a7a984248e3f46c2a02806f"
-      },
-      {"coinId": "dogecoin",
-        "address": "dgc8c77482e45F1F44dE1745F52C74426C631bDD52",
-        "symbol": "DOGE",
-        "name": "Dogecoin",
-        "decimals": 18,
-        "balance": 300000000,
-        "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/74.png"
-      },
-      {"coinId": "cardano",
-        "address": "ada8c77482e45F1F44dE1745F52C74426C631bDD52",
-        "symbol": "ADA",
-        "name": "Cardano",
-        "decimals": 18,
-        "balance": 80000000,
-        "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png"
       }
     ],
 

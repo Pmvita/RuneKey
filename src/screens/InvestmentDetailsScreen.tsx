@@ -13,9 +13,10 @@ import {
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList, InvestmentHolding } from '../types';
+import { RootStackParamList, InvestmentHolding, TechnicalIndicators, TechnicalSignals } from '../types';
 import { formatLargeCurrency } from '../utils/formatters';
 import { investingService, InvestmentChartPoint } from '../services/api/investingService';
+import { technicalAnalysisService } from '../services/api/technicalAnalysisService';
 import { SparklineChart, UniversalBackground } from '../components';
 
  type InvestmentDetailsRouteProp = RouteProp<RootStackParamList, 'InvestmentDetails'>;
@@ -61,6 +62,8 @@ const CHART_CONFIG: Record<ChartRange, { range: ChartRange; interval: '5m' | '30
   const [chartPoints, setChartPoints] = useState<InvestmentChartPoint[]>([]);
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicators>({});
+  const [technicalSignals, setTechnicalSignals] = useState<TechnicalSignals>({});
 
    const marketValue = useMemo(() => holding.quantity * quoteData.price, [holding.quantity, quoteData.price]);
    const costBasis = useMemo(() => holding.quantity * holding.averagePrice, [holding.quantity, holding.averagePrice]);
@@ -115,7 +118,46 @@ const CHART_CONFIG: Record<ChartRange, { range: ChartRange; interval: '5m' | '30
           return;
         }
 
-        setChartPoints(Array.isArray(response.data.points) ? response.data.points : []);
+        const points = Array.isArray(response.data.points) ? response.data.points : [];
+        setChartPoints(points);
+
+        // Calculate technical indicators from chart data
+        if (points.length > 0) {
+          const priceData = points.map((point) => ({
+            close: point.close,
+            timestamp: point.timestamp,
+          }));
+
+          const indicators = technicalAnalysisService.calculateIndicators(priceData, {
+            rsiPeriod: 14,
+            macdFast: 12,
+            macdSlow: 26,
+            macdSignal: 9,
+            bbPeriod: 20,
+            bbStdDev: 2,
+            smaPeriods: [20, 50],
+            emaPeriods: [12, 26],
+            stochasticPeriod: 14,
+            atrPeriod: 14,
+            adxPeriod: 14,
+          });
+
+          setTechnicalIndicators(indicators);
+
+          // Calculate signals
+          const rsiSignal = technicalAnalysisService.getRSISignal(indicators.rsi);
+          const macdSignal = technicalAnalysisService.getMACDSignal(indicators.macd);
+          const bbPosition = technicalAnalysisService.getBBPosition(
+            quoteData.price,
+            indicators.bollingerBands
+          );
+
+          setTechnicalSignals({
+            rsiSignal,
+            macdSignal,
+            bbPosition,
+          });
+        }
       } catch (error: any) {
         setChartPoints([]);
         setChartError(error?.message || 'Unable to load chart data');
@@ -123,7 +165,7 @@ const CHART_CONFIG: Record<ChartRange, { range: ChartRange; interval: '5m' | '30
         setIsChartLoading(false);
       }
     },
-    [holding.symbol]
+    [holding.symbol, quoteData.price]
   );
 
    useEffect(() => {
@@ -349,6 +391,150 @@ const CHART_CONFIG: Record<ChartRange, { range: ChartRange; interval: '5m' | '30
               )}
             </View>
           </View>
+
+          {/* Technical Indicators Section */}
+          {Object.keys(technicalIndicators).length > 0 && (
+            <View
+              style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: 'rgba(30, 41, 59, 0.65)',
+                padding: 20,
+                marginBottom: 20,
+              }}
+            >
+              <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.75, marginBottom: 16 }}>
+                TECHNICAL INDICATORS
+              </Text>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                {technicalIndicators.rsi !== undefined && (
+                  <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>RSI (14)</Text>
+                      <View
+                        style={{
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 8,
+                          backgroundColor:
+                            technicalSignals.rsiSignal === 'overbought'
+                              ? 'rgba(239, 68, 68, 0.2)'
+                              : technicalSignals.rsiSignal === 'oversold'
+                              ? 'rgba(34, 211, 153, 0.2)'
+                              : 'rgba(59, 130, 246, 0.2)',
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color:
+                              technicalSignals.rsiSignal === 'overbought'
+                                ? '#F87171'
+                                : technicalSignals.rsiSignal === 'oversold'
+                                ? '#34D399'
+                                : '#3B82F6',
+                            fontSize: 10,
+                            fontWeight: '600',
+                          }}
+                        >
+                          {technicalSignals.rsiSignal?.toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>
+                      {technicalIndicators.rsi.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+
+                {technicalIndicators.macd && (
+                  <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>MACD</Text>
+                      <View
+                        style={{
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 8,
+                          backgroundColor:
+                            technicalSignals.macdSignal === 'bullish'
+                              ? 'rgba(34, 211, 153, 0.2)'
+                              : technicalSignals.macdSignal === 'bearish'
+                              ? 'rgba(239, 68, 68, 0.2)'
+                              : 'rgba(59, 130, 246, 0.2)',
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color:
+                              technicalSignals.macdSignal === 'bullish'
+                                ? '#34D399'
+                                : technicalSignals.macdSignal === 'bearish'
+                                ? '#F87171'
+                                : '#3B82F6',
+                            fontSize: 10,
+                            fontWeight: '600',
+                          }}
+                        >
+                          {technicalSignals.macdSignal?.toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '500' }}>
+                      {technicalIndicators.macd.MACD.toFixed(4)}
+                    </Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
+                      Signal: {technicalIndicators.macd.signal.toFixed(4)}
+                    </Text>
+                  </View>
+                )}
+
+                {technicalIndicators.bollingerBands && (
+                  <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+                    <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>Bollinger Bands</Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                      Upper: {formatLargeCurrency(technicalIndicators.bollingerBands.upper)}
+                    </Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                      Middle: {formatLargeCurrency(technicalIndicators.bollingerBands.middle)}
+                    </Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                      Lower: {formatLargeCurrency(technicalIndicators.bollingerBands.lower)}
+                    </Text>
+                    {technicalSignals.bbPosition && (
+                      <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 4, textTransform: 'capitalize' }}>
+                        Position: {technicalSignals.bbPosition.replace('_', ' ')}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {technicalIndicators.sma && Object.keys(technicalIndicators.sma).length > 0 && (
+                  <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+                    <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>SMA</Text>
+                    {Object.entries(technicalIndicators.sma).map(([period, value]) => (
+                      <Text key={period} style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                        SMA({period}): {formatLargeCurrency(value)}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                {technicalIndicators.stochastic && (
+                  <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+                    <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>Stochastic</Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                      K: {technicalIndicators.stochastic.k.toFixed(2)}
+                    </Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                      D: {technicalIndicators.stochastic.d.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
 
            <View
              style={{

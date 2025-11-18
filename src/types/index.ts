@@ -203,3 +203,68 @@ export interface InvestmentHolding extends Investment {
   changePercent: number;
   marketValue: number;
 }
+
+// Technical Analysis Types
+export interface TechnicalIndicators {
+  rsi?: number;
+  macd?: {
+    MACD: number;
+    signal: number;
+    histogram: number;
+  };
+  bollingerBands?: {
+    upper: number;
+    middle: number;
+    lower: number;
+  };
+  sma?: {
+    [period: number]: number;
+  };
+  ema?: {
+    [period: number]: number;
+  };
+  stochastic?: {
+    k: number;
+    d: number;
+  };
+  atr?: number;
+  adx?: number;
+}
+
+export interface TechnicalSignals {
+  rsiSignal?: 'overbought' | 'oversold' | 'neutral';
+  macdSignal?: 'bullish' | 'bearish' | 'neutral';
+  bbPosition?: 'above_upper' | 'below_lower' | 'near_upper' | 'near_lower' | 'middle' | 'unknown';
+}
+
+// Portfolio Analytics Types
+export interface PortfolioMetrics {
+  totalReturn: number;
+  totalReturnPercent: number;
+  cagr?: number;
+  sharpeRatio?: number;
+  sortinoRatio?: number;
+  maxDrawdown: number;
+  maxDrawdownPercent: number;
+  volatility?: number;
+  winRate?: number;
+  averageWin?: number;
+  averageLoss?: number;
+  profitFactor?: number;
+  calmarRatio?: number;
+}
+
+export interface HoldingPerformance {
+  symbol: string;
+  costBasis: number;
+  currentValue: number;
+  profitLoss: number;
+  profitLossPercent: number;
+  weight: number;
+}
+
+export interface DiversificationMetrics {
+  concentration: number;
+  effectiveHoldings: number;
+  topHoldingWeight: number;
+}

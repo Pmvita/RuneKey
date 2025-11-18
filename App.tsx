@@ -18,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Ionicons as IoniconSet } from '@expo/vector-icons';
 import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { logger } from './src/utils/logger';
 
 // Screens
@@ -91,20 +92,23 @@ const TabNavigator = () => {
           } else if (route.name === 'Stocks') {
             iconName = focused ? 'trending-up' : 'trending-up-outline';
           } else if (route.name === 'Runekey') {
-            const scaledSize = 80;
+            const scaledSize = 64;
             return (
-              <View style={[styles.tabIconWrapper, focused && styles.tabIconFocused]}>
-                <Image 
-                  source={require('./assets/icon.png')}
-                  style={[
-                    styles.runekeyIcon, 
-                    { 
-                      width: scaledSize, 
-                      height: scaledSize,
-                      opacity: focused ? 1 : 0.75 
-                    }
-                  ]}
-                />
+              <View style={styles.centerTabWrapper}>
+                <View style={[styles.centerTabGlow, focused && styles.centerTabGlowFocused]} />
+                <View style={[styles.centerTabButton, focused && styles.centerTabButtonFocused]}>
+                  <Image
+                    source={require('./assets/icon.png')}
+                    style={[
+                      styles.runekeyIconLarge,
+                      {
+                        width: scaledSize,
+                        height: scaledSize,
+                        opacity: focused ? 1 : 0.82,
+                      },
+                    ]}
+                  />
+                </View>
               </View>
             );
           } else if (route.name === 'Search') {
@@ -121,6 +125,16 @@ const TabNavigator = () => {
             </View>
           );
         },
+        tabBarBackground: () => (
+          <View style={styles.tabBarBackgroundWrapper}>
+            <LinearGradient
+              colors={['rgba(15, 23, 42, 0.45)', 'rgba(2, 6, 23, 0.94)', 'rgba(0, 0, 0, 0.99)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.tabBarGradient}
+            />
+          </View>
+        ),
         tabBarShowLabel: false,
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: '#94a3b8',
@@ -390,24 +404,32 @@ export default App;
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: Platform.select({ ios: 24, android: 18, default: 24 }),
-    height: 72,
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: Platform.select({ ios: 18, android: 12, default: 16 }),
-    borderRadius: 28,
-    backgroundColor: 'rgba(30, 41, 59, 0.88)',
+    left: 14,
+    right: 14,
+    bottom: Platform.select({ ios: 30, android: 20, default: 28 }),
+    height: 96,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.select({ ios: 24, android: 18, default: 22 }),
+    borderRadius: 36,
+    backgroundColor: 'transparent',
     borderTopWidth: 0,
-    elevation: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  tabBarBackgroundWrapper: {
+    flex: 1,
+    borderRadius: 36,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(12, 20, 38, 0.55)',
+  },
+  tabBarGradient: {
+    flex: 1,
   },
   tabBarItem: {
-    borderRadius: 22,
+    borderRadius: 24,
+    paddingTop: 4,
   },
   tabButton: {
     flex: 1,
@@ -415,17 +437,66 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabIconWrapper: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   tabIconFocused: {
-    backgroundColor: 'rgba(59, 130, 246, 0.18)',
+    backgroundColor: 'rgba(96, 165, 250, 0.18)',
+    shadowColor: '#60A5FA',
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
   },
-  runekeyIcon: {
-    borderRadius: 12,
+  centerTabWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ translateY: Platform.select({ ios: -28, android: -24, default: -26 }) }],
+  },
+  centerTabGlow: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+    opacity: 0.65,
+    ...Platform.select({
+      web: { 
+        // @ts-ignore web-only style
+        filter: 'blur(24px)',
+      },
+      default: {},
+    }),
+  },
+  centerTabGlowFocused: {
+    backgroundColor: 'rgba(96, 165, 250, 0.35)',
+    opacity: 0.85,
+  },
+  centerTabButton: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(2, 6, 23, 0.95)',
+    borderWidth: 2,
+    borderColor: 'rgba(148, 163, 184, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#60A5FA',
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  centerTabButtonFocused: {
+    borderColor: '#3B82F6',
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    shadowOpacity: 0.5,
+    shadowRadius: 22,
+  },
+  runekeyIconLarge: {
+    borderRadius: 18,
   },
   tabLabel: {
     fontSize: 12,

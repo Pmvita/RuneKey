@@ -6,9 +6,10 @@ import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import investingData from '../../mockData/investing.json';
-import { Investment, InvestmentHolding, RootStackParamList } from '../types';
+import { Investment, InvestmentHolding, RootStackParamList, PortfolioMetrics, HoldingPerformance, DiversificationMetrics } from '../types';
 import { formatLargeCurrency } from '../utils/formatters';
 import { investingService } from '../services/api/investingService';
+import { portfolioAnalyticsService } from '../services/api/portfolioAnalyticsService';
 import { usePrices } from '../hooks/token/usePrices';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { UniversalBackground } from '../components';
@@ -69,6 +70,40 @@ export const InvestingScreen: React.FC = () => {
   const totalMarketValue = useMemo(() => {
     return holdings.reduce((total, holding) => total + holding.marketValue, 0);
   }, [holdings]);
+
+  // Calculate portfolio analytics
+  const portfolioMetrics = useMemo(() => {
+    const holdingsPerformance = portfolioAnalyticsService.calculateHoldingPerformance(
+      holdings.map((h) => ({
+        symbol: h.symbol,
+        costBasis: h.quantity * h.averagePrice,
+        currentValue: h.marketValue,
+      })),
+      totalMarketValue
+    );
+
+    const diversification = portfolioAnalyticsService.calculateDiversification(holdingsPerformance);
+
+    // Calculate basic metrics from current holdings
+    const totalCostBasis = holdings.reduce((sum, h) => sum + h.quantity * h.averagePrice, 0);
+    const totalReturn = totalMarketValue - totalCostBasis;
+    const totalReturnPercent = totalCostBasis > 0 ? (totalReturn / totalCostBasis) * 100 : 0;
+
+    // For advanced metrics, we'd need historical data
+    // For now, we'll calculate what we can from current data
+    const metrics: PortfolioMetrics = {
+      totalReturn,
+      totalReturnPercent,
+      maxDrawdown: 0, // Would need historical data
+      maxDrawdownPercent: 0, // Would need historical data
+    };
+
+    return {
+      metrics,
+      holdingsPerformance,
+      diversification,
+    };
+  }, [holdings, totalMarketValue]);
 
   const loadQuotes = useCallback(async () => {
     if (investments.length === 0) {
@@ -237,6 +272,94 @@ export const InvestingScreen: React.FC = () => {
           </Animated.View>
         ))}
       </View>
+
+      {/* Portfolio Analytics Section */}
+      {portfolioMetrics && (
+        <View
+          style={{
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: 'rgba(30, 41, 59, 0.65)',
+            padding: 20,
+            marginBottom: 24,
+          }}
+        >
+          <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.75, marginBottom: 16 }}>
+            PORTFOLIO ANALYTICS
+          </Text>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+              <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>Total Return</Text>
+              <Text
+                style={{
+                  color: portfolioMetrics.metrics.totalReturn >= 0 ? '#34D399' : '#F87171',
+                  fontSize: 18,
+                  fontWeight: '600',
+                }}
+              >
+                {portfolioMetrics.metrics.totalReturn >= 0 ? '+' : ''}
+                {formatLargeCurrency(portfolioMetrics.metrics.totalReturn)}
+              </Text>
+              <Text
+                style={{
+                  color: portfolioMetrics.metrics.totalReturnPercent >= 0 ? '#34D399' : '#F87171',
+                  fontSize: 13,
+                  marginTop: 2,
+                }}
+              >
+                ({portfolioMetrics.metrics.totalReturnPercent >= 0 ? '+' : ''}
+                {portfolioMetrics.metrics.totalReturnPercent.toFixed(2)}%)
+              </Text>
+            </View>
+
+            <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
+              <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>Diversification</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '500' }}>
+                {portfolioMetrics.diversification.effectiveHoldings.toFixed(1)} effective holdings
+              </Text>
+              <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
+                Concentration: {(portfolioMetrics.diversification.concentration * 100).toFixed(1)}%
+              </Text>
+            </View>
+
+            {portfolioMetrics.holdingsPerformance.length > 0 && (
+              <View style={{ flex: 1, minWidth: '100%', marginTop: 8 }}>
+                <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 8 }}>Top Holdings by Weight</Text>
+                {portfolioMetrics.holdingsPerformance
+                  .sort((a, b) => b.weight - a.weight)
+                  .slice(0, 3)
+                  .map((holding, index) => (
+                    <View
+                      key={holding.symbol}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 8,
+                        paddingBottom: 8,
+                        borderBottomWidth: index < 2 ? 1 : 0,
+                        borderBottomColor: 'rgba(30, 41, 59, 0.5)',
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '500' }}>{holding.symbol}</Text>
+                        <Text style={{ color: '#94A3B8', fontSize: 11 }}>
+                          {holding.profitLossPercent >= 0 ? '+' : ''}
+                          {holding.profitLossPercent.toFixed(2)}% P&L
+                        </Text>
+                      </View>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                        {holding.weight.toFixed(1)}%
+                      </Text>
+                    </View>
+                  ))}
+              </View>
+            )}
+          </View>
+        </View>
+      )}
 
       <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginBottom: 16 }}>
         Holdings
