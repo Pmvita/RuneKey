@@ -1,6 +1,56 @@
 # RuneKey - Cross-Platform Crypto Wallet
 
 <div align="center">
+
+![GitHub Repo stars](https://img.shields.io/github/stars/Pmvita/runekey?style=for-the-badge&logo=github&logoColor=white)
+![GitHub forks](https://img.shields.io/github/forks/Pmvita/runekey?style=for-the-badge&logo=github&logoColor=white)
+![GitHub issues](https://img.shields.io/github/issues/Pmvita/runekey?style=for-the-badge&logo=github&logoColor=white)
+![GitHub license](https://img.shields.io/github/license/Pmvita/runekey?style=for-the-badge&logo=github&logoColor=white)
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=Pmvita.runekey&left_color=purple&right_color=orange)
+
+</div>
+
+<div align="center">
+
+## 🚀 Development Status
+
+![Status](https://img.shields.io/badge/Status-In_Development-yellow?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge)
+
+## 🌐 Connect With Me
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pierre-mvita/)
+[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=for-the-badge&logo=About.me&logoColor=white)](https://pierre-mvita.vercel.app/)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:Petermvita@hotmail.com)
+
+## 💻 Core Framework
+
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+## ⛓️ Blockchain Networks
+
+![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white)
+![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)
+![Polygon](https://img.shields.io/badge/Polygon-8247E5?style=for-the-badge&logo=polygon&logoColor=white)
+![BNB Chain](https://img.shields.io/badge/BNB_Chain-F3BA2F?style=for-the-badge&logo=binance&logoColor=white)
+![Avalanche](https://img.shields.io/badge/Avalanche-E84142?style=for-the-badge&logo=avalanche&logoColor=white)
+
+## 🔌 DEX & DeFi Integrations
+
+![Jupiter](https://img.shields.io/badge/Jupiter-000000?style=for-the-badge&logo=jupiter&logoColor=white)
+![0x Protocol](https://img.shields.io/badge/0x_Protocol-000000?style=for-the-badge&logo=0x&logoColor=white)
+
+## 📊 Market Data Providers
+
+![CoinGecko](https://img.shields.io/badge/CoinGecko-8BC53F?style=for-the-badge&logo=coingecko&logoColor=white)
+![Yahoo Finance](https://img.shields.io/badge/Yahoo_Finance-6001D2?style=for-the-badge&logo=yahoo&logoColor=white)
+
+</div>
+
+<div align="center">
   <h3>🔑 Your gateway to the decentralized world</h3>
   <p>A modern, secure, and user-friendly multi-chain cryptocurrency wallet built with React Native</p>
 </div>
@@ -115,7 +165,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/runekey.git
+   git clone https://github.com/Pmvita/runekey.git
    cd runekey
    ```
 
@@ -268,6 +318,18 @@ eas build --platform android
 expo build:web
 ```
 
+## 📊 GitHub Stats
+
+<div align="center">
+
+![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Pmvita&repo=runekey&show_icons=true&theme=radical&hide_border=true&bg_color=0D1117&title_color=FF6B9D&icon_color=FF6B9D)
+
+![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Pmvita&repo=runekey&layout=compact&theme=radical&hide_border=true&bg_color=0D1117&title_color=FF6B9D)
+
+![GitHub Streak](https://github-readme-streak-stats.demolab.com/?user=Pmvita&repo=runekey&theme=radical&hide_border=true&background=0D1117&ring=FF6B9D&fire=FF6B9D&currStreakLabel=FF6B9D)
+
+</div>
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -284,7 +346,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Create an issue for bug reports or feature requests
 - Join our Discord community: [Coming Soon]
-- Email: support@runekey.com
+- Email: Petermvita@hotmail.com
 
 ## 🗺️ Roadmap
 

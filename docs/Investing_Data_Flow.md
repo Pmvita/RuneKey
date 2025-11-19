@@ -26,19 +26,29 @@ This guide documents how RuneKey powers the traditional markets experience (equi
 
 ## 🔁 Quote Refresh Flow
 
-```
-Symbols (from mockData/investing.json)
-        │
-        ▼
-investingService.fetchQuotes()
-        │    (web) ──▶ AllOrigins proxy ──▶ Stooq
-        │     (native) ──▶ Stooq
-        ▼
-Quote normalization (price + change%)
-        ▼
-Investing totals & holdings state
-        ▼
-Home & Investing UIs + animated numbers
+```mermaid
+flowchart TD
+    A["📋 Symbols<br/>(from mockData/investing.json)"] --> B["🔧 investingService.fetchQuotes()"]
+    
+    B --> C1["🌐 Web Path"]
+    B --> C2["📱 Native Path"]
+    
+    C1 --> D1["🌍 AllOrigins Proxy"]
+    D1 --> E["📊 Stooq API"]
+    C2 --> E
+    
+    E --> F["📈 Quote Normalization<br/>(price + change%)"]
+    F --> G["💼 Investing Totals<br/>& Holdings State"]
+    G --> H["🖼️ Home & Investing UIs<br/>+ Animated Numbers"]
+    
+    style A fill:#E8F5E9,stroke:#4CAF50,color:#000
+    style B fill:#E3F2FD,stroke:#2196F3,color:#000
+    style C1 fill:#FFF3E0,stroke:#FF9800,color:#000
+    style C2 fill:#F3E5F5,stroke:#9C27B0,color:#000
+    style E fill:#FFEBEE,stroke:#F44336,color:#000
+    style F fill:#E0F2F1,stroke:#009688,color:#000
+    style G fill:#FFF9C4,stroke:#FBC02D,color:#000
+    style H fill:#FCE4EC,stroke:#E91E63,color:#000
 ```
 
 - Quotes are requested in parallel to minimize latency.
@@ -49,17 +59,27 @@ Home & Investing UIs + animated numbers
 
 ## 📊 Chart Refresh Flow
 
-```
-User selects timeframe (1D / 5D / 1MO / 3MO / 6MO / 1Y)
-        │
-        ▼
-investingService.fetchChart(symbol, config)
-        │    (web) ──▶ AllOrigins proxy ──▶ Yahoo Finance chart API
-        │     (native) ──▶ Yahoo Finance chart API
-        ▼
-Timestamp & close extraction
-        ▼
-SparklineChart rendering in InvestmentDetailsScreen
+```mermaid
+flowchart TD
+    A["👤 User selects timeframe<br/>(1D / 5D / 1MO / 3MO / 6MO / 1Y)"] --> B["🔧 investingService.fetchChart<br/>(symbol, config)"]
+    
+    B --> C1["🌐 Web Path"]
+    B --> C2["📱 Native Path"]
+    
+    C1 --> D1["🌍 AllOrigins Proxy"]
+    D1 --> E["📈 Yahoo Finance<br/>Chart API"]
+    C2 --> E
+    
+    E --> F["📊 Timestamp & Close<br/>Extraction"]
+    F --> G["📉 SparklineChart Rendering<br/>in InvestmentDetailsScreen"]
+    
+    style A fill:#E8F5E9,stroke:#4CAF50,color:#000
+    style B fill:#E3F2FD,stroke:#2196F3,color:#000
+    style C1 fill:#FFF3E0,stroke:#FF9800,color:#000
+    style C2 fill:#F3E5F5,stroke:#9C27B0,color:#000
+    style E fill:#FFEBEE,stroke:#F44336,color:#000
+    style F fill:#E0F2F1,stroke:#009688,color:#000
+    style G fill:#FCE4EC,stroke:#E91E63,color:#000
 ```
 
 - Chart data is request-scoped (per symbol + timeframe) and not globally cached.

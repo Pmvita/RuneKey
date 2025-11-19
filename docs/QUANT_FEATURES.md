@@ -62,6 +62,12 @@ Advanced portfolio risk and performance metrics:
 - **Diversification Metrics** - Effective holdings and concentration index
 - **Top Holdings by Weight** - Shows top 3 holdings with their portfolio weights and P&L
 
+#### StocksScreen (Markets)
+- **Technical Indicators for Featured Instrument** - RSI, MACD, and SMA displayed in the featured card
+- **Real-time Signal Badges** - Color-coded indicators showing overbought/oversold (RSI) and bullish/bearish (MACD) signals
+- **Quick Technical Analysis** - Indicators calculated automatically when chart data loads
+- **Market-wide Analytics** - Technical analysis integrated into the markets overview
+
 ## 📊 Usage Examples
 
 ### Calculating Technical Indicators

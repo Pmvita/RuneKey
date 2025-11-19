@@ -19,8 +19,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 import investingData from '../../mockData/investing.json';
-import { Investment, InvestmentHolding } from '../types';
-import { investingService } from '../services/api/investingService';
+import { Investment, InvestmentHolding, TechnicalIndicators, TechnicalSignals } from '../types';
+import { investingService, InvestmentChartPoint } from '../services/api/investingService';
+import { technicalAnalysisService } from '../services/api/technicalAnalysisService';
 import { formatLargeCurrency } from '../utils/formatters';
 import {
   SelectionHighlightOverlay,
@@ -120,6 +121,8 @@ export const StocksScreen: React.FC = () => {
   const [chartSearchQuery, setChartSearchQuery] = useState('');
   const [chartSearchResults, setChartSearchResults] = useState<SymbolSearchResult[]>([]);
   const [isSearchingSymbols, setIsSearchingSymbols] = useState(false);
+  const [featuredIndicators, setFeaturedIndicators] = useState<TechnicalIndicators>({});
+  const [featuredSignals, setFeaturedSignals] = useState<TechnicalSignals>({});
 
   const resolvedActiveSymbol = useMemo(() => activeSymbol ?? holdings[0]?.symbol ?? 'AAPL', [
     activeSymbol,
@@ -227,6 +230,39 @@ export const StocksScreen: React.FC = () => {
         const closes = response.data.points.map((point) => point.close);
         setFeaturedChart(closes);
 
+        // Calculate technical indicators from chart data
+        if (response.data.points.length > 0) {
+          const priceData = response.data.points.map((point) => ({
+            close: point.close,
+            timestamp: point.timestamp,
+          }));
+
+          const indicators = technicalAnalysisService.calculateIndicators(priceData, {
+            rsiPeriod: 14,
+            macdFast: 12,
+            macdSlow: 26,
+            macdSignal: 9,
+            bbPeriod: 20,
+            bbStdDev: 2,
+            smaPeriods: [20, 50],
+            emaPeriods: [12, 26],
+          });
+
+          setFeaturedIndicators(indicators);
+
+          // Calculate signals
+          const rsiSignal = technicalAnalysisService.getRSISignal(indicators.rsi);
+          const macdSignal = technicalAnalysisService.getMACDSignal(indicators.macd);
+          const currentPrice = closes[closes.length - 1] ?? 0;
+          const bbPosition = technicalAnalysisService.getBBPosition(currentPrice, indicators.bollingerBands);
+
+          setFeaturedSignals({
+            rsiSignal,
+            macdSignal,
+            bbPosition,
+          });
+        }
+
         if (overrides && symbol.toUpperCase() === resolvedActiveSymbol.toUpperCase()) {
           setFeaturedOverride((prev) => ({
             symbol: symbol.toUpperCase(),
@@ -241,7 +277,7 @@ export const StocksScreen: React.FC = () => {
         setIsChartLoading(false);
       }
     },
-    []
+    [resolvedActiveSymbol]
   );
 
   const loadMarketExtras = useCallback(async () => {
@@ -647,6 +683,118 @@ export const StocksScreen: React.FC = () => {
                   <Text style={{ color: '#94A3B8', fontSize: 12 }}>Chart data unavailable</Text>
                 )}
               </View>
+
+              {/* Technical Indicators Quick View */}
+              {Object.keys(featuredIndicators).length > 0 && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTopWidth: 1,
+                    borderTopColor: 'rgba(30, 41, 59, 0.5)',
+                  }}
+                >
+                  {featuredIndicators.rsi !== undefined && (
+                    <View style={{ flex: 1, minWidth: '30%', marginBottom: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                        <Text style={{ color: '#94A3B8', fontSize: 10 }}>RSI</Text>
+                        {featuredSignals.rsiSignal && (
+                          <View
+                            style={{
+                              marginLeft: 6,
+                              paddingHorizontal: 6,
+                              paddingVertical: 2,
+                              borderRadius: 6,
+                              backgroundColor:
+                                featuredSignals.rsiSignal === 'overbought'
+                                  ? 'rgba(239, 68, 68, 0.2)'
+                                  : featuredSignals.rsiSignal === 'oversold'
+                                  ? 'rgba(34, 211, 153, 0.2)'
+                                  : 'rgba(59, 130, 246, 0.2)',
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:
+                                  featuredSignals.rsiSignal === 'overbought'
+                                    ? '#F87171'
+                                    : featuredSignals.rsiSignal === 'oversold'
+                                    ? '#34D399'
+                                    : '#3B82F6',
+                                fontSize: 8,
+                                fontWeight: '600',
+                              }}
+                            >
+                              {featuredSignals.rsiSignal === 'overbought'
+                                ? 'OB'
+                                : featuredSignals.rsiSignal === 'oversold'
+                                ? 'OS'
+                                : 'N'}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                        {featuredIndicators.rsi.toFixed(1)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {featuredIndicators.macd && (
+                    <View style={{ flex: 1, minWidth: '30%', marginBottom: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                        <Text style={{ color: '#94A3B8', fontSize: 10 }}>MACD</Text>
+                        {featuredSignals.macdSignal && (
+                          <View
+                            style={{
+                              marginLeft: 6,
+                              paddingHorizontal: 6,
+                              paddingVertical: 2,
+                              borderRadius: 6,
+                              backgroundColor:
+                                featuredSignals.macdSignal === 'bullish'
+                                  ? 'rgba(34, 211, 153, 0.2)'
+                                  : featuredSignals.macdSignal === 'bearish'
+                                  ? 'rgba(239, 68, 68, 0.2)'
+                                  : 'rgba(59, 130, 246, 0.2)',
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:
+                                  featuredSignals.macdSignal === 'bullish'
+                                    ? '#34D399'
+                                    : featuredSignals.macdSignal === 'bearish'
+                                    ? '#F87171'
+                                    : '#3B82F6',
+                                fontSize: 8,
+                                fontWeight: '600',
+                              }}
+                            >
+                              {featuredSignals.macdSignal === 'bullish' ? '↑' : featuredSignals.macdSignal === 'bearish' ? '↓' : '—'}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                        {featuredIndicators.macd.MACD > 0 ? '+' : ''}
+                        {featuredIndicators.macd.MACD.toFixed(3)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {featuredIndicators.sma && Object.keys(featuredIndicators.sma).length > 0 && (
+                    <View style={{ flex: 1, minWidth: '30%', marginBottom: 8 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 10, marginBottom: 4 }}>SMA(20)</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                        {formatLargeCurrency(featuredIndicators.sma[20] || 0)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           )}
 

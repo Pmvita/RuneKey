@@ -6,23 +6,41 @@ This document provides a detailed overview of the RuneKey application architectu
 
 RuneKey follows a layered architecture pattern with clear separation of concerns:
 
-```
-┌─────────────────────────────────────────┐
-│                UI Layer                 │
-│         (Screens & Components)          │
-├─────────────────────────────────────────┤
-│              Hook Layer                 │
-│        (Custom React Hooks)            │
-├─────────────────────────────────────────┤
-│             State Layer                 │
-│          (Zustand Stores)               │
-├─────────────────────────────────────────┤
-│            Service Layer                │
-│       (API & Blockchain Services)      │
-├─────────────────────────────────────────┤
-│             Data Layer                  │
-│      (Secure Storage & Constants)      │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph UI["🖼️ UI Layer"]
+        SCREENS["📱 Screens"]
+        COMPONENTS["🧩 Components"]
+    end
+
+    subgraph HOOKS["🪝 Hook Layer"]
+        CUSTOM_HOOKS["⚛️ Custom React Hooks"]
+    end
+
+    subgraph STATE["🗃️ State Layer"]
+        ZUSTAND["📦 Zustand Stores"]
+    end
+
+    subgraph SERVICES["🔧 Service Layer"]
+        API_SERVICES["🌐 API Services"]
+        BLOCKCHAIN["⛓️ Blockchain Services"]
+    end
+
+    subgraph DATA["💾 Data Layer"]
+        SECURE_STORAGE["🔐 Secure Storage"]
+        CONSTANTS["📋 Constants"]
+    end
+
+    UI --> HOOKS
+    HOOKS --> STATE
+    STATE --> SERVICES
+    SERVICES --> DATA
+
+    style UI fill:#9D4EDD,stroke:#7B2CBF,color:#fff
+    style HOOKS fill:#4361EE,stroke:#3A0CA3,color:#fff
+    style STATE fill:#F72585,stroke:#B5179E,color:#fff
+    style SERVICES fill:#06FFA5,stroke:#06D6A0,color:#000
+    style DATA fill:#FFBE0B,stroke:#FB8500,color:#000
 ```
 
 ## 📂 Folder Structure
@@ -116,31 +134,63 @@ RuneKey/
 ### Component Architecture
 
 #### Atomic Design Principles
-```
-Atoms (Basic elements)
-├── Button
-├── Input
-├── Card
-└── Text
 
-Molecules (Simple combinations)
-├── TokenListItem
-├── SwapForm
-└── PriceDisplay
+```mermaid
+graph TD
+    subgraph ATOMS["⚛️ Atoms - Basic Elements"]
+        A1["Button"]
+        A2["Input"]
+        A3["Card"]
+        A4["Text"]
+    end
 
-Organisms (Complex combinations)
-├── TokenList
-├── SwapInterface
-└── WalletOverview
+    subgraph MOLECULES["🔬 Molecules - Simple Combinations"]
+        M1["TokenListItem"]
+        M2["SwapForm"]
+        M3["PriceDisplay"]
+    end
 
-Templates (Page layouts)
-├── ScreenLayout
-└── ModalLayout
+    subgraph ORGANISMS["🧬 Organisms - Complex Combinations"]
+        O1["TokenList"]
+        O2["SwapInterface"]
+        O3["WalletOverview"]
+    end
 
-Pages (Actual screens)
-├── HomeScreen
-├── SwapScreen
-└── WalletScreen
+    subgraph TEMPLATES["📄 Templates - Page Layouts"]
+        T1["ScreenLayout"]
+        T2["ModalLayout"]
+    end
+
+    subgraph PAGES["📱 Pages - Actual Screens"]
+        P1["HomeScreen"]
+        P2["SwapScreen"]
+        P3["WalletScreen"]
+    end
+
+    A1 --> M1
+    A2 --> M1
+    A3 --> M2
+    A4 --> M3
+
+    M1 --> O1
+    M2 --> O2
+    M3 --> O3
+
+    O1 --> T1
+    O2 --> T1
+    O3 --> T1
+    O2 --> T2
+
+    T1 --> P1
+    T1 --> P2
+    T1 --> P3
+    T2 --> P2
+
+    style ATOMS fill:#E8F5E9,stroke:#4CAF50,color:#000
+    style MOLECULES fill:#E3F2FD,stroke:#2196F3,color:#000
+    style ORGANISMS fill:#FFF3E0,stroke:#FF9800,color:#000
+    style TEMPLATES fill:#F3E5F5,stroke:#9C27B0,color:#000
+    style PAGES fill:#FFEBEE,stroke:#F44336,color:#000
 ```
 
 #### Component Structure
@@ -324,18 +374,17 @@ export const useFeature = () => {
 ## 🔐 Security Architecture
 
 ### Private Key Management
-```
-Private Key Storage Flow:
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   User Input    │───▶│   Validation    │───▶│  Expo SecureStore│
-│  (Private Key)  │    │   & Sanitization│    │   (Encrypted)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                                       │
-                                                       ▼
-                                               ┌─────────────────┐
-                                               │ Wallet Operations│
-                                               │ (Signing, etc.) │
-                                               └─────────────────┘
+
+```mermaid
+flowchart LR
+    A["👤 User Input<br/>(Private Key)"] --> B["✅ Validation<br/>& Sanitization"]
+    B --> C["🔐 Expo SecureStore<br/>(Encrypted)"]
+    C --> D["⚙️ Wallet Operations<br/>(Signing, etc.)"]
+
+    style A fill:#FFE0B2,stroke:#FF9800,color:#000
+    style B fill:#BBDEFB,stroke:#2196F3,color:#000
+    style C fill:#C8E6C9,stroke:#4CAF50,color:#000
+    style D fill:#F8BBD0,stroke:#E91E63,color:#000
 ```
 
 ### Data Flow Security
@@ -374,52 +423,100 @@ class NetworkManager {
 ```
 
 ### Swap Integration
-```
-Swap Flow:
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   User Input    │───▶│  Quote Service  │───▶│   DEX Router    │
-│ (Token A → B)   │    │ (Jupiter/0x)    │    │ (Best Route)    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Fee Calculation │    │ Price Impact    │    │   Transaction   │
-│   (0.5-1%)      │    │   Validation    │    │   Execution     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+
+```mermaid
+flowchart TD
+    A["👤 User Input<br/>(Token A → B)"] --> B["💰 Quote Service<br/>(Jupiter/0x)"]
+    B --> C["🔄 DEX Router<br/>(Best Route)"]
+    
+    A --> D["💵 Fee Calculation<br/>(0.5-1%)"]
+    B --> E["📊 Price Impact<br/>Validation"]
+    C --> F["⚡ Transaction<br/>Execution"]
+
+    D --> G["✅ User Confirmation"]
+    E --> G
+    F --> G
+
+    style A fill:#FFE0B2,stroke:#FF9800,color:#000
+    style B fill:#BBDEFB,stroke:#2196F3,color:#000
+    style C fill:#C8E6C9,stroke:#4CAF50,color:#000
+    style D fill:#F8BBD0,stroke:#E91E63,color:#000
+    style E fill:#FFF9C4,stroke:#FBC02D,color:#000
+    style F fill:#E1BEE7,stroke:#9C27B0,color:#000
+    style G fill:#A5D6A7,stroke:#388E3C,color:#000
 ```
 
 ## 📊 Data Flow Architecture
 
 ### Market Data Flow
-```
-Crypto Tokens
-CoinGecko API ──▶ priceService ──▶ usePriceStore ──▶ Token & portfolio UI
-      │                │                │                  │
-      │                ▼                ▼                  ▼
-      │        Error handling      Interval refresh   Animated displays
-      ▼
-  Local cache (rate-limit friendly)
 
-Traditional Markets
-Stooq API ──▶ investingService ──▶ Investing state ──▶ Home/Investing screens
-   ▲              │                        │                    │
-   │              ▼                        ▼                    ▼
-AllOrigins proxy (web)       Quote reconciliation     Animated numbers & charts
+```mermaid
+flowchart TD
+    subgraph CRYPTO["💰 Crypto Tokens"]
+        CG["📊 CoinGecko API"]
+        PS["🔧 priceService"]
+        PStore["📦 usePriceStore"]
+        UI1["🖼️ Token & Portfolio UI"]
+        
+        CG --> PS
+        PS --> PStore
+        PStore --> UI1
+        
+        PS --> ERR["⚠️ Error Handling"]
+        PStore --> REFRESH["🔄 Interval Refresh"]
+        UI1 --> ANIM1["✨ Animated Displays"]
+        
+        PS --> CACHE1["💾 Local Cache<br/>(rate-limit friendly)"]
+    end
 
-Yahoo Finance ──▶ investingService ──▶ Chart data cache ──▶ SparklineChart
+    subgraph TRAD["📈 Traditional Markets"]
+        STOOQ["📊 Stooq API"]
+        PROXY["🌐 AllOrigins Proxy<br/>(web)"]
+        INV_SVC["🔧 investingService"]
+        INV_STATE["📦 Investing State"]
+        UI2["🖼️ Home/Investing Screens"]
+        
+        STOOQ --> INV_SVC
+        PROXY --> STOOQ
+        INV_SVC --> INV_STATE
+        INV_STATE --> UI2
+        
+        INV_STATE --> RECON["🔀 Quote Reconciliation"]
+        UI2 --> ANIM2["✨ Animated Numbers<br/>& Charts"]
+        
+        YAHOO["📈 Yahoo Finance"]
+        YAHOO --> INV_SVC
+        INV_SVC --> CHART_CACHE["📊 Chart Data Cache"]
+        CHART_CACHE --> SPARK["📉 SparklineChart"]
+    end
+
+    style CRYPTO fill:#E8F5E9,stroke:#4CAF50,color:#000
+    style TRAD fill:#E3F2FD,stroke:#2196F3,color:#000
 ```
 
 ### Transaction Flow
-```
-Transaction Lifecycle:
-User Action ──▶ Validation ──▶ Quote ──▶ Confirmation ──▶ Execution
-     │              │           │            │              │
-     ▼              ▼           ▼            ▼              ▼
- Form Input   Error Checking  Price      User Approval   Blockchain
-                              Impact                      Submission
-                                │                           │
-                                ▼                           ▼
-                           Warning Display            Status Tracking
+
+```mermaid
+flowchart LR
+    A["👤 User Action"] --> B["✅ Validation"]
+    B --> C["💰 Quote"]
+    C --> D["✓ Confirmation"]
+    D --> E["⚡ Execution"]
+
+    A --> A1["📝 Form Input"]
+    B --> B1["❌ Error Checking"]
+    C --> C1["📊 Price Impact"]
+    D --> D1["👆 User Approval"]
+    E --> E1["⛓️ Blockchain<br/>Submission"]
+
+    C1 --> WARN["⚠️ Warning Display"]
+    E1 --> STATUS["📊 Status Tracking"]
+
+    style A fill:#FFE0B2,stroke:#FF9800,color:#000
+    style B fill:#BBDEFB,stroke:#2196F3,color:#000
+    style C fill:#C8E6C9,stroke:#4CAF50,color:#000
+    style D fill:#F8BBD0,stroke:#E91E63,color:#000
+    style E fill:#E1BEE7,stroke:#9C27B0,color:#000
 ```
 
 ### Investing Module Overview
