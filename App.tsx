@@ -25,7 +25,7 @@ import { logger } from './src/utils/logger';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SwapScreen } from './src/screens/SwapScreen';
 import { StocksScreen } from './src/screens/StocksScreen';
-import { RunekeyScreen } from './src/screens/RunekeyScreen';
+import { OpenMarketScreen } from './src/screens/OpenMarketScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { TokenDetailsScreen } from './src/screens/TokenDetailsScreen';
@@ -182,7 +182,7 @@ const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Runekey" 
-        component={RunekeyScreen}
+        component={OpenMarketScreen}
         options={{
           title: '',
           headerShown: false,

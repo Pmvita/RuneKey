@@ -55,6 +55,62 @@ const FALLBACK_TRENDING: TrendingStock[] = [
     volume: 45678123,
     exchange: 'NASDAQ',
   },
+  {
+    symbol: 'META',
+    name: 'Meta Platforms Inc.',
+    price: 312.44,
+    changePercent: 2.68,
+    volume: 29811223,
+    exchange: 'NASDAQ',
+  },
+  {
+    symbol: 'TSLA',
+    name: 'Tesla Inc.',
+    price: 268.92,
+    changePercent: 4.75,
+    volume: 60233451,
+    exchange: 'NASDAQ',
+  },
+  {
+    symbol: 'AMD',
+    name: 'Advanced Micro Devices Inc.',
+    price: 124.83,
+    changePercent: 3.91,
+    volume: 40111223,
+    exchange: 'NASDAQ',
+  },
+  {
+    symbol: 'GOOGL',
+    name: 'Alphabet Inc.',
+    price: 142.35,
+    changePercent: 1.85,
+    volume: 35123456,
+    exchange: 'NASDAQ',
+  },
+  {
+    symbol: 'AMZN',
+    name: 'Amazon.com Inc.',
+    price: 152.78,
+    changePercent: 2.13,
+    volume: 45234567,
+    exchange: 'NASDAQ',
+  },
+  {
+    symbol: 'NFLX',
+    name: 'Netflix Inc.',
+    price: 396.21,
+    changePercent: 2.41,
+    volume: 17890345,
+    exchange: 'NASDAQ',
+  },
+  {
+    symbol: 'ADBE',
+    name: 'Adobe Inc.',
+    price: 528.12,
+    changePercent: 1.72,
+    volume: 9423456,
+    exchange: 'NASDAQ',
+  },
 ];
 
 const FALLBACK_NEWS: StockNewsItem[] = [
@@ -62,17 +118,121 @@ const FALLBACK_NEWS: StockNewsItem[] = [
     symbol: 'AAPL',
     title: 'Apple unveils next-gen Mac lineup with AI acceleration',
     url: 'https://finance.example.com/news/apple-next-gen',
-    publishedAt: new Date().toISOString(),
-    site: 'Finance Example',
+    publishedAt: new Date(Date.now() - 3600000).toISOString(),
+    site: 'Tech Finance',
     text: 'Apple introduced new silicon with enhanced AI features aimed at pro users.',
   },
   {
     symbol: 'NVDA',
     title: 'NVIDIA posts record data center revenue',
     url: 'https://finance.example.com/news/nvidia-data-center',
-    publishedAt: new Date().toISOString(),
-    site: 'Finance Example',
+    publishedAt: new Date(Date.now() - 7200000).toISOString(),
+    site: 'Market Watch',
     text: 'Demand for GPUs powering AI workloads continues to boost NVIDIA earnings.',
+  },
+  {
+    symbol: 'MSFT',
+    title: 'Microsoft announces major Azure expansion',
+    url: 'https://finance.example.com/news/microsoft-azure',
+    publishedAt: new Date(Date.now() - 10800000).toISOString(),
+    site: 'Business Insider',
+    text: 'Microsoft plans to invest billions in expanding its cloud infrastructure.',
+  },
+  {
+    symbol: 'TSLA',
+    title: 'Tesla reports strong Q4 delivery numbers',
+    url: 'https://finance.example.com/news/tesla-deliveries',
+    publishedAt: new Date(Date.now() - 14400000).toISOString(),
+    site: 'Reuters',
+    text: 'Tesla delivered more vehicles than expected in the fourth quarter.',
+  },
+  {
+    symbol: 'META',
+    title: 'Meta platforms sees growth in ad revenue',
+    url: 'https://finance.example.com/news/meta-revenue',
+    publishedAt: new Date(Date.now() - 18000000).toISOString(),
+    site: 'Bloomberg',
+    text: 'Meta Platforms reports strong advertising revenue growth.',
+  },
+  {
+    symbol: 'GOOGL',
+    title: 'Alphabet launches new AI initiatives',
+    url: 'https://finance.example.com/news/google-ai',
+    publishedAt: new Date(Date.now() - 21600000).toISOString(),
+    site: 'CNBC',
+    text: 'Google parent company announces major AI investments.',
+  },
+  {
+    symbol: 'AMZN',
+    title: 'Amazon expands same-day delivery network',
+    url: 'https://finance.example.com/news/amazon-delivery',
+    publishedAt: new Date(Date.now() - 25200000).toISOString(),
+    site: 'Wall Street Journal',
+    text: 'Amazon continues to expand its same-day delivery capabilities.',
+  },
+  {
+    symbol: 'AMD',
+    title: 'AMD gains market share in server processors',
+    url: 'https://finance.example.com/news/amd-servers',
+    publishedAt: new Date(Date.now() - 28800000).toISOString(),
+    site: 'TechCrunch',
+    text: 'AMD continues to gain market share in the server processor market.',
+  },
+  {
+    symbol: 'INTC',
+    title: 'Intel announces new manufacturing plans',
+    url: 'https://finance.example.com/news/intel-manufacturing',
+    publishedAt: new Date(Date.now() - 32400000).toISOString(),
+    site: 'Financial Times',
+    text: 'Intel reveals plans for new manufacturing facilities.',
+  },
+  {
+    symbol: 'JPM',
+    title: 'JPMorgan reports strong quarterly earnings',
+    url: 'https://finance.example.com/news/jpmorgan-earnings',
+    publishedAt: new Date(Date.now() - 36000000).toISOString(),
+    site: 'Forbes',
+    text: 'JPMorgan Chase reports better-than-expected quarterly earnings.',
+  },
+  {
+    symbol: 'V',
+    title: 'Visa announces new digital payment solutions',
+    url: 'https://finance.example.com/news/visa-digital',
+    publishedAt: new Date(Date.now() - 39600000).toISOString(),
+    site: 'Yahoo Finance',
+    text: 'Visa introduces new digital payment technologies.',
+  },
+  {
+    symbol: 'MA',
+    title: 'Mastercard partners with fintech startups',
+    url: 'https://finance.example.com/news/mastercard-fintech',
+    publishedAt: new Date(Date.now() - 43200000).toISOString(),
+    site: 'Reuters',
+    text: 'Mastercard forms partnerships with emerging fintech companies.',
+  },
+  {
+    symbol: 'DIS',
+    title: 'Disney reports streaming subscriber growth',
+    url: 'https://finance.example.com/news/disney-streaming',
+    publishedAt: new Date(Date.now() - 46800000).toISOString(),
+    site: 'Variety',
+    text: 'Disney+ sees continued subscriber growth in latest quarter.',
+  },
+  {
+    symbol: 'NFLX',
+    title: 'Netflix announces new original content slate',
+    url: 'https://finance.example.com/news/netflix-content',
+    publishedAt: new Date(Date.now() - 50400000).toISOString(),
+    site: 'Deadline',
+    text: 'Netflix unveils ambitious slate of original programming.',
+  },
+  {
+    symbol: 'CRM',
+    title: 'Salesforce introduces new AI tools',
+    url: 'https://finance.example.com/news/salesforce-ai',
+    publishedAt: new Date(Date.now() - 54000000).toISOString(),
+    site: 'TechCrunch',
+    text: 'Salesforce launches new AI-powered business tools.',
   },
 ];
 
@@ -135,7 +295,9 @@ class StocksService {
         return FALLBACK_TRENDING;
       }
 
-      return data.slice(0, 12).map((item: any) => this.mapMarketMover(item));
+      const mapped = data.slice(0, 15).map((item: any) => this.mapMarketMover(item));
+      console.log('📈 Fetched trending stocks from API:', mapped.length);
+      return mapped;
     } catch (error) {
       console.warn('stocksService.fetchTrending: using fallback data', error);
       return FALLBACK_TRENDING;
@@ -176,28 +338,49 @@ class StocksService {
     }
   }
 
-  async fetchNews(limit: number = 15): Promise<StockNewsItem[]> {
+  async fetchNews(limit: number = 15, page: number = 1): Promise<StockNewsItem[]> {
     try {
+      // Try to use Financial Modeling Prep API first
       const url = `${FMP_BASE}/stock_news?limit=${limit}&apikey=${FMP_API_KEY}`;
       const response = await axios.get(url);
       const data = Array.isArray(response.data) ? response.data : [];
 
-      if (data.length === 0) {
-        return FALLBACK_NEWS;
+      if (data.length > 0) {
+        return data.map((item: any) => ({
+          symbol: item.symbol || item.ticker || '',
+          title: item.title || 'Market update',
+          url: item.url,
+          publishedAt: item.publishedDate || item.date || new Date().toISOString(),
+          site: item.site || item.source || 'Finance',
+          image: item.image,
+          text: item.text,
+        }));
       }
 
-      return data.map((item: any) => ({
-        symbol: item.symbol || item.ticker || '',
-        title: item.title || 'Market update',
-        url: item.url,
-        publishedAt: item.publishedDate || item.date || new Date().toISOString(),
-        site: item.site || item.source || 'Finance',
-        image: item.image,
-        text: item.text,
-      }));
+      // If API fails, use expanded fallback news with pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedNews = FALLBACK_NEWS.slice(startIndex, endIndex);
+      
+      if (paginatedNews.length === 0 && page === 1) {
+        // Return all fallback news if first page is empty
+        return FALLBACK_NEWS.slice(0, limit);
+      }
+      
+      return paginatedNews;
     } catch (error) {
       console.warn('stocksService.fetchNews: using fallback data', error);
-      return FALLBACK_NEWS;
+      
+      // Use fallback news with pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedNews = FALLBACK_NEWS.slice(startIndex, endIndex);
+      
+      if (paginatedNews.length === 0 && page === 1) {
+        return FALLBACK_NEWS.slice(0, limit);
+      }
+      
+      return paginatedNews;
     }
   }
 
