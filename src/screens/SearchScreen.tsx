@@ -14,6 +14,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { dappService, DApp } from '../services/api/dappService';
+import { stocksService, TrendingStock } from '../services/api/stocksService';
+import { investingService, InvestmentQuote } from '../services/api/investingService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
 import { LiquidGlass, LoadingSpinner, UniversalBackground } from '../components';
@@ -39,7 +41,7 @@ interface SearchResult {
 
 export const SearchScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'tokens' | 'dapps' | 'collections'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'crypto' | 'defi' | 'stocks' | 'bonds' | 'etfs' | 'dapps' | 'collections'>('all');
   const [apiTrendingTokens, setApiTrendingTokens] = useState<NormalizedTrendingToken[]>([]);
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -56,6 +58,18 @@ export const SearchScreen: React.FC = () => {
   const [isLoadingDapps, setIsLoadingDapps] = useState(false);
   const [dappCategories, setDappCategories] = useState<string[]>([]);
   const [selectedDappCategory, setSelectedDappCategory] = useState<string>('all');
+  
+  // New state for stocks
+  const [stocks, setStocks] = useState<TrendingStock[]>([]);
+  const [isLoadingStocks, setIsLoadingStocks] = useState(false);
+  
+  // New state for ETFs
+  const [etfs, setEtfs] = useState<Array<{ symbol: string; name: string; quote: InvestmentQuote }>>([]);
+  const [isLoadingEtfs, setIsLoadingEtfs] = useState(false);
+  
+  // New state for bonds
+  const [bonds, setBonds] = useState<Array<{ symbol: string; name: string; quote: InvestmentQuote }>>([]);
+  const [isLoadingBonds, setIsLoadingBonds] = useState(false);
   
   const navigation = useNavigation<any>();
 
@@ -154,21 +168,24 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
-  // Fetch top tokens when tokens tab is selected
+  // Fetch data when category is selected
   useEffect(() => {
-    if (selectedCategory === 'tokens' && topTokens.length === 0) {
+    if (selectedCategory === 'crypto' && topTokens.length === 0) {
       fetchTopTokens(1, false);
-    }
-  }, [selectedCategory]);
-
-  // Fetch DApps when dapps tab is selected
-  useEffect(() => {
-    if (selectedCategory === 'dapps' && dapps.length === 0) {
+    } else if (selectedCategory === 'defi' && topTokens.length === 0) {
+      fetchDeFiTokens(1, false);
+    } else if (selectedCategory === 'stocks' && stocks.length === 0) {
+      fetchStocks();
+    } else if (selectedCategory === 'etfs' && etfs.length === 0) {
+      fetchETFs();
+    } else if (selectedCategory === 'bonds' && bonds.length === 0) {
+      fetchBonds();
+    } else if (selectedCategory === 'dapps' && dapps.length === 0) {
       fetchDApps();
     }
   }, [selectedCategory]);
 
-  // Fetch top tokens
+  // Fetch top crypto tokens
   const fetchTopTokens = async (page: number = 1, append: boolean = false) => {
     setIsLoadingTokens(true);
     try {
@@ -196,6 +213,163 @@ export const SearchScreen: React.FC = () => {
       setHasMorePages(false);
     } finally {
       setIsLoadingTokens(false);
+    }
+  };
+
+  // Fetch DeFi tokens (filter from top coins by category)
+  const fetchDeFiTokens = async (page: number = 1, append: boolean = false) => {
+    setIsLoadingTokens(true);
+    try {
+      // Fetch more tokens to filter DeFi ones
+      const result = await priceService.fetchTopCoins(250, 1);
+      if (result.success && result.data.length > 0) {
+        // Filter tokens that are likely DeFi (common DeFi token names/patterns)
+        const defiKeywords = ['uniswap', 'aave', 'compound', 'maker', 'curve', 'yearn', 'sushi', 'pancake', 'balancer', 'synthetix', 'chainlink', 'lido', 'staked', 'wrapped', 'wbtc', 'weth'];
+        const defiTokens = result.data.filter(token => 
+          defiKeywords.some(keyword => 
+            token.name.toLowerCase().includes(keyword) || 
+            token.symbol.toLowerCase().includes(keyword) ||
+            token.id.toLowerCase().includes(keyword)
+          )
+        );
+        
+        // Paginate the filtered results
+        const startIndex = (page - 1) * tokensPerPage;
+        const endIndex = startIndex + tokensPerPage;
+        const paginatedTokens = defiTokens.slice(startIndex, endIndex);
+        
+        if (append) {
+          setTopTokens(prev => [...prev, ...paginatedTokens]);
+        } else {
+          setTopTokens(paginatedTokens);
+        }
+        setCurrentPage(page);
+        setHasMorePages(endIndex < defiTokens.length);
+        setTotalTokens(defiTokens.length);
+      } else {
+        if (!append) {
+          setTopTokens([]);
+        }
+        setHasMorePages(false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch DeFi tokens:', error);
+      if (!append) {
+        setTopTokens([]);
+      }
+      setHasMorePages(false);
+    } finally {
+      setIsLoadingTokens(false);
+    }
+  };
+
+  // Fetch stocks
+  const fetchStocks = async () => {
+    setIsLoadingStocks(true);
+    try {
+      const stocksData = await stocksService.fetchTrending();
+      setStocks(stocksData);
+    } catch (error) {
+      console.error('Failed to fetch stocks:', error);
+      setStocks([]);
+    } finally {
+      setIsLoadingStocks(false);
+    }
+  };
+
+  // Fetch ETFs
+  const fetchETFs = async () => {
+    setIsLoadingEtfs(true);
+    try {
+      // Popular ETF symbols
+      const etfSymbols = [
+        { symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust' },
+        { symbol: 'QQQ', name: 'Invesco QQQ Trust' },
+        { symbol: 'VTI', name: 'Vanguard Total Stock Market ETF' },
+        { symbol: 'VOO', name: 'Vanguard S&P 500 ETF' },
+        { symbol: 'IWM', name: 'iShares Russell 2000 ETF' },
+        { symbol: 'EFA', name: 'iShares MSCI EAFE ETF' },
+        { symbol: 'EEM', name: 'iShares MSCI Emerging Markets ETF' },
+        { symbol: 'GLD', name: 'SPDR Gold Trust' },
+        { symbol: 'SLV', name: 'iShares Silver Trust' },
+        { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF' },
+      ];
+
+      const quotesResult = await investingService.fetchQuotes(
+        etfSymbols.map(etf => ({
+          symbol: etf.symbol,
+          name: etf.name,
+          type: 'etf' as const,
+          market: 'NYSEARCA',
+          currency: 'USD',
+        }))
+      );
+
+      if (quotesResult.success) {
+        const etfsWithQuotes = etfSymbols
+          .map(etf => ({
+            symbol: etf.symbol,
+            name: etf.name,
+            quote: quotesResult.data[etf.symbol],
+          }))
+          .filter(item => item.quote && item.quote.price > 0);
+        setEtfs(etfsWithQuotes);
+      } else {
+        setEtfs([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch ETFs:', error);
+      setEtfs([]);
+    } finally {
+      setIsLoadingEtfs(false);
+    }
+  };
+
+  // Fetch bonds
+  const fetchBonds = async () => {
+    setIsLoadingBonds(true);
+    try {
+      // Popular bond ETF symbols (using ETFs as proxy for bonds since direct bond data is limited)
+      const bondSymbols = [
+        { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF' },
+        { symbol: 'IEF', name: 'iShares 7-10 Year Treasury Bond ETF' },
+        { symbol: 'SHY', name: 'iShares 1-3 Year Treasury Bond ETF' },
+        { symbol: 'AGG', name: 'iShares Core U.S. Aggregate Bond ETF' },
+        { symbol: 'BND', name: 'Vanguard Total Bond Market ETF' },
+        { symbol: 'LQD', name: 'iShares iBoxx $ Investment Grade Corporate Bond ETF' },
+        { symbol: 'HYG', name: 'iShares iBoxx $ High Yield Corporate Bond ETF' },
+        { symbol: 'MUB', name: 'iShares National Muni Bond ETF' },
+        { symbol: 'TIP', name: 'iShares TIPS Bond ETF' },
+        { symbol: 'VCIT', name: 'Vanguard Intermediate-Term Corporate Bond ETF' },
+      ];
+
+      const quotesResult = await investingService.fetchQuotes(
+        bondSymbols.map(bond => ({
+          symbol: bond.symbol,
+          name: bond.name,
+          type: 'etf' as const,
+          market: 'NYSEARCA',
+          currency: 'USD',
+        }))
+      );
+
+      if (quotesResult.success) {
+        const bondsWithQuotes = bondSymbols
+          .map(bond => ({
+            symbol: bond.symbol,
+            name: bond.name,
+            quote: quotesResult.data[bond.symbol],
+          }))
+          .filter(item => item.quote && item.quote.price > 0);
+        setBonds(bondsWithQuotes);
+      } else {
+        setBonds([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch bonds:', error);
+      setBonds([]);
+    } finally {
+      setIsLoadingBonds(false);
     }
   };
 
@@ -264,8 +438,16 @@ export const SearchScreen: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    if (selectedCategory === 'tokens') {
+    if (selectedCategory === 'crypto') {
       fetchTopTokens(1, false);
+    } else if (selectedCategory === 'defi') {
+      fetchDeFiTokens(1, false);
+    } else if (selectedCategory === 'stocks') {
+      fetchStocks();
+    } else if (selectedCategory === 'etfs') {
+      fetchETFs();
+    } else if (selectedCategory === 'bonds') {
+      fetchBonds();
     } else if (selectedCategory === 'dapps') {
       fetchDApps();
     } else {
@@ -374,7 +556,7 @@ export const SearchScreen: React.FC = () => {
       : (token as any).current_price || 0;
     const showPrice = Number.isFinite(currentPrice);
     
-    const listLength = selectedCategory === 'tokens' ? topTokens.length : apiTrendingTokens.length;
+    const listLength = (selectedCategory === 'crypto' || selectedCategory === 'defi') ? topTokens.length : apiTrendingTokens.length;
 
     return (
       <TouchableOpacity
@@ -399,7 +581,7 @@ export const SearchScreen: React.FC = () => {
 
         <View style={styles.assetInfo}>
           <Text style={styles.assetName}>{token.name}</Text>
-          {selectedCategory === 'tokens' && (
+          {(selectedCategory === 'crypto' || selectedCategory === 'defi') && (
             <Text style={styles.assetMetaText}>
               #{(token as CoinInfo).market_cap_rank || 'N/A'}
             </Text>
@@ -506,6 +688,152 @@ export const SearchScreen: React.FC = () => {
     );
   };
 
+  const getStockLogoUri = (symbol: string) =>
+    `https://financialmodelingprep.com/image-stock/${symbol?.toUpperCase()}.png`;
+
+  const renderStockItem = (stock: TrendingStock, index: number) => {
+    const priceChange = formatPriceChange(stock.changePercent);
+    
+    return (
+      <TouchableOpacity
+        key={stock.symbol}
+        style={[
+          styles.assetRow,
+          index < stocks.length - 1 && styles.assetRowDivider,
+        ]}
+        onPress={() => {
+          // Navigate to stock details if needed
+          logger.logButtonPress('Stock', `view ${stock.symbol}`);
+        }}
+        activeOpacity={0.75}
+      >
+        <View style={styles.assetIcon}>
+          <Image 
+            source={{ uri: getStockLogoUri(stock.symbol) }} 
+            style={styles.assetIconImage}
+            onError={() => {
+              // Image error - will show broken image or fallback handled by React Native
+            }}
+          />
+        </View>
+
+        <View style={styles.assetInfo}>
+          <Text style={styles.assetName}>{stock.name}</Text>
+          <Text style={styles.assetMetaText}>
+            {stock.exchange || 'MARKET'} • {stock.symbol}
+          </Text>
+        </View>
+
+        <View style={styles.assetMetrics}>
+          <Text style={styles.assetPrice}>
+            {formatCurrency(stock.price)}
+          </Text>
+          <View style={styles.assetChangeRow}>
+            <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
+            <Text style={[styles.assetChangeText, { color: priceChange.color }]}>
+              {priceChange.value}%
+            </Text>
+          </View>
+          <Text style={styles.assetSymbol}>
+            Vol: {formatNumber(stock.volume)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderETFItem = (etf: { symbol: string; name: string; quote: InvestmentQuote }, index: number) => {
+    const priceChange = formatPriceChange(etf.quote.changePercent);
+    
+    return (
+      <TouchableOpacity
+        key={etf.symbol}
+        style={[
+          styles.assetRow,
+          index < etfs.length - 1 && styles.assetRowDivider,
+        ]}
+        onPress={() => {
+          logger.logButtonPress('ETF', `view ${etf.symbol}`);
+        }}
+        activeOpacity={0.75}
+      >
+        <View style={styles.assetIcon}>
+          <Ionicons name="bar-chart" size={20} color="#94A3B8" style={styles.iconGlyph} />
+        </View>
+
+        <View style={styles.assetInfo}>
+          <Text style={styles.assetName}>{etf.name}</Text>
+          <Text style={styles.assetMetaText}>
+            {etf.quote.exchange || 'MARKET'} • {etf.symbol}
+          </Text>
+        </View>
+
+        <View style={styles.assetMetrics}>
+          <Text style={styles.assetPrice}>
+            {formatCurrency(etf.quote.price)}
+          </Text>
+          <View style={styles.assetChangeRow}>
+            <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
+            <Text style={[styles.assetChangeText, { color: priceChange.color }]}>
+              {priceChange.value}%
+            </Text>
+          </View>
+          {etf.quote.dividendYield && (
+            <Text style={styles.assetSymbol}>
+              Yield: {etf.quote.dividendYield.toFixed(2)}%
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderBondItem = (bond: { symbol: string; name: string; quote: InvestmentQuote }, index: number) => {
+    const priceChange = formatPriceChange(bond.quote.changePercent);
+    
+    return (
+      <TouchableOpacity
+        key={bond.symbol}
+        style={[
+          styles.assetRow,
+          index < bonds.length - 1 && styles.assetRowDivider,
+        ]}
+        onPress={() => {
+          logger.logButtonPress('Bond', `view ${bond.symbol}`);
+        }}
+        activeOpacity={0.75}
+      >
+        <View style={styles.assetIcon}>
+          <Ionicons name="shield" size={20} color="#94A3B8" style={styles.iconGlyph} />
+        </View>
+
+        <View style={styles.assetInfo}>
+          <Text style={styles.assetName}>{bond.name}</Text>
+          <Text style={styles.assetMetaText}>
+            {bond.quote.exchange || 'MARKET'} • {bond.symbol}
+          </Text>
+        </View>
+
+        <View style={styles.assetMetrics}>
+          <Text style={styles.assetPrice}>
+            {formatCurrency(bond.quote.price)}
+          </Text>
+          <View style={styles.assetChangeRow}>
+            <Ionicons name={priceChange.icon as any} size={12} color={priceChange.color} />
+            <Text style={[styles.assetChangeText, { color: priceChange.color }]}>
+              {priceChange.value}%
+            </Text>
+          </View>
+          {bond.quote.dividendYield && (
+            <Text style={styles.assetSymbol}>
+              Yield: {bond.quote.dividendYield.toFixed(2)}%
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderDAppCategories = () => {
     if (dappCategories.length === 0) return null;
 
@@ -560,10 +888,10 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderPaginationControls = () => {
-    if (selectedCategory !== 'tokens' || topTokens.length === 0) return null;
+    if ((selectedCategory !== 'crypto' && selectedCategory !== 'defi') || topTokens.length === 0) return null;
 
     return (
-      <LiquidGlass cornerRadius={18} elasticity={0.18} style={styles.paginationGlass} className="p-4">
+      <LiquidGlass variant="transparent" cornerRadius={18} elasticity={0.18} style={styles.borderlessCard} className="p-4">
         <View style={styles.paginationRow}>
           <Text style={styles.paginationMeta}>
             Showing {topTokens.length} of {hasMorePages ? 'many' : totalTokens} tokens
@@ -620,7 +948,7 @@ export const SearchScreen: React.FC = () => {
     navigation.navigate('TrendingTokens');
   };
 
-  const handleCategoryPress = (category: 'all' | 'tokens' | 'dapps' | 'collections') => {
+  const handleCategoryPress = (category: 'all' | 'crypto' | 'defi' | 'stocks' | 'bonds' | 'etfs' | 'dapps' | 'collections') => {
     setSelectedCategory(category);
     logger.logButtonPress('Search Category', `switch to ${category}`);
   };
@@ -679,7 +1007,11 @@ export const SearchScreen: React.FC = () => {
           >
             {[
               { key: 'all', label: 'All', icon: 'grid-outline' },
-              { key: 'tokens', label: 'Tokens', icon: 'ellipse-outline' },
+              { key: 'crypto', label: 'Crypto', icon: 'logo-bitcoin' },
+              { key: 'defi', label: 'DeFi', icon: 'swap-horizontal-outline' },
+              { key: 'stocks', label: 'Stocks', icon: 'trending-up-outline' },
+              { key: 'bonds', label: 'Bonds', icon: 'shield-outline' },
+              { key: 'etfs', label: 'ETFs', icon: 'bar-chart-outline' },
               { key: 'dapps', label: 'DApps', icon: 'apps-outline' },
               { key: 'collections', label: 'Collections', icon: 'images-outline' },
             ].map((category) => (
@@ -714,17 +1046,18 @@ export const SearchScreen: React.FC = () => {
         </Animated.View>
 
         {/* Content based on selected category */}
-        {selectedCategory === 'tokens' ? (
+        {selectedCategory === 'crypto' ? (
           <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
             <LiquidGlass
+              variant="transparent"
               cornerRadius={24}
               elasticity={0.2}
-              style={styles.glassCard}
+              style={styles.borderlessCard}
               className="p-6"
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Top Tokens</Text>
+                  <Text style={styles.sectionTitle}>Top Crypto</Text>
                   <Text style={styles.sectionSubtitle}>Live market leaders ranked by market cap</Text>
                 </View>
                 <TouchableOpacity
@@ -743,7 +1076,7 @@ export const SearchScreen: React.FC = () => {
                 <View style={styles.loadingContainer}>
                   <LoadingSpinner size={32} color="#3B82F6" />
                   <Text style={styles.loadingText}>
-                    Loading top tokens...
+                    Loading crypto tokens...
                   </Text>
                 </View>
               ) : topTokens.length > 0 ? (
@@ -752,9 +1085,9 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="ellipse-outline" size={48} color="#94A3B8" />
+                  <Ionicons name="logo-bitcoin" size={48} color="#94A3B8" />
                   <Text style={styles.emptyText}>
-                    No tokens available
+                    No crypto tokens available
                   </Text>
                 </View>
               )}
@@ -762,12 +1095,203 @@ export const SearchScreen: React.FC = () => {
 
             {renderPaginationControls()}
           </Animated.View>
+        ) : selectedCategory === 'defi' ? (
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              variant="transparent"
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.borderlessCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>DeFi Tokens</Text>
+                  <Text style={styles.sectionSubtitle}>Decentralized finance protocols and tokens</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.sectionActionButton}
+                  onPress={handleRefresh}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {isLoadingTokens && topTokens.length === 0 ? (
+                <View style={styles.loadingContainer}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={styles.loadingText}>
+                    Loading DeFi tokens...
+                  </Text>
+                </View>
+              ) : topTokens.length > 0 ? (
+                <View style={styles.assetList}>
+                  {topTokens.map((token, index) => renderTokenItem(token, index))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="swap-horizontal-outline" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
+                    No DeFi tokens available
+                  </Text>
+                </View>
+              )}
+            </LiquidGlass>
+
+            {renderPaginationControls()}
+          </Animated.View>
+        ) : selectedCategory === 'stocks' ? (
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              variant="transparent"
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.borderlessCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Trending Stocks</Text>
+                  <Text style={styles.sectionSubtitle}>Top market movers from major exchanges</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.sectionActionButton}
+                  onPress={handleRefresh}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {isLoadingStocks && stocks.length === 0 ? (
+                <View style={styles.loadingContainer}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={styles.loadingText}>
+                    Loading stocks...
+                  </Text>
+                </View>
+              ) : stocks.length > 0 ? (
+                <View style={styles.assetList}>
+                  {stocks.map((stock, index) => renderStockItem(stock, index))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="trending-up-outline" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
+                    No stocks available
+                  </Text>
+                </View>
+              )}
+            </LiquidGlass>
+          </Animated.View>
+        ) : selectedCategory === 'etfs' ? (
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              variant="transparent"
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.borderlessCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Exchange-Traded Funds</Text>
+                  <Text style={styles.sectionSubtitle}>Popular ETFs with live pricing</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.sectionActionButton}
+                  onPress={handleRefresh}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {isLoadingEtfs && etfs.length === 0 ? (
+                <View style={styles.loadingContainer}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={styles.loadingText}>
+                    Loading ETFs...
+                  </Text>
+                </View>
+              ) : etfs.length > 0 ? (
+                <View style={styles.assetList}>
+                  {etfs.map((etf, index) => renderETFItem(etf, index))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="bar-chart-outline" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
+                    No ETFs available
+                  </Text>
+                </View>
+              )}
+            </LiquidGlass>
+          </Animated.View>
+        ) : selectedCategory === 'bonds' ? (
+          <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
+            <LiquidGlass
+              variant="transparent"
+              cornerRadius={24}
+              elasticity={0.2}
+              style={styles.borderlessCard}
+              className="p-6"
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Bond ETFs</Text>
+                  <Text style={styles.sectionSubtitle}>Fixed income securities and bond funds</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.sectionActionButton}
+                  onPress={handleRefresh}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
+                  <Text style={styles.sectionActionText}>
+                    Refresh
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {isLoadingBonds && bonds.length === 0 ? (
+                <View style={styles.loadingContainer}>
+                  <LoadingSpinner size={32} color="#3B82F6" />
+                  <Text style={styles.loadingText}>
+                    Loading bonds...
+                  </Text>
+                </View>
+              ) : bonds.length > 0 ? (
+                <View style={styles.assetList}>
+                  {bonds.map((bond, index) => renderBondItem(bond, index))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="shield-outline" size={48} color="#94A3B8" />
+                  <Text style={styles.emptyText}>
+                    No bonds available
+                  </Text>
+                </View>
+              )}
+            </LiquidGlass>
+          </Animated.View>
         ) : selectedCategory === 'dapps' ? (
           <Animated.View style={[styles.sectionWrapper, trendingAnimatedStyle]}>
             <LiquidGlass
+              variant="transparent"
               cornerRadius={24}
               elasticity={0.2}
-              style={styles.glassCard}
+              style={styles.borderlessCard}
               className="p-6"
             >
               <View style={styles.sectionHeaderRow}>
