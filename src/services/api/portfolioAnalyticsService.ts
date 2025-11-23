@@ -180,6 +180,8 @@ class PortfolioAnalyticsService {
       symbol: string;
       costBasis: number;
       currentValue: number;
+      annualDividendIncome?: number;
+      dividendYield?: number;
     }>,
     totalPortfolioValue: number
   ): HoldingPerformance[] {
@@ -195,6 +197,8 @@ class PortfolioAnalyticsService {
         profitLoss,
         profitLossPercent,
         weight,
+        annualDividendIncome: holding.annualDividendIncome,
+        dividendYield: holding.dividendYield,
       };
     });
   }

@@ -73,20 +73,47 @@ export const InvestingScreen: React.FC = () => {
 
   // Calculate portfolio analytics
   const portfolioMetrics = useMemo(() => {
+    // Calculate dividend income
+    const totalDividendIncome = holdings.reduce((sum, h) => {
+      return sum + (h.annualDividendIncome ?? 0);
+    }, 0);
+
+    // Calculate portfolio dividend yield (weighted average)
+    const portfolioDividendYield = totalMarketValue > 0
+      ? (totalDividendIncome / totalMarketValue) * 100
+      : 0;
+
     const holdingsPerformance = portfolioAnalyticsService.calculateHoldingPerformance(
       holdings.map((h) => ({
         symbol: h.symbol,
         costBasis: h.quantity * h.averagePrice,
         currentValue: h.marketValue,
+        annualDividendIncome: h.annualDividendIncome,
+        dividendYield: h.dividendYield,
       })),
       totalMarketValue
     );
+
+    // Add dividend data to holdings performance
+    holdingsPerformance.forEach((hp) => {
+      const holding = holdings.find((h) => h.symbol === hp.symbol);
+      if (holding) {
+        hp.annualDividendIncome = holding.annualDividendIncome;
+        hp.dividendYield = holding.dividendYield;
+      }
+    });
 
     const diversification = portfolioAnalyticsService.calculateDiversification(holdingsPerformance);
 
     // Calculate basic metrics from current holdings
     const totalCostBasis = holdings.reduce((sum, h) => sum + h.quantity * h.averagePrice, 0);
-    const totalReturn = totalMarketValue - totalCostBasis;
+    
+    // Capital gains (price appreciation/depreciation)
+    const capitalGains = totalMarketValue - totalCostBasis;
+    const capitalGainsPercent = totalCostBasis > 0 ? (capitalGains / totalCostBasis) * 100 : 0;
+    
+    // Total return includes both capital gains and dividend income
+    const totalReturn = capitalGains + totalDividendIncome;
     const totalReturnPercent = totalCostBasis > 0 ? (totalReturn / totalCostBasis) * 100 : 0;
 
     // For advanced metrics, we'd need historical data
@@ -94,6 +121,10 @@ export const InvestingScreen: React.FC = () => {
     const metrics: PortfolioMetrics = {
       totalReturn,
       totalReturnPercent,
+      capitalGains,
+      capitalGainsPercent,
+      dividendIncome: totalDividendIncome,
+      dividendYield: portfolioDividendYield,
       maxDrawdown: 0, // Would need historical data
       maxDrawdownPercent: 0, // Would need historical data
     };
@@ -133,11 +164,34 @@ export const InvestingScreen: React.FC = () => {
 
           const marketValue = investment.quantity * currentPrice;
 
+          // Extract dividend data
+          const dividendYield = quote?.dividendYield ?? previous?.dividendYield;
+          const annualDividend = quote?.annualDividend ?? quote?.trailingAnnualDividendRate ?? previous?.annualDividend;
+          
+          // Debug logging for dividend data
+          if (quote && (quote.dividendYield || quote.annualDividend)) {
+            console.log(`✅ Dividend data found for ${symbol}:`, {
+              dividendYield: quote.dividendYield,
+              annualDividend: quote.annualDividend,
+              trailingAnnualDividendRate: quote.trailingAnnualDividendRate,
+            });
+          } else if (quote && quote.price > 0) {
+            console.log(`⚠️ No dividend data in quote for ${symbol} (price: $${quote.price})`);
+          }
+          
+          // Calculate annual dividend income (annual dividend per share * quantity)
+          const annualDividendIncome = annualDividend && Number.isFinite(annualDividend) && annualDividend > 0
+            ? annualDividend * investment.quantity
+            : undefined;
+
           return {
             ...investment,
             currentPrice,
             changePercent,
             marketValue,
+            dividendYield,
+            annualDividend,
+            annualDividendIncome,
           };
         })
         .sort((a, b) => b.marketValue - a.marketValue)
@@ -312,6 +366,20 @@ export const InvestingScreen: React.FC = () => {
                 ({portfolioMetrics.metrics.totalReturnPercent >= 0 ? '+' : ''}
                 {portfolioMetrics.metrics.totalReturnPercent.toFixed(2)}%)
               </Text>
+              {/* Breakdown: Capital Gains + Dividends */}
+              <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(30, 41, 59, 0.5)' }}>
+                <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>
+                  Capital: {portfolioMetrics.metrics.capitalGains >= 0 ? '+' : ''}
+                  {formatLargeCurrency(portfolioMetrics.metrics.capitalGains)} ({portfolioMetrics.metrics.capitalGainsPercent >= 0 ? '+' : ''}
+                  {portfolioMetrics.metrics.capitalGainsPercent.toFixed(2)}%)
+                </Text>
+                <Text style={{ color: portfolioMetrics.metrics.dividendIncome > 0 ? '#5EEAD4' : '#64748B', fontSize: 10, marginTop: 2 }}>
+                  Dividends: {portfolioMetrics.metrics.dividendIncome > 0 ? '+' : ''}
+                  {portfolioMetrics.metrics.dividendIncome > 0 
+                    ? `${formatLargeCurrency(portfolioMetrics.metrics.dividendIncome)}/yr`
+                    : '$0.00/yr (no data)'}
+                </Text>
+              </View>
             </View>
 
             <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
@@ -322,6 +390,28 @@ export const InvestingScreen: React.FC = () => {
               <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
                 Concentration: {(portfolioMetrics.diversification.concentration * 100).toFixed(1)}%
               </Text>
+              <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(30, 41, 59, 0.5)' }}>
+                <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 2 }}>Dividend Yield</Text>
+                {portfolioMetrics.metrics.dividendYield > 0 ? (
+                  <>
+                    <Text style={{ color: '#5EEAD4', fontSize: 14, fontWeight: '600' }}>
+                      {portfolioMetrics.metrics.dividendYield.toFixed(2)}%
+                    </Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>
+                      Annual income: {formatLargeCurrency(portfolioMetrics.metrics.dividendIncome)}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={{ color: '#64748B', fontSize: 14, fontWeight: '600' }}>
+                      N/A
+                    </Text>
+                    <Text style={{ color: '#64748B', fontSize: 10, marginTop: 2 }}>
+                      No dividend data available
+                    </Text>
+                  </>
+                )}
+              </View>
             </View>
 
             {portfolioMetrics.holdingsPerformance.length > 0 && (
@@ -349,6 +439,11 @@ export const InvestingScreen: React.FC = () => {
                           {holding.profitLossPercent >= 0 ? '+' : ''}
                           {holding.profitLossPercent.toFixed(2)}% P&L
                         </Text>
+                        {holding.annualDividendIncome && holding.annualDividendIncome > 0 && (
+                          <Text style={{ color: '#5EEAD4', fontSize: 10, marginTop: 2 }}>
+                            {holding.dividendYield ? `${holding.dividendYield.toFixed(2)}% yield` : ''} • {formatLargeCurrency(holding.annualDividendIncome)}/yr
+                          </Text>
+                        )}
                       </View>
                       <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
                         {holding.weight.toFixed(1)}%
@@ -467,6 +562,33 @@ export const InvestingScreen: React.FC = () => {
               </Text>
             </View>
           </View>
+
+          {item.annualDividendIncome && item.annualDividendIncome > 0 && (
+            <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(30, 41, 59, 0.5)' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#94A3B8', fontSize: 12 }}>Dividend Yield</Text>
+                  <Text style={{ color: '#5EEAD4', fontSize: 15, fontWeight: '600', marginTop: 4 }}>
+                    {item.dividendYield ? `${item.dividendYield.toFixed(2)}%` : 'N/A'}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#94A3B8', fontSize: 12 }}>Annual Income</Text>
+                  <Text style={{ color: '#5EEAD4', fontSize: 15, fontWeight: '600', marginTop: 4 }}>
+                    {formatLargeCurrency(item.annualDividendIncome)}
+                  </Text>
+                </View>
+                {item.annualDividend && (
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#94A3B8', fontSize: 12 }}>Per Share</Text>
+                    <Text style={{ color: '#5EEAD4', fontSize: 15, fontWeight: '600', marginTop: 4 }}>
+                      {formatLargeCurrency(item.annualDividend)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
         </TouchableOpacity>
       </Animated.View>
     );

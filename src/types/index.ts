@@ -202,6 +202,9 @@ export interface InvestmentHolding extends Investment {
   currentPrice: number;
   changePercent: number;
   marketValue: number;
+  dividendYield?: number; // Annual dividend yield as percentage
+  annualDividend?: number; // Annual dividend per share
+  annualDividendIncome?: number; // Total annual dividend income (annualDividend * quantity)
 }
 
 // Technical Analysis Types
@@ -241,6 +244,10 @@ export interface TechnicalSignals {
 export interface PortfolioMetrics {
   totalReturn: number;
   totalReturnPercent: number;
+  capitalGains: number; // Price appreciation/depreciation
+  capitalGainsPercent: number;
+  dividendIncome: number; // Total annual dividend income
+  dividendYield: number; // Portfolio dividend yield as percentage
   cagr?: number;
   sharpeRatio?: number;
   sortinoRatio?: number;
@@ -261,6 +268,8 @@ export interface HoldingPerformance {
   profitLoss: number;
   profitLossPercent: number;
   weight: number;
+  annualDividendIncome?: number; // Annual dividend income for this holding
+  dividendYield?: number; // Dividend yield for this holding
 }
 
 export interface DiversificationMetrics {
