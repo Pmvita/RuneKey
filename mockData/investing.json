@@ -19,7 +19,7 @@
       "type": "index",
       "market": "INDEX",
       "currency": "USD",
-      "quantity": 100,
+      "quantity": 500,
       "averagePrice": 6000.00,
       "icon": "https://logo.clearbit.com/spglobal.com"
     },

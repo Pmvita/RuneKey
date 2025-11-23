@@ -42,9 +42,11 @@ class InvestingService {
   /**
    * Normalize symbol for Yahoo Finance API
    * Converts dots to hyphens for class shares (e.g., BRK.B -> BRK-B)
+   * Preserves caret (^) for index symbols (e.g., ^GSPC)
    */
   private normalizeSymbolForYahoo(symbol: string): string {
     if (!symbol) return symbol;
+    // Preserve caret for index symbols (^GSPC, ^DJI, etc.)
     // Convert dots to hyphens for class shares (BRK.B -> BRK-B, BRK.A -> BRK-A)
     return symbol.replace(/\./g, '-').toUpperCase();
   }
@@ -55,7 +57,9 @@ class InvestingService {
   private async fetchYahooQuote(symbol: string): Promise<InvestmentQuote | null> {
     try {
       const normalizedSymbol = this.normalizeSymbolForYahoo(symbol);
-      const url = `${this.yahooQuoteURL}?symbols=${encodeURIComponent(normalizedSymbol)}`;
+      // URL encode the symbol properly (handles ^, =, etc.)
+      const encodedSymbol = encodeURIComponent(normalizedSymbol);
+      const url = `${this.yahooQuoteURL}?symbols=${encodedSymbol}`;
       const requestUrl = Platform.OS === 'web' 
         ? `${API_ENDPOINTS.CORS_PROXY}${encodeURIComponent(url)}`
         : url;
@@ -63,19 +67,42 @@ class InvestingService {
       const response = await axios.get(requestUrl);
       const result = response.data?.quoteResponse?.result?.[0];
 
-      if (!result) return null;
+      if (!result) {
+        console.warn(`Yahoo Finance: No result for symbol ${symbol} (normalized: ${normalizedSymbol})`);
+        return null;
+      }
 
-      const price = typeof result.regularMarketPrice === 'number' 
+      // Handle different price fields (indices might use different field names)
+      // Try multiple possible price fields
+      const price = typeof result.regularMarketPrice === 'number' && result.regularMarketPrice > 0
         ? result.regularMarketPrice 
-        : parseFloat(result.regularMarketPrice) || 0;
+        : typeof result.price === 'number' && result.price > 0
+        ? result.price
+        : typeof result.regularMarketPrice === 'string'
+        ? parseFloat(result.regularMarketPrice) || 0
+        : typeof result.price === 'string'
+        ? parseFloat(result.price) || 0
+        : 0;
       
-      const previousClose = typeof result.regularMarketPreviousClose === 'number'
+      // Handle previous close (for calculating change percent)
+      const previousClose = typeof result.regularMarketPreviousClose === 'number' && result.regularMarketPreviousClose > 0
         ? result.regularMarketPreviousClose
-        : parseFloat(result.regularMarketPreviousClose) || price;
+        : typeof result.previousClose === 'number' && result.previousClose > 0
+        ? result.previousClose
+        : typeof result.regularMarketPreviousClose === 'string'
+        ? parseFloat(result.regularMarketPreviousClose) || price
+        : typeof result.previousClose === 'string'
+        ? parseFloat(result.previousClose) || price
+        : price;
 
       const changePercent = previousClose !== 0 && price !== 0
         ? ((price - previousClose) / previousClose) * 100
         : 0;
+
+      // Log if price is still 0 for debugging
+      if (price === 0 && symbol.startsWith('^')) {
+        console.warn(`Yahoo Finance: Price is 0 for index ${symbol}. Response data:`, JSON.stringify(result, null, 2));
+      }
 
       return {
         symbol: symbol.toUpperCase(),
@@ -98,6 +125,11 @@ class InvestingService {
     }
 
     const upper = rawSymbol.toUpperCase();
+
+    // Skip index symbols (^GSPC, ^DJI, etc.) - STOOQ doesn't support them
+    if (upper.startsWith('^')) {
+      return null;
+    }
 
     // Handle forex and commodity pairs that use the =X suffix
     if (upper.includes('=')) {
@@ -146,8 +178,40 @@ class InvestingService {
         // Try Yahoo Finance first (more reliable, free, no API key needed)
         let quote = await this.fetchYahooQuote(symbol);
         
-        // Fallback to STOOQ if Yahoo Finance fails
-        if (!quote) {
+        // For index symbols (^GSPC, etc.), try fetching from chart API as fallback
+        if (!quote || quote.price === 0) {
+          if (symbol.startsWith('^')) {
+            try {
+              const chartResponse = await this.fetchChart(symbol, { range: '1d', interval: '1d' });
+              if (chartResponse.success && chartResponse.data.points.length > 0) {
+                const latestPoint = chartResponse.data.points[chartResponse.data.points.length - 1];
+                const previousPoint = chartResponse.data.points.length > 1 
+                  ? chartResponse.data.points[chartResponse.data.points.length - 2]
+                  : latestPoint;
+                
+                const price = latestPoint.close;
+                const previousClose = previousPoint.close;
+                const changePercent = previousClose !== 0 && price !== 0
+                  ? ((price - previousClose) / previousClose) * 100
+                  : 0;
+
+                quote = {
+                  symbol: symbol.toUpperCase(),
+                  price,
+                  changePercent,
+                  currency: chartResponse.data.currency || holding.currency || 'USD',
+                  exchange: holding.market || 'INDEX',
+                  shortName: holding.name || symbol,
+                };
+              }
+            } catch (error: any) {
+              console.warn(`Chart API fallback failed for index ${symbol}:`, error?.message);
+            }
+          }
+        }
+        
+        // Fallback to STOOQ if Yahoo Finance fails (skip for indices)
+        if (!quote || quote.price === 0) {
           const stooqSymbol = this.mapSymbolToStooq(holding);
           if (stooqSymbol) {
             try {
@@ -169,25 +233,27 @@ class InvestingService {
                 changePercent = ((price - open) / open) * 100;
               }
 
-              quote = {
-                symbol,
-                price,
-                changePercent,
-                currency: holding.currency || 'USD',
-                exchange: holding.market || 'STOOQ',
-                shortName: holding.name || symbol,
-              };
+              if (price > 0) {
+                quote = {
+                  symbol,
+                  price,
+                  changePercent,
+                  currency: holding.currency || 'USD',
+                  exchange: holding.market || 'STOOQ',
+                  shortName: holding.name || symbol,
+                };
+              }
             } catch (error: any) {
               console.warn(`STOOQ quote failed for ${symbol}:`, error?.message);
             }
           }
         }
 
-        if (quote) {
+        if (quote && quote.price > 0) {
           return { symbol, quote, success: true };
         }
 
-        return { symbol, quote: null, success: false, error: 'Both APIs failed' };
+        return { symbol, quote: null, success: false, error: 'All APIs failed or returned zero price' };
       })
     );
 
