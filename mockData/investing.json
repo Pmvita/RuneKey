@@ -107,7 +107,7 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 400,
+      "quantity": 500,
       "averagePrice": 500.00,
       "icon": "https://logo.clearbit.com/meta.com"
     },
@@ -118,7 +118,7 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 300,
+      "quantity": 500,
       "averagePrice": 350.00,
       "icon": "https://logo.clearbit.com/tesla.com"
     },
@@ -129,7 +129,7 @@
       "type": "stock",
       "market": "NYSE",
       "currency": "USD",
-      "quantity": 500,
+      "quantity": 1500,
       "averagePrice": 120.00,
       "icon": "https://logo.clearbit.com/exxonmobil.com"
     },
@@ -141,7 +141,7 @@
       "market": "CME",
       "currency": "USD",
       "quantity": 10,
-      "averagePrice": 4079.50,
+      "averagePrice": 4000.50,
       "icon": "https://logo.clearbit.com/gold.org"
     },
     {

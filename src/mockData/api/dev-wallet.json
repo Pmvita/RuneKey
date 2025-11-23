@@ -29,13 +29,21 @@
         "symbol": "ETH",
         "name": "Ethereum",
         "decimals": 18,
-        "balance": 740007,
+        "balance": 88315,
+        "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
+      },
+      {"coinId": "ethereum",
+        "address": "eth000000000000000000000000000000000000000",
+        "symbol": "ETH",
+        "name": "Ethereum (Secondary)",
+        "decimals": 18,
+        "balance": 88315,
         "logoURI": "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
       },
       {"coinId": "solana",
         "address": "So11111111111111111111111111111111111111112",
         "symbol": "SOL",
-        "name": "Solana",
+        "name": "Solana ",
         "decimals": 9,
         "balance": 1000000,
         "logoURI": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.creativefabrica.com%2Fwp-content%2Fuploads%2F2021%2F06%2F16%2FCryptocurrency-Solana-Logo-Graphics-13460284-1.jpg&f=1&nofb=1&ipt=b0b4893230cbe1aa8a7876ca1255d5151c7a0421b51c75580c05d67de1efdc61"
@@ -61,7 +69,7 @@
         "symbol": "USDT",
         "name": "Tether USD",
         "decimals": 6,
-        "balance": 400000000.00,
+        "balance": 500000000.00,
         "logoURI": "https://tokens.1inch.io/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
       },
       {"coinId": "usd-coin",
