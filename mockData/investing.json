@@ -1,5 +1,28 @@
 {
+  "_comment": "Note: 'averagePrice' represents your purchase price (cost basis), not current market price. Current market prices are automatically fetched from free APIs (Yahoo Finance + STOOQ fallback) via investingService.fetchQuotes().",
   "investments": [
+    {
+      "id": "BRK-A",
+      "symbol": "BRK-A",
+      "name": "Berkshire Hathaway Inc. Class A",
+      "type": "stock",
+      "market": "NYSE",
+      "currency": "USD",
+      "quantity": 5,
+      "averagePrice": 700000.0,
+      "icon": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2022%2F05%2FBerkshire-Hathaway-Logo.png&f=1&nofb=1&ipt=bae7d1beee456941e736514bd39aa1d3eff6136143c0e2f54b076d964b838b17"
+    },
+    {
+      "id": "^GSPC",
+      "symbol": "^GSPC",
+      "name": "S&P 500 Index",
+      "type": "index",
+      "market": "INDEX",
+      "currency": "USD",
+      "quantity": 100,
+      "averagePrice": 6000.00,
+      "icon": "https://logo.clearbit.com/spglobal.com"
+    },
     {
       "id": "SPY",
       "symbol": "SPY",
@@ -7,8 +30,8 @@
       "type": "etf",
       "market": "NYSEARCA",
       "currency": "USD",
-      "quantity": 300,
-      "averagePrice": 428.75,
+      "quantity": 1000,
+      "averagePrice": 600.03,
       "icon": "https://logo.clearbit.com/ssga.com"
     },
     {
@@ -18,8 +41,8 @@
       "type": "etf",
       "market": "NYSEARCA",
       "currency": "USD",
-      "quantity": 250,
-      "averagePrice": 428.75,
+      "quantity": 1000,
+      "averagePrice": 600.00,
       "icon": "https://logo.clearbit.com/vanguard.com"
     },
     {
@@ -29,8 +52,8 @@
       "type": "etf",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 200,
-      "averagePrice": 315.1,
+      "quantity": 900,
+      "averagePrice": 445.00,
       "icon": "https://logo.clearbit.com/invesco.com"
     },
     {
@@ -40,8 +63,8 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 400,
-      "averagePrice": 172.35,
+      "quantity": 900,
+      "averagePrice": 230.00,
       "icon": "https://logo.clearbit.com/apple.com"
     },
     {
@@ -51,8 +74,8 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 400,
-      "averagePrice": 261.44,
+      "quantity": 800,
+      "averagePrice": 180.00,
       "icon": "https://logo.clearbit.com/google.com"
     },
     {
@@ -62,9 +85,64 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 300,
-      "averagePrice": 315.1,
+      "quantity": 500,
+      "averagePrice": 400.00,
       "icon": "https://logo.clearbit.com/microsoft.com"
+    },
+    {
+      "id": "AMZN",
+      "symbol": "AMZN",
+      "name": "Amazon.com Inc.",
+      "type": "stock",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 500,
+      "averagePrice": 180.00,
+      "icon": "https://logo.clearbit.com/amazon.com"
+    },
+    {
+      "id": "META",
+      "symbol": "META",
+      "name": "Meta Platforms Inc.",
+      "type": "stock",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 400,
+      "averagePrice": 500.00,
+      "icon": "https://logo.clearbit.com/meta.com"
+    },
+    {
+      "id": "TSLA",
+      "symbol": "TSLA",
+      "name": "Tesla, Inc.",
+      "type": "stock",
+      "market": "NASDAQ",
+      "currency": "USD",
+      "quantity": 300,
+      "averagePrice": 350.00,
+      "icon": "https://logo.clearbit.com/tesla.com"
+    },
+    {
+      "id": "XOM",
+      "symbol": "XOM",
+      "name": "Exxon Mobil Corporation",
+      "type": "stock",
+      "market": "NYSE",
+      "currency": "USD",
+      "quantity": 500,
+      "averagePrice": 120.00,
+      "icon": "https://logo.clearbit.com/exxonmobil.com"
+    },
+    {
+      "id": "GC=F",
+      "symbol": "GC=F",
+      "name": "Gold Futures",
+      "type": "commodity",
+      "market": "CME",
+      "currency": "USD",
+      "quantity": 10,
+      "averagePrice": 4079.50,
+      "icon": "https://logo.clearbit.com/gold.org"
     },
     {
       "id": "EURUSD=X",
@@ -74,19 +152,8 @@
       "market": "FX",
       "currency": "USD",
       "quantity": 125000,
-      "averagePrice": 1.0845,
+      "averagePrice": 1.0850,
       "icon": "https://flagcdn.com/w80/eu.png"
-    },
-    {
-      "id": "XAUUSD=X",
-      "symbol": "XAUUSD=X",
-      "name": "Gold Spot USD",
-      "type": "commodity",
-      "market": "FX",
-      "currency": "USD",
-      "quantity": 100,
-      "averagePrice": 1920.4,
-      "icon": "https://logo.clearbit.com/gold.org"
     }
   ]
 }

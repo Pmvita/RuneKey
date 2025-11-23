@@ -37,6 +37,59 @@ interface ChartParams {
 class InvestingService {
   private quotesURL = API_ENDPOINTS.STOOQ_QUOTE;
   private chartURL = API_ENDPOINTS.YAHOO_FINANCE_CHART;
+  private yahooQuoteURL = API_ENDPOINTS.YAHOO_FINANCE;
+
+  /**
+   * Normalize symbol for Yahoo Finance API
+   * Converts dots to hyphens for class shares (e.g., BRK.B -> BRK-B)
+   */
+  private normalizeSymbolForYahoo(symbol: string): string {
+    if (!symbol) return symbol;
+    // Convert dots to hyphens for class shares (BRK.B -> BRK-B, BRK.A -> BRK-A)
+    return symbol.replace(/\./g, '-').toUpperCase();
+  }
+
+  /**
+   * Fetch quote from Yahoo Finance API (primary method)
+   */
+  private async fetchYahooQuote(symbol: string): Promise<InvestmentQuote | null> {
+    try {
+      const normalizedSymbol = this.normalizeSymbolForYahoo(symbol);
+      const url = `${this.yahooQuoteURL}?symbols=${encodeURIComponent(normalizedSymbol)}`;
+      const requestUrl = Platform.OS === 'web' 
+        ? `${API_ENDPOINTS.CORS_PROXY}${encodeURIComponent(url)}`
+        : url;
+
+      const response = await axios.get(requestUrl);
+      const result = response.data?.quoteResponse?.result?.[0];
+
+      if (!result) return null;
+
+      const price = typeof result.regularMarketPrice === 'number' 
+        ? result.regularMarketPrice 
+        : parseFloat(result.regularMarketPrice) || 0;
+      
+      const previousClose = typeof result.regularMarketPreviousClose === 'number'
+        ? result.regularMarketPreviousClose
+        : parseFloat(result.regularMarketPreviousClose) || price;
+
+      const changePercent = previousClose !== 0 && price !== 0
+        ? ((price - previousClose) / previousClose) * 100
+        : 0;
+
+      return {
+        symbol: symbol.toUpperCase(),
+        price,
+        changePercent,
+        currency: result.currency || 'USD',
+        exchange: result.fullExchangeName || result.exchange || 'MARKET',
+        shortName: result.shortName || result.longName || symbol,
+      };
+    } catch (error: any) {
+      console.warn(`Yahoo Finance quote failed for ${symbol}:`, error?.message);
+      return null;
+    }
+  }
 
   private mapSymbolToStooq(holding: Pick<Investment, 'symbol' | 'type' | 'market'>): string | null {
     const rawSymbol = holding.symbol?.trim();
@@ -90,44 +143,51 @@ class InvestingService {
 
     const quoteEntries = await Promise.all(
       Array.from(uniqueHoldingsMap.entries()).map(async ([symbol, holding]) => {
-        const stooqSymbol = this.mapSymbolToStooq(holding);
-        if (!stooqSymbol) {
-          return { symbol, quote: null, success: false };
-        }
+        // Try Yahoo Finance first (more reliable, free, no API key needed)
+        let quote = await this.fetchYahooQuote(symbol);
+        
+        // Fallback to STOOQ if Yahoo Finance fails
+        if (!quote) {
+          const stooqSymbol = this.mapSymbolToStooq(holding);
+          if (stooqSymbol) {
+            try {
+              const requestUrl = this.buildUrl(this.quotesURL, {
+                s: stooqSymbol,
+                f: 'sd2t2ohlcv',
+                h: '',
+                e: 'json',
+              });
+              const response = await axios.get(requestUrl);
 
-        try {
-          const requestUrl = this.buildUrl(this.quotesURL, {
-            s: stooqSymbol,
-            f: 'sd2t2ohlcv',
-            h: '',
-            e: 'json',
-          });
-          const response = await axios.get(requestUrl);
+              const entry = response.data?.symbols?.[0];
+              const close = typeof entry?.close === 'number' ? entry.close : parseFloat(entry?.close);
+              const open = typeof entry?.open === 'number' ? entry.open : parseFloat(entry?.open);
 
-          const entry = response.data?.symbols?.[0];
-          const close = typeof entry?.close === 'number' ? entry.close : parseFloat(entry?.close);
-          const open = typeof entry?.open === 'number' ? entry.open : parseFloat(entry?.open);
+              const price = Number.isFinite(close) ? close : 0;
+              let changePercent = 0;
+              if (Number.isFinite(open) && open !== 0 && Number.isFinite(price)) {
+                changePercent = ((price - open) / open) * 100;
+              }
 
-          const price = Number.isFinite(close) ? close : 0;
-          let changePercent = 0;
-          if (Number.isFinite(open) && open !== 0 && Number.isFinite(price)) {
-            changePercent = ((price - open) / open) * 100;
+              quote = {
+                symbol,
+                price,
+                changePercent,
+                currency: holding.currency || 'USD',
+                exchange: holding.market || 'STOOQ',
+                shortName: holding.name || symbol,
+              };
+            } catch (error: any) {
+              console.warn(`STOOQ quote failed for ${symbol}:`, error?.message);
+            }
           }
-
-          const quote: InvestmentQuote = {
-            symbol,
-            price,
-            changePercent,
-            currency: holding.currency || 'USD',
-            exchange: holding.market || 'STOOQ',
-            shortName: holding.name || symbol,
-          };
-
-          return { symbol, quote, success: true };
-        } catch (error: any) {
-          console.error(`Error fetching quote for ${symbol}:`, error?.message || error);
-          return { symbol, quote: null, success: false, error };
         }
+
+        if (quote) {
+          return { symbol, quote, success: true };
+        }
+
+        return { symbol, quote: null, success: false, error: 'Both APIs failed' };
       })
     );
 
@@ -170,9 +230,12 @@ class InvestingService {
       };
     }
 
+    // Normalize symbol for Yahoo Finance API (convert dots to hyphens)
+    const normalizedSymbol = this.normalizeSymbolForYahoo(sanitizedSymbol);
+
     try {
       const requestUrl = this.buildUrl(
-        `${this.chartURL}/${encodeURIComponent(sanitizedSymbol)}`,
+        `${this.chartURL}/${encodeURIComponent(normalizedSymbol)}`,
         {
           range: params.range ?? '1mo',
           interval: params.interval ?? '1d',
@@ -209,7 +272,7 @@ class InvestingService {
         success: true,
       };
     } catch (error: any) {
-      console.error(`Error fetching chart for ${sanitizedSymbol}:`, error);
+      console.error(`Error fetching chart for ${sanitizedSymbol} (normalized: ${normalizedSymbol}):`, error);
       return {
         data: {
           symbol: sanitizedSymbol.toUpperCase(),

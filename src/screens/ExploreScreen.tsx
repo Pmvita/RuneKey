@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 import { stocksService, StockNewsItem, TrendingStock } from '../services/api/stocksService';
 import { formatLargeCurrency } from '../utils/formatters';
 
-export const OpenMarketScreen: React.FC = () => {
+export const ExploreScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'crypto' | 'stocks'>('crypto');
   const [newsItems, setNewsItems] = useState<StockNewsItem[]>([]);
   const [trendingStocks, setTrendingStocks] = useState<TrendingStock[]>([]);
@@ -100,7 +100,7 @@ export const OpenMarketScreen: React.FC = () => {
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Market Place</Text>
+          <Text style={styles.title}>Explore</Text>
         </View>
 
         {/* Tabs */}
@@ -536,3 +536,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

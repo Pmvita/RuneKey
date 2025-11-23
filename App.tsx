@@ -25,7 +25,7 @@ import { logger } from './src/utils/logger';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SwapScreen } from './src/screens/SwapScreen';
 import { StocksScreen } from './src/screens/StocksScreen';
-import { OpenMarketScreen } from './src/screens/OpenMarketScreen';
+import { ExploreScreen } from './src/screens/ExploreScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { TokenDetailsScreen } from './src/screens/TokenDetailsScreen';
@@ -92,7 +92,7 @@ const TabNavigator = () => {
           } else if (route.name === 'Stocks') {
             iconName = focused ? 'trending-up' : 'trending-up-outline';
           } else if (route.name === 'Runekey') {
-            const scaledSize = 64;
+            const scaledSize = 54;
             return (
               <View style={styles.centerTabWrapper}>
                 <View style={[styles.centerTabGlow, focused && styles.centerTabGlowFocused]} />
@@ -182,7 +182,7 @@ const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Runekey" 
-        component={OpenMarketScreen}
+        component={ExploreScreen}
         options={{
           title: '',
           headerShown: false,
@@ -407,10 +407,10 @@ const styles = StyleSheet.create({
     left: 14,
     right: 14,
     bottom: Platform.select({ ios: 30, android: 20, default: 28 }),
-    height: 96,
+    height: 72,
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: Platform.select({ ios: 24, android: 18, default: 22 }),
+    paddingTop: 12,
+    paddingBottom: Platform.select({ ios: 18, android: 14, default: 16 }),
     borderRadius: 36,
     backgroundColor: 'transparent',
     borderTopWidth: 0,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
   },
   tabIconWrapper: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
@@ -454,13 +454,13 @@ const styles = StyleSheet.create({
   centerTabWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ translateY: Platform.select({ ios: -28, android: -24, default: -26 }) }],
+    transform: [{ translateY: Platform.select({ ios: -22, android: -18, default: -20 }) }],
   },
   centerTabGlow: {
     position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: 'rgba(59, 130, 246, 0.25)',
     opacity: 0.65,
     ...Platform.select({
@@ -476,9 +476,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   centerTabButton: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: 'rgba(2, 6, 23, 0.95)',
     borderWidth: 2,
     borderColor: 'rgba(148, 163, 184, 0.35)',
