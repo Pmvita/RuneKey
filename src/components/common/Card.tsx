@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { logger } from '../../utils/logger';
+import { useThemeColors } from '../../utils/theme';
 
 interface CardProps {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ export const Card: React.FC<CardProps> = ({
   disabled = false,
   className = '',
 }) => {
+  const colors = useThemeColors();
+
   const getCardStyle = () => {
     const baseStyle = {
       borderRadius: 16,
@@ -27,18 +30,22 @@ export const Card: React.FC<CardProps> = ({
       case 'glass':
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: colors.glass,
           borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
-          backdropFilter: 'blur(10px)',
+          borderColor: colors.border,
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 4,
         };
       case 'frost':
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          backgroundColor: colors.primaryLight + '15',
           borderWidth: 1,
-          borderColor: 'rgba(186, 230, 253, 0.3)',
-          shadowColor: '#38bdf8',
+          borderColor: colors.primary + '30',
+          shadowColor: colors.primary,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
           shadowRadius: 12,
@@ -47,24 +54,24 @@ export const Card: React.FC<CardProps> = ({
       case 'ice':
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(186, 230, 253, 0.05)',
+          backgroundColor: colors.accentLight + '15',
           borderWidth: 1,
-          borderColor: 'rgba(186, 230, 253, 0.2)',
+          borderColor: colors.accent + '30',
         };
       case 'outlined':
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(30, 41, 59, 0.8)',
+          backgroundColor: colors.backgroundCard,
           borderWidth: 1,
-          borderColor: 'rgba(186, 230, 253, 0.3)',
+          borderColor: colors.border,
         };
       case 'elevated':
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: colors.backgroundCard,
           borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
-          shadowColor: '#000',
+          borderColor: colors.border,
+          shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.15,
           shadowRadius: 16,
@@ -73,9 +80,9 @@ export const Card: React.FC<CardProps> = ({
       default:
         return {
           ...baseStyle,
-          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          backgroundColor: colors.backgroundCard,
           borderWidth: 1,
-          borderColor: 'rgba(56, 189, 248, 0.2)',
+          borderColor: colors.border,
         };
     }
   };

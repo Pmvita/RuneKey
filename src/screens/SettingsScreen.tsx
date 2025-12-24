@@ -1,157 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, Image, Dimensions } from 'react-native';
+// RuneKey/src/screens/SettingsScreen.tsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withSpring, 
   withTiming,
-  withSequence,
   withDelay,
-  Easing
+  FadeInDown,
 } from 'react-native-reanimated';
-import { Card } from '../components/common/Card';
-import { Button } from '../components/common/Button';
-import { LiquidGlass, UniversalBackground } from '../components';
+import {
+  AnimatedSettingsCard,
+  AnimatedSettingsItem,
+  AnimatedSwitch,
+  AnimatedSectionHeader,
+  UniversalBackground,
+} from '../components';
 import { useAppStore } from '../stores/app/useAppStore';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useWallet } from '../hooks/wallet/useWallet';
 import { NETWORK_CONFIGS } from '../constants';
 import { SupportedNetwork } from '../types';
 import { logger } from '../utils/logger';
+import { useThemeColors, useIsDark } from '../utils/theme';
+import { notificationService } from '../services/notifications/notificationService';
+import { biometricService, BiometricType } from '../services/auth/biometricService';
+import { hapticFeedback } from '../utils/haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface SettingsItemProps {
-  icon: string;
-  title: string;
-  subtitle?: string;
-  onPress?: () => void;
-  rightElement?: React.ReactNode;
-  showArrow?: boolean;
-  variant?: 'default' | 'danger' | 'warning';
-}
-
-const SettingsItem: React.FC<SettingsItemProps> = ({
-  icon,
-  title,
-  subtitle,
-  onPress,
-  rightElement,
-  showArrow = true,
-  variant = 'default',
-}) => {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'danger':
-        return {
-          iconColor: '#dc2626',
-          titleColor: '#dc2626',
-          subtitleColor: '#ef4444',
-        };
-      case 'warning':
-        return {
-          iconColor: '#f59e0b',
-          titleColor: '#f59e0b',
-          subtitleColor: '#fbbf24',
-        };
-      default:
-        return {
-          iconColor: '#64748b',
-          titleColor: '#1e293b',
-          subtitleColor: '#64748b',
-        };
-    }
-  };
-
-  const styles = getVariantStyles();
-
-  return (
-    <TouchableOpacity
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-      }}
-      onPress={onPress}
-      disabled={!onPress}
-      activeOpacity={0.7}
-    >
-      <View style={{
-        width: 40,
-        height: 40,
-        backgroundColor: '#0b1120',
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-      }}>
-        {icon === 'wallet' ? (
-          <Image
-            source={require('../../assets/icon.png')}
-            style={{ width: 20, height: 20 }}
-            resizeMode="contain"
-          />
-        ) : (
-          <Ionicons name={icon as any} size={20} color={styles.iconColor} />
-        )}
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '600',
-          color: styles.titleColor,
-          marginBottom: 4,
-        }}>
-          {title}
-        </Text>
-        {subtitle && (
-          <Text style={{
-            fontSize: 14,
-            color: styles.subtitleColor,
-          }}>
-            {subtitle}
-          </Text>
-        )}
-      </View>
-      {rightElement && (
-        <View style={{ marginRight: 8 }}>
-          {rightElement}
-        </View>
-      )}
-      {showArrow && onPress && (
-        <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
-      )}
-    </TouchableOpacity>
-  );
+const STORAGE_KEYS = {
+  PUSH_NOTIFICATIONS: 'push_notifications_enabled',
+  BIOMETRIC_ENABLED: 'biometric_enabled',
 };
 
 export const SettingsScreen: React.FC = () => {
   const { theme, setTheme, developerMode, setDeveloperMode, logout } = useAppStore();
   const { isConnected, currentWallet, activeNetwork, disconnectWallet } = useWalletStore();
   const { switchNetwork } = useWallet();
+  const colors = useThemeColors();
+  const isDark = useIsDark();
+  const systemColorScheme = useColorScheme();
+
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricType, setBiometricType] = useState<BiometricType | null>(null);
+  const [isLoadingBiometric, setIsLoadingBiometric] = useState(false);
 
   // Animation values
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(-30);
-  const walletCardScale = useSharedValue(0.9);
-  const walletCardOpacity = useSharedValue(0);
-  const actionsTranslateY = useSharedValue(30);
-  const actionsOpacity = useSharedValue(0);
-  const preferencesTranslateY = useSharedValue(30);
-  const preferencesOpacity = useSharedValue(0);
+
+  // Initialize services
+  useEffect(() => {
+    const initializeServices = async () => {
+      // Initialize notifications
+      await notificationService.initialize();
+
+      // Load saved preferences
+      const savedPushNotifications = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_NOTIFICATIONS);
+      if (savedPushNotifications !== null) {
+        setPushNotificationsEnabled(savedPushNotifications === 'true');
+      }
+
+      const savedBiometric = await AsyncStorage.getItem(STORAGE_KEYS.BIOMETRIC_ENABLED);
+      if (savedBiometric !== null) {
+        setBiometricEnabled(savedBiometric === 'true');
+      }
+
+      // Check biometric availability
+      const biometricInfo = await biometricService.getBiometricType();
+      setBiometricType(biometricInfo);
+    };
+
+    initializeServices();
+  }, []);
 
   // Log screen focus
   useFocusEffect(
@@ -160,21 +88,6 @@ export const SettingsScreen: React.FC = () => {
       // Start animations
       headerOpacity.value = withTiming(1, { duration: 600 });
       headerTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
-      
-      setTimeout(() => {
-        walletCardOpacity.value = withTiming(1, { duration: 600 });
-        walletCardScale.value = withSpring(1, { damping: 12, stiffness: 120 });
-      }, 200);
-
-      setTimeout(() => {
-        actionsOpacity.value = withTiming(1, { duration: 600 });
-        actionsTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
-      }, 400);
-
-      setTimeout(() => {
-        preferencesOpacity.value = withTiming(1, { duration: 600 });
-        preferencesTranslateY.value = withSpring(0, { damping: 15, stiffness: 150 });
-      }, 600);
     }, [])
   );
 
@@ -184,89 +97,176 @@ export const SettingsScreen: React.FC = () => {
     transform: [{ translateY: headerTranslateY.value }],
   }));
 
-  const walletCardAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: walletCardOpacity.value,
-    transform: [{ scale: walletCardScale.value }],
-  }));
-
-  const actionsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: actionsOpacity.value,
-    transform: [{ translateY: actionsTranslateY.value }],
-  }));
-
-  const preferencesAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: preferencesOpacity.value,
-    transform: [{ translateY: preferencesTranslateY.value }],
-  }));
-
-  const handleThemeChange = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+  const handleThemeChange = useCallback(async () => {
+    hapticFeedback.selection();
+    const newTheme = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light';
     setTheme(newTheme);
     logger.logButtonPress('Theme Toggle', `switch to ${newTheme} mode`);
-  };
+    
+    // Show notification
+    await notificationService.scheduleLocalNotification({
+      title: 'Theme Changed',
+      body: `Switched to ${newTheme === 'system' ? 'system' : newTheme} theme`,
+      data: { type: 'theme_change', theme: newTheme },
+    });
+  }, [theme, setTheme]);
 
-  const handleNetworkSwitch = () => {
+  const handleNetworkSwitch = useCallback(() => {
+    hapticFeedback.medium();
+    const networkOptions = Object.keys(NETWORK_CONFIGS).map(network => ({
+      text: NETWORK_CONFIGS[network as SupportedNetwork].name,
+      onPress: async () => {
+        switchNetwork(network as SupportedNetwork);
+        logger.logButtonPress('Network Switch', `switch to ${network}`);
+        hapticFeedback.success();
+        
+        // Show notification
+        await notificationService.showNetworkSwitchNotification(
+          NETWORK_CONFIGS[network as SupportedNetwork].name
+        );
+      },
+    }));
+
     Alert.alert(
       'Switch Network',
       'Select a network to switch to:',
-      Object.keys(NETWORK_CONFIGS).map(network => ({
-        text: NETWORK_CONFIGS[network as SupportedNetwork].name,
-        onPress: () => {
-          switchNetwork(network as SupportedNetwork);
-          logger.logButtonPress('Network Switch', `switch to ${network}`);
-        },
-      }))
+      networkOptions
     );
-  };
+  }, [switchNetwork]);
 
-  const handleSecurityPress = () => {
+  const handleSecurityPress = useCallback(() => {
+    hapticFeedback.medium();
     logger.logButtonPress('Security', 'navigate to security settings');
-    Alert.alert('Security', 'Security settings will be available soon!');
-  };
+    Alert.alert(
+      'Security Settings',
+      'Security settings including 2FA, backup phrases, and wallet encryption will be available soon!',
+      [{ text: 'OK' }]
+    );
+  }, []);
 
-  const handleHelpPress = () => {
+  const handleHelpPress = useCallback(() => {
+    hapticFeedback.medium();
     logger.logButtonPress('Help', 'navigate to help center');
-    Alert.alert('Help', 'Help center will be available soon!');
-  };
+    Alert.alert(
+      'Help Center',
+      'Access tutorials, FAQs, and support documentation. Coming soon!',
+      [{ text: 'OK' }]
+    );
+  }, []);
 
-  const handleDisconnectWallet = () => {
+  const handlePushNotificationsToggle = useCallback(async (value: boolean) => {
+    hapticFeedback.light();
+    setPushNotificationsEnabled(value);
+    await AsyncStorage.setItem(STORAGE_KEYS.PUSH_NOTIFICATIONS, value.toString());
+    
+    if (value) {
+      await notificationService.initialize();
+      await notificationService.scheduleLocalNotification({
+        title: 'Notifications Enabled',
+        body: 'You will now receive alerts for transactions and price changes',
+        data: { type: 'notifications_enabled' },
+      });
+    } else {
+      await notificationService.cancelAllNotifications();
+    }
+    
+    logger.logButtonPress('Push Notifications', value ? 'enabled' : 'disabled');
+  }, []);
+
+  const handleBiometricToggle = useCallback(async (value: boolean) => {
+    hapticFeedback.light();
+    
+    if (value) {
+      setIsLoadingBiometric(true);
+      const available = await biometricService.isAvailable();
+      
+      if (!available) {
+        Alert.alert(
+          'Biometric Not Available',
+          'Biometric authentication is not available on this device or not enrolled.',
+          [{ text: 'OK' }]
+        );
+        setIsLoadingBiometric(false);
+        return;
+      }
+
+      const authenticated = await biometricService.authenticate(
+        'Enable biometric authentication to secure your wallet'
+      );
+
+      if (authenticated) {
+        setBiometricEnabled(true);
+        await AsyncStorage.setItem(STORAGE_KEYS.BIOMETRIC_ENABLED, 'true');
+        hapticFeedback.success();
+        
+        await notificationService.scheduleLocalNotification({
+          title: 'Biometric Enabled',
+          body: `${biometricType?.name || 'Biometric'} authentication is now active`,
+          data: { type: 'biometric_enabled' },
+        });
+      } else {
+        hapticFeedback.error();
+      }
+      setIsLoadingBiometric(false);
+    } else {
+      setBiometricEnabled(false);
+      await AsyncStorage.setItem(STORAGE_KEYS.BIOMETRIC_ENABLED, 'false');
+      hapticFeedback.light();
+    }
+    
+    logger.logButtonPress('Biometric', value ? 'enabled' : 'disabled');
+  }, [biometricType]);
+
+  const handleDisconnectWallet = useCallback(() => {
+    hapticFeedback.medium();
     Alert.alert(
       'Disconnect Wallet',
       'Are you sure you want to disconnect your wallet?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel', onPress: () => hapticFeedback.light() },
         {
           text: 'Disconnect',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             disconnectWallet();
+            hapticFeedback.success();
             logger.logButtonPress('Disconnect Wallet', 'wallet disconnected');
+            
+            await notificationService.showWalletDisconnectedNotification();
           },
         },
       ]
     );
-  };
+  }, [disconnectWallet]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
+    hapticFeedback.medium();
     Alert.alert(
       'Logout',
       'Are you sure you want to logout? This will take you back to the login screen.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel', onPress: () => hapticFeedback.light() },
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             // Disconnect wallet first
             disconnectWallet();
             // Then logout from app
             logout();
+            hapticFeedback.success();
             logger.logButtonPress('Logout', 'user logged out');
+            
+            await notificationService.scheduleLocalNotification({
+              title: 'Logged Out',
+              body: 'You have been logged out successfully',
+              data: { type: 'logout' },
+            });
           },
         },
       ]
     );
-  };
+  }, [disconnectWallet, logout]);
 
   const formatUSD = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -282,150 +282,127 @@ export const SettingsScreen: React.FC = () => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  const getThemeIcon = () => {
+    if (theme === 'system') return 'phone-portrait';
+    return theme === 'dark' ? 'moon' : 'sunny';
+  };
+
+  const getThemeText = () => {
+    if (theme === 'system') {
+      return `System (${systemColorScheme === 'dark' ? 'Dark' : 'Light'})`;
+    }
+    return theme === 'dark' ? 'Dark' : 'Light';
+  };
+
   return (
     <UniversalBackground>
-      <SafeAreaView style={{ flex: 1 }}>
-      {/* Enhanced background gradient */}
-      <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#000000',
-      }} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <ScrollView 
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 32 }}
+        >
+          {/* Header */}
+          <Animated.View 
+            style={[
+              { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 },
+              headerAnimatedStyle
+            ]}
+          >
+            <Text style={{
+              fontSize: 32,
+              fontWeight: 'bold',
+              color: colors.textPrimary,
+              textAlign: 'center',
+              marginBottom: 4,
+              letterSpacing: -0.5,
+            }}>
+              Settings
+            </Text>
+            <Text style={{
+              fontSize: 16,
+              color: colors.textSecondary,
+              textAlign: 'center',
+            }}>
+              Manage your wallet preferences
+            </Text>
+          </Animated.View>
 
-      {/* Subtle background pattern */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03 }}>
-        <View style={{ position: 'absolute', top: 80, left: 40, width: 120, height: 120, backgroundColor: '#3b82f6', borderRadius: 60 }} />
-        <View style={{ position: 'absolute', bottom: 150, right: 60, width: 80, height: 80, backgroundColor: '#10b981', borderRadius: 40 }} />
-      </View>
-
-      <ScrollView 
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
-      >
-        {/* Enhanced Header */}
-        <Animated.View style={[{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }, headerAnimatedStyle]}>
-          <Text style={{
-            fontSize: 32,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            textAlign: 'center',
-            marginBottom: 4,
-            letterSpacing: -0.5,
-          }}>
-            Settings
-          </Text>
-          <Text style={{
-            fontSize: 16,
-            color: '#94A3B8',
-            textAlign: 'center',
-          }}>
-            Manage your wallet preferences
-          </Text>
-        </Animated.View>
-
-        {/* Enhanced Connected Wallet Section */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 32 }, walletCardAnimatedStyle]}>
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 20,
-            padding: 24,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <View style={{
-                width: 48,
-                height: 48,
-                backgroundColor: '#3b82f6',
-                borderRadius: 24,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 16,
-              }}>
-                <Ionicons name="wallet" size={24} color="#ffffff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: '#FFFFFF',
-                  marginBottom: 4,
+          {/* Connected Wallet Section */}
+          <AnimatedSettingsCard delay={100} variant="glass" style={{ marginHorizontal: 24, marginBottom: 32 }}>
+            <View style={{ padding: 24 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  backgroundColor: colors.primary,
+                  borderRadius: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 16,
                 }}>
-                  Connected Wallet
-                </Text>
+                  <Ionicons name="wallet" size={24} color={colors.textInverse} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    color: colors.textPrimary,
+                    marginBottom: 4,
+                  }}>
+                    Connected Wallet
+                  </Text>
+                  <Text style={{
+                    fontSize: 14,
+                    color: colors.textSecondary,
+                    fontFamily: 'monospace',
+                  }}>
+                    {currentWallet ? truncateAddress(currentWallet.address) : 'No wallet connected'}
+                  </Text>
+                </View>
+                {isConnected && (
+                  <View style={{
+                    backgroundColor: colors.success,
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                  }}>
+                    <Text style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: colors.textInverse,
+                    }}>
+                      Connected
+                    </Text>
+                  </View>
+                )}
+              </View>
+              
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{
                   fontSize: 14,
-                  color: '#94A3B8',
-                  fontFamily: 'monospace',
+                  color: colors.textSecondary,
                 }}>
-                  {currentWallet ? truncateAddress(currentWallet.address) : 'No wallet connected'}
+                  Network: {activeNetwork}
                 </Text>
-              </View>
-              <View style={{
-                backgroundColor: '#22c55e',
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-              }}>
                 <Text style={{
-                  fontSize: 12,
-                  fontWeight: '600',
-                  color: '#ffffff',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  color: colors.textPrimary,
                 }}>
-                  Connected
+                  {currentWallet ? formatUSD(parseFloat(currentWallet.balance) * 3000) : '$0'}
                 </Text>
               </View>
             </View>
-            
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{
-                fontSize: 14,
-                color: '#94A3B8',
-              }}>
-                Network: {activeNetwork}
-              </Text>
-              <Text style={{
-                fontSize: 16,
-                fontWeight: 'bold',
-                color: '#FFFFFF',
-              }}>
-                {currentWallet ? formatUSD(parseFloat(currentWallet.balance) * 3000) : '$0'}
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
+          </AnimatedSettingsCard>
 
-        {/* Enhanced Quick Actions Section */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 32 }, actionsAnimatedStyle]}>
-          <Text style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            marginBottom: 16,
-          }}>
-            Quick Actions
-          </Text>
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 20,
-            overflow: 'hidden',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
+          {/* Quick Actions Section */}
+          <AnimatedSectionHeader 
+            title="Quick Actions" 
+            delay={200}
+            style={{ paddingHorizontal: 24, marginBottom: 16 }}
+          />
+          <AnimatedSettingsCard delay={250} variant="glass" style={{ marginHorizontal: 24, marginBottom: 32 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 24 }}>
               {/* Switch Network */}
               <TouchableOpacity
@@ -436,25 +413,20 @@ export const SettingsScreen: React.FC = () => {
                 <View style={{
                   width: 64,
                   height: 64,
-                  backgroundColor: '#eff6ff',
+                  backgroundColor: colors.primaryLight + '20',
                   borderRadius: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 8,
-                  shadowColor: '#3b82f6',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 8,
-                  elevation: 4,
                   borderWidth: 1,
-                  borderColor: 'rgba(59, 130, 246, 0.2)',
+                  borderColor: colors.primary + '40',
                 }}>
-                  <Ionicons name="swap-horizontal" size={28} color="#3b82f6" />
+                  <Ionicons name="swap-horizontal" size={28} color={colors.primary} />
                 </View>
                 <Text style={{
                   fontSize: 14,
                   fontWeight: '600',
-                  color: '#FFFFFF',
+                  color: colors.textPrimary,
                 }}>
                   Switch Network
                 </Text>
@@ -469,25 +441,20 @@ export const SettingsScreen: React.FC = () => {
                 <View style={{
                   width: 64,
                   height: 64,
-                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  backgroundColor: colors.success + '20',
                   borderRadius: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 8,
-                  shadowColor: '#22c55e',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 8,
-                  elevation: 4,
                   borderWidth: 1,
-                  borderColor: 'rgba(34, 197, 94, 0.2)',
+                  borderColor: colors.success + '40',
                 }}>
-                  <Ionicons name="shield-checkmark" size={28} color="#22c55e" />
+                  <Ionicons name="shield-checkmark" size={28} color={colors.success} />
                 </View>
                 <Text style={{
                   fontSize: 14,
                   fontWeight: '600',
-                  color: '#FFFFFF',
+                  color: colors.textPrimary,
                 }}>
                   Security
                 </Text>
@@ -502,244 +469,136 @@ export const SettingsScreen: React.FC = () => {
                 <View style={{
                   width: 64,
                   height: 64,
-                  backgroundColor: '#faf5ff',
+                  backgroundColor: colors.accent + '20',
                   borderRadius: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 8,
-                  shadowColor: '#a855f7',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 8,
-                  elevation: 4,
                   borderWidth: 1,
-                  borderColor: 'rgba(168, 85, 247, 0.2)',
+                  borderColor: colors.accent + '40',
                 }}>
-                  <Ionicons name="help-circle" size={28} color="#a855f7" />
+                  <Ionicons name="help-circle" size={28} color={colors.accent} />
                 </View>
                 <Text style={{
                   fontSize: 14,
                   fontWeight: '600',
-                  color: '#FFFFFF',
+                  color: colors.textPrimary,
                 }}>
                   Help
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </Animated.View>
+          </AnimatedSettingsCard>
 
-        {/* Enhanced Preferences Section */}
-        <Animated.View style={[{ paddingHorizontal: 24 }, preferencesAnimatedStyle]}>
-          <Text style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            marginBottom: 16,
-          }}>
-            Preferences
-          </Text>
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 20,
-            overflow: 'hidden',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
-            {/* Dark Mode */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-              borderBottomWidth: 1,
-              borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-            }}>
-              <View style={{
-                width: 40,
-                height: 40,
-                backgroundColor: '#0b1120',
-                borderRadius: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 16,
-              }}>
-                <Ionicons name="moon" size={20} color="#94A3B8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#FFFFFF',
-                  marginBottom: 4,
-                }}>
-                  Dark Mode
-                </Text>
-                <Text style={{
-                  fontSize: 14,
-                  color: '#94A3B8',
-                }}>
-                  Switch between light and dark themes
-                </Text>
-              </View>
-              <Switch
-                value={theme === 'dark'}
-                onValueChange={handleThemeChange}
-                trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
-                thumbColor="#ffffff"
-              />
-            </View>
+          {/* Preferences Section */}
+          <AnimatedSectionHeader 
+            title="Preferences" 
+            delay={400}
+            style={{ paddingHorizontal: 24, marginBottom: 16 }}
+          />
+          <AnimatedSettingsCard delay={450} variant="glass" style={{ marginHorizontal: 24, marginBottom: 32 }}>
+            {/* Theme Toggle */}
+            <AnimatedSettingsItem
+              key={`theme-${theme}`}
+              icon={getThemeIcon()}
+              title="Theme"
+              subtitle={getThemeText()}
+              onPress={handleThemeChange}
+              rightElement={
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={{
+                    fontSize: 14,
+                    color: colors.textSecondary,
+                    marginRight: 8,
+                  }}>
+                    {getThemeText()}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+                </View>
+              }
+              showArrow={false}
+              delay={500}
+            />
 
             {/* Push Notifications */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-              borderBottomWidth: 1,
-              borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-            }}>
-              <View style={{
-                width: 40,
-                height: 40,
-                backgroundColor: '#0b1120',
-                borderRadius: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 16,
-              }}>
-                <Ionicons name="notifications" size={20} color="#94A3B8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#FFFFFF',
-                  marginBottom: 4,
-                }}>
-                  Push Notifications
-                </Text>
-                <Text style={{
-                  fontSize: 14,
-                  color: '#94A3B8',
-                }}>
-                  Get alerts for transactions and price changes
-                </Text>
-              </View>
-              <Switch
-                value={pushNotificationsEnabled}
-                onValueChange={setPushNotificationsEnabled}
-                trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
-                thumbColor="#ffffff"
-              />
-            </View>
+            <AnimatedSettingsItem
+              icon="notifications"
+              title="Push Notifications"
+              subtitle="Get alerts for transactions and price changes"
+              rightElement={
+                <AnimatedSwitch
+                  value={pushNotificationsEnabled}
+                  onValueChange={handlePushNotificationsToggle}
+                  delay={550}
+                />
+              }
+              showArrow={false}
+              delay={550}
+            />
 
             {/* Biometric */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-            }}>
-              <View style={{
-                width: 40,
-                height: 40,
-                backgroundColor: '#0b1120',
-                borderRadius: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 16,
-              }}>
-                <Ionicons name="finger-print" size={20} color="#94A3B8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#FFFFFF',
-                  marginBottom: 4,
-                }}>
-                  Biometric
-                </Text>
-                <Text style={{
-                  fontSize: 14,
-                  color: '#94A3B8',
-                }}>
-                  Use fingerprint or face ID to unlock
-                </Text>
-              </View>
-              <Switch
-                value={biometricEnabled}
-                onValueChange={setBiometricEnabled}
-                trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
-                thumbColor="#ffffff"
+            {biometricType?.available && (
+              <AnimatedSettingsItem
+                icon={biometricType.type === 'facial' ? 'face-recognition' : 'finger-print'}
+                title={biometricType.name}
+                subtitle={`Use ${biometricType.name.toLowerCase()} to unlock`}
+                rightElement={
+                  <AnimatedSwitch
+                    value={biometricEnabled}
+                    onValueChange={handleBiometricToggle}
+                    disabled={isLoadingBiometric}
+                    delay={600}
+                  />
+                }
+                showArrow={false}
+                delay={600}
               />
-            </View>
-          </View>
-        </Animated.View>
+            )}
+          </AnimatedSettingsCard>
 
-        {/* Logout Section */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginTop: 32 }, preferencesAnimatedStyle]}>
-          <View style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 20,
-            overflow: 'hidden',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 4,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-          }}>
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 20,
-                paddingHorizontal: 20,
-              }}
+          {/* Developer Mode (if enabled) */}
+          {developerMode && (
+            <>
+              <AnimatedSectionHeader 
+                title="Developer" 
+                delay={700}
+                style={{ paddingHorizontal: 24, marginBottom: 16 }}
+              />
+              <AnimatedSettingsCard delay={750} variant="glass" style={{ marginHorizontal: 24, marginBottom: 32 }}>
+                <AnimatedSettingsItem
+                  icon="code"
+                  title="Developer Mode"
+                  subtitle="Advanced features for development"
+                  rightElement={
+                    <AnimatedSwitch
+                      value={developerMode}
+                      onValueChange={(value) => {
+                        hapticFeedback.light();
+                        setDeveloperMode(value);
+                      }}
+                      delay={800}
+                    />
+                  }
+                  showArrow={false}
+                  delay={800}
+                />
+              </AnimatedSettingsCard>
+            </>
+          )}
+
+          {/* Logout Section */}
+          <AnimatedSettingsCard delay={900} variant="glass" style={{ marginHorizontal: 24, marginTop: 16 }}>
+            <AnimatedSettingsItem
+              icon="log-out"
+              title="Logout"
+              subtitle="Sign out and return to login screen"
               onPress={handleLogout}
-              activeOpacity={0.7}
-            >
-              <View style={{
-                width: 40,
-                height: 40,
-                backgroundColor: 'rgba(248, 113, 113, 0.18)',
-                borderRadius: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 16,
-              }}>
-                <Ionicons name="log-out" size={20} color="#dc2626" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#dc2626',
-                  marginBottom: 4,
-                }}>
-                  Logout
-                </Text>
-                <Text style={{
-                  fontSize: 14,
-                  color: '#ef4444',
-                }}>
-                  Sign out and return to login screen
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#dc2626" />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+              variant="danger"
+              delay={950}
+            />
+          </AnimatedSettingsCard>
+        </ScrollView>
+      </SafeAreaView>
     </UniversalBackground>
   );
 };

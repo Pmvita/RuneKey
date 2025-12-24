@@ -6,6 +6,7 @@ import Animated, {
   withTiming,
   Easing
 } from 'react-native-reanimated';
+import { useThemeColors } from '../../utils/theme';
 
 interface InputProps {
   label?: string;
@@ -48,6 +49,7 @@ export const Input: React.FC<InputProps> = ({
   onBlur,
   className = '',
 }) => {
+  const colors = useThemeColors();
   const [isFocused, setIsFocused] = useState(false);
   const borderWidth = useSharedValue(1);
   const scale = useSharedValue(1);
@@ -77,8 +79,8 @@ export const Input: React.FC<InputProps> = ({
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 16,
-      backgroundColor: 'rgba(30, 41, 59, 0.8)',
-      shadowColor: '#000',
+      backgroundColor: colors.backgroundCard,
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -88,15 +90,15 @@ export const Input: React.FC<InputProps> = ({
     if (error) {
       return {
         ...baseStyle,
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: colors.error,
+        backgroundColor: colors.error + '1A',
       };
     } else if (isFocused) {
       return {
         ...baseStyle,
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.05)',
-        shadowColor: '#38bdf8',
+        borderColor: colors.primary,
+        backgroundColor: colors.primary + '0D',
+        shadowColor: colors.primary,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -105,7 +107,7 @@ export const Input: React.FC<InputProps> = ({
     } else {
       return {
         ...baseStyle,
-        borderColor: 'rgba(148, 163, 184, 0.3)',
+        borderColor: colors.border,
       };
     }
   };
@@ -113,7 +115,7 @@ export const Input: React.FC<InputProps> = ({
   const getInputStyle = () => {
     return {
       flex: 1,
-      color: '#f1f5f9',
+      color: colors.textPrimary,
       fontSize: 16,
       backgroundColor: 'transparent',
       paddingVertical: 0,
@@ -125,7 +127,7 @@ export const Input: React.FC<InputProps> = ({
     return {
       fontSize: 14,
       fontWeight: '600' as const,
-      color: '#cbd5e1',
+      color: colors.textSecondary,
       marginBottom: 8,
       letterSpacing: 0.5,
     };
@@ -133,7 +135,7 @@ export const Input: React.FC<InputProps> = ({
 
   const getErrorStyle = () => {
     return {
-      color: '#ef4444',
+      color: colors.error,
       fontSize: 12,
       marginTop: 4,
       fontWeight: '500' as const,
@@ -142,7 +144,7 @@ export const Input: React.FC<InputProps> = ({
 
   const getHelperStyle = () => {
     return {
-      color: '#94a3b8',
+      color: colors.textTertiary,
       fontSize: 12,
       marginTop: 4,
     };
@@ -167,7 +169,7 @@ export const Input: React.FC<InputProps> = ({
           <TextInput
             style={getInputStyle()}
             placeholder={placeholder}
-            placeholderTextColor="#64748b"
+            placeholderTextColor={colors.textTertiary}
             value={value}
             onChangeText={onChangeText}
             editable={!disabled}
@@ -179,8 +181,8 @@ export const Input: React.FC<InputProps> = ({
             maxLength={maxLength}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            selectionColor="#38bdf8"
-            cursorColor="#38bdf8"
+            selectionColor={colors.primary}
+            cursorColor={colors.primary}
           />
           
           {rightElement && (

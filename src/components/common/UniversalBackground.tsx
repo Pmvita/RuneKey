@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import BubbleBackground from './BubbleBackground';
+import { useThemeColors } from '../../utils/theme';
 
 interface UniversalBackgroundProps {
   children: React.ReactNode;
@@ -11,8 +12,10 @@ export const UniversalBackground: React.FC<UniversalBackgroundProps> = ({
   children,
   style
 }) => {
+  const colors = useThemeColors();
+  
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: colors.background }, style]}>
       <BubbleBackground />
       <View style={styles.content}>
         {children}
@@ -25,7 +28,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    backgroundColor: '#000000',
   },
   content: {
     flex: 1,

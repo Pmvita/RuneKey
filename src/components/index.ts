@@ -26,6 +26,10 @@ export { AnimatedButton } from './common/AnimatedButton';
 export { ParticleEffect } from './common/ParticleEffect';
 export { AnimatedProgressBar } from './common/AnimatedProgressBar';
 export { LiquidGlass } from './common/LiquidGlass';
+export { AnimatedSettingsCard } from './common/AnimatedSettingsCard';
+export { AnimatedSettingsItem } from './common/AnimatedSettingsItem';
+export { AnimatedSwitch } from './common/AnimatedSwitch';
+export { AnimatedSectionHeader } from './common/AnimatedSectionHeader';
 
 // Token components
 export { TokenListItem } from './token/TokenListItem';

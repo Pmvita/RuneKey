@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { UniversalBackground, SparklineChart } from '../components';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
+import { useThemeColors } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -48,6 +49,7 @@ interface WatchlistStock {
 }
 
 export const MarketScreen: React.FC = () => {
+  const colors = useThemeColors();
   const [activeTab, setActiveTab] = useState<TabType>('Overview');
   const [selectedTimeframe, setSelectedTimeframe] = useState('This week');
 
@@ -139,18 +141,25 @@ export const MarketScreen: React.FC = () => {
   const renderTrendingStock = ({ item }: { item: TrendingStock }) => {
     const isPositive = item.changePercent >= 0;
     return (
-      <Animated.View entering={FadeInUp} style={styles.trendingCard}>
-        <View style={[styles.stockIconSquare, { backgroundColor: '#1E293B' }]}>
+      <Animated.View entering={FadeInUp} style={[styles.trendingCard, { backgroundColor: colors.backgroundCard, borderColor: colors.primary + '33' }]}>
+        <View style={[styles.stockIconSquare, { backgroundColor: colors.backgroundTertiary }]}>
           <View style={[styles.stockIconCircle, { backgroundColor: item.iconColor }]}>
-            <Text style={styles.stockIconText}>{item.symbol[0]}</Text>
+            <Text style={[styles.stockIconText, { color: colors.textInverse }]}>{item.symbol[0]}</Text>
           </View>
         </View>
-        <Text style={styles.trendingSymbol}>{item.symbol}</Text>
-        <Text style={styles.trendingName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.trendingPrice}>{formatCurrency(item.price)}</Text>
-        <Text style={[styles.trendingChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
-          {isPositive ? '+' : ''}{formatPercentage(item.changePercent)}
-        </Text>
+        <Text style={[styles.trendingSymbol, { color: colors.textPrimary }]}>{item.symbol}</Text>
+        <Text style={[styles.trendingName, { color: colors.textTertiary }]} numberOfLines={1}>{item.name}</Text>
+        <Text style={[styles.trendingPrice, { color: colors.textPrimary }]}>{formatCurrency(item.price)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Ionicons 
+            name={isPositive ? 'arrow-up' : 'arrow-down'} 
+            size={12} 
+            color={isPositive ? colors.success : colors.error} 
+          />
+          <Text style={[styles.trendingChange, { color: isPositive ? colors.success : colors.error }]}>
+            {isPositive ? '+' : ''}{formatPercentage(item.changePercent)}
+          </Text>
+        </View>
       </Animated.View>
     );
   };
@@ -158,20 +167,20 @@ export const MarketScreen: React.FC = () => {
   const renderPortfolioStock = ({ item }: { item: PortfolioStock }) => {
     const isPositive = item.changePercent >= 0;
     return (
-      <Animated.View entering={FadeInUp} style={[styles.portfolioCard, { backgroundColor: '#F3F4F6' }]}>
+      <Animated.View entering={FadeInUp} style={[styles.portfolioCard, { backgroundColor: colors.backgroundCard }]}>
         <View style={[styles.portfolioIconCircle, { backgroundColor: item.iconColor }]}>
-          <Text style={styles.portfolioIconText}>{item.symbol[0]}</Text>
+          <Text style={[styles.portfolioIconText, { color: colors.textInverse }]}>{item.symbol[0]}</Text>
         </View>
-        <Text style={styles.portfolioSymbol}>{item.symbol}</Text>
-        <Text style={styles.portfolioName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.portfolioPrice}>{item.price.toFixed(2)}</Text>
+        <Text style={[styles.portfolioSymbol, { color: colors.textPrimary }]}>{item.symbol}</Text>
+        <Text style={[styles.portfolioName, { color: colors.textTertiary }]} numberOfLines={1}>{item.name}</Text>
+        <Text style={[styles.portfolioPrice, { color: colors.textPrimary }]}>{item.price.toFixed(2)}</Text>
         <View style={styles.portfolioChangeRow}>
           <Ionicons 
             name={isPositive ? 'arrow-up' : 'arrow-down'} 
             size={14} 
-            color={isPositive ? '#22C55E' : '#EF4444'} 
+            color={isPositive ? colors.success : colors.error} 
           />
-          <Text style={[styles.portfolioChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+          <Text style={[styles.portfolioChange, { color: isPositive ? colors.success : colors.error }]}>
             {formatPercentage(item.changePercent)}
           </Text>
         </View>
@@ -182,32 +191,32 @@ export const MarketScreen: React.FC = () => {
   const renderWatchlistStock = ({ item }: { item: WatchlistStock }) => {
     const isPositive = item.changePercent >= 0;
     return (
-      <Animated.View entering={FadeInUp} style={styles.watchlistItem}>
+      <Animated.View entering={FadeInUp} style={[styles.watchlistItem, { backgroundColor: colors.backgroundCard }]}>
         <View style={[styles.watchlistIconCircle, { backgroundColor: item.iconColor }]}>
-          <Text style={styles.watchlistIconText}>{item.symbol[0]}</Text>
+          <Text style={[styles.watchlistIconText, { color: colors.textInverse }]}>{item.symbol[0]}</Text>
         </View>
         <View style={styles.watchlistInfo}>
-          <Text style={styles.watchlistSymbol}>{item.symbol}</Text>
-          <Text style={styles.watchlistName} numberOfLines={1}>{item.name}</Text>
+          <Text style={[styles.watchlistSymbol, { color: colors.textPrimary }]}>{item.symbol}</Text>
+          <Text style={[styles.watchlistName, { color: colors.textTertiary }]} numberOfLines={1}>{item.name}</Text>
         </View>
         <View style={styles.watchlistChart}>
           <SparklineChart
             data={item.chartData}
             width={60}
             height={30}
-            color={isPositive ? '#22C55E' : '#EF4444'}
+            color={isPositive ? colors.success : colors.error}
             strokeWidth={2}
           />
         </View>
         <View style={styles.watchlistPrice}>
-          <Text style={styles.watchlistPriceValue}>{formatCurrency(item.price)}</Text>
+          <Text style={[styles.watchlistPriceValue, { color: colors.textPrimary }]}>{formatCurrency(item.price)}</Text>
           <View style={styles.watchlistChangeRow}>
             <Ionicons 
               name={isPositive ? 'arrow-up' : 'arrow-down'} 
               size={12} 
-              color={isPositive ? '#22C55E' : '#EF4444'} 
+              color={isPositive ? colors.success : colors.error} 
             />
-            <Text style={[styles.watchlistChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+            <Text style={[styles.watchlistChange, { color: isPositive ? colors.success : colors.error }]}>
               {formatPercentage(item.changePercent)}
             </Text>
           </View>
@@ -227,8 +236,8 @@ export const MarketScreen: React.FC = () => {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.title}>Markets</Text>
-              <Text style={styles.subtitle}>Live equity, ETF, forex & commodity signals</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Markets</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Live equity, ETF, forex & commodity signals</Text>
             </View>
           </View>
 
@@ -237,33 +246,41 @@ export const MarketScreen: React.FC = () => {
             {(['Overview', 'Watchlist', 'Chart'] as TabType[]).map((tab) => (
               <TouchableOpacity
                 key={tab}
-                style={[styles.tab, activeTab === tab && styles.tabActive]}
+                style={[
+                  styles.tab, 
+                  { backgroundColor: colors.backgroundCard },
+                  activeTab === tab && { backgroundColor: colors.primary + '33' }
+                ]}
                 onPress={() => setActiveTab(tab)}
               >
-                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                <Text style={[
+                  styles.tabText, 
+                  { color: colors.textTertiary },
+                  activeTab === tab && { color: colors.textPrimary, fontWeight: '600' }
+                ]}>
                   {tab}
                 </Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity style={styles.refreshButton}>
-              <Ionicons name="refresh" size={16} color="#3B82F6" />
-              <Text style={styles.refreshText}>Refresh data</Text>
+              <Ionicons name="refresh" size={16} color={colors.primary} />
+              <Text style={[styles.refreshText, { color: colors.primary }]}>Refresh data</Text>
             </TouchableOpacity>
           </View>
 
           {activeTab === 'Overview' && (
             <>
               {/* Featured Section */}
-              <View style={styles.featuredSection}>
-                <Text style={styles.featuredLabel}>FEATURED</Text>
-                <Text style={styles.featuredName}>{featuredStock.name}</Text>
-                <Text style={styles.featuredTicker}>
+              <View style={[styles.featuredSection, { backgroundColor: colors.backgroundCard, borderColor: colors.primary + '33' }]}>
+                <Text style={[styles.featuredLabel, { color: colors.textTertiary }]}>FEATURED</Text>
+                <Text style={[styles.featuredName, { color: colors.textPrimary }]}>{featuredStock.name}</Text>
+                <Text style={[styles.featuredTicker, { color: colors.textSecondary }]}>
                   {featuredStock.symbol} • {featuredStock.exchange}
                 </Text>
                 <View style={styles.featuredPriceRow}>
                   <View>
-                    <Text style={styles.featuredPrice}>{formatCurrency(featuredStock.price)}</Text>
-                    <Text style={[styles.featuredChange, { color: '#22C55E' }]}>
+                    <Text style={[styles.featuredPrice, { color: colors.textPrimary }]}>{formatCurrency(featuredStock.price)}</Text>
+                    <Text style={[styles.featuredChange, { color: colors.success }]}>
                       {featuredStock.change >= 0 ? '+' : ''}{formatCurrency(featuredStock.change)} ({featuredStock.changePercent >= 0 ? '+' : ''}{formatPercentage(featuredStock.changePercent)})
                     </Text>
                   </View>
@@ -273,18 +290,18 @@ export const MarketScreen: React.FC = () => {
                     data={featuredStock.chartData}
                     width={SCREEN_WIDTH - 64}
                     height={200}
-                    color="#22C55E"
+                    color={colors.success}
                     strokeWidth={3}
                   />
                 </View>
                 <View style={styles.featuredIndicators}>
                   <View style={styles.indicator}>
-                    <Text style={styles.indicatorLabel}>RSI N</Text>
-                    <Text style={styles.indicatorValue}>{featuredStock.rsi}</Text>
+                    <Text style={[styles.indicatorLabel, { color: colors.textTertiary }]}>RSI N</Text>
+                    <Text style={[styles.indicatorValue, { color: colors.textPrimary }]}>{featuredStock.rsi}</Text>
                   </View>
                   <View style={styles.indicator}>
-                    <Text style={styles.indicatorLabel}>SMA(20)</Text>
-                    <Text style={styles.indicatorValue}>{formatCurrency(featuredStock.sma)}</Text>
+                    <Text style={[styles.indicatorLabel, { color: colors.textTertiary }]}>SMA(20)</Text>
+                    <Text style={[styles.indicatorValue, { color: colors.textPrimary }]}>{formatCurrency(featuredStock.sma)}</Text>
                   </View>
                 </View>
               </View>
@@ -292,9 +309,9 @@ export const MarketScreen: React.FC = () => {
               {/* Trending Section */}
               <View style={styles.trendingSection}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Trending</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Trending</Text>
                   <TouchableOpacity>
-                    <Text style={styles.refreshLink}>Refresh</Text>
+                    <Text style={[styles.refreshLink, { color: colors.primary }]}>Refresh</Text>
                   </TouchableOpacity>
                 </View>
                 <FlatList
@@ -312,21 +329,21 @@ export const MarketScreen: React.FC = () => {
           {activeTab === 'Watchlist' && (
             <>
               {/* Stock Gains Section */}
-              <View style={styles.gainsSection}>
+              <View style={[styles.gainsSection, { backgroundColor: colors.backgroundCard, borderColor: colors.primary + '33' }]}>
                 <View style={styles.gainsHeader}>
-                  <Text style={styles.gainsTitle}>Stock Gains</Text>
+                  <Text style={[styles.gainsTitle, { color: colors.textPrimary }]}>Stock Gains</Text>
                   <TouchableOpacity style={styles.timeframeButton}>
-                    <Text style={styles.timeframeText}>{selectedTimeframe}</Text>
-                    <Ionicons name="chevron-down" size={16} color="#7C3AED" />
+                    <Text style={[styles.timeframeText, { color: colors.textPrimary }]}>{selectedTimeframe}</Text>
+                    <Ionicons name="chevron-down" size={16} color={colors.accent} />
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.gainsValue}>{formatCurrency(stockGainsValue)}</Text>
+                <Text style={[styles.gainsValue, { color: colors.textPrimary }]}>{formatCurrency(stockGainsValue)}</Text>
                 <View style={styles.gainsChart}>
                   <SparklineChart
                     data={[25000, 26000, 27000, 28000, 29000, 28500, 29855]}
                     width={SCREEN_WIDTH - 64}
                     height={150}
-                    color="#7C3AED"
+                    color={colors.accent}
                     strokeWidth={3}
                   />
                 </View>
@@ -335,9 +352,9 @@ export const MarketScreen: React.FC = () => {
               {/* Portfolio Section */}
               <View style={styles.portfolioSection}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Portfolio</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Portfolio</Text>
                   <TouchableOpacity>
-                    <Text style={styles.viewAllText}>View all</Text>
+                    <Text style={[styles.viewAllText, { color: colors.primary }]}>View all</Text>
                   </TouchableOpacity>
                 </View>
                 <FlatList
@@ -353,9 +370,9 @@ export const MarketScreen: React.FC = () => {
               {/* Watchlist Section */}
               <View style={styles.watchlistSection}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Watchlist</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Watchlist</Text>
                   <TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={20} color="#7C3AED" />
+                    <Ionicons name="chevron-forward" size={20} color={colors.accent} />
                   </TouchableOpacity>
                 </View>
                 <View style={styles.watchlistList}>
@@ -391,13 +408,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 4,
+    // color will be set dynamically
   },
   subtitle: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#94A3B8',
+    // color will be set dynamically
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -409,19 +426,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    // backgroundColor will be set dynamically
   },
   tabActive: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    // backgroundColor will be set dynamically
   },
   tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#94A3B8',
+    // color will be set dynamically
   },
   tabTextActive: {
-    color: '#FFFFFF',
     fontWeight: '600',
+    // color will be set dynamically
   },
   refreshButton: {
     flexDirection: 'row',
@@ -432,11 +449,11 @@ const styles = StyleSheet.create({
   refreshText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#3B82F6',
+    // color will be set dynamically
   },
   featuredSection: {
     marginBottom: 32,
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    // backgroundColor will be set dynamically
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
@@ -445,22 +462,22 @@ const styles = StyleSheet.create({
   featuredLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#94A3B8',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 8,
+    // color will be set dynamically
   },
   featuredName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 4,
+    // color will be set dynamically
   },
   featuredTicker: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#94A3B8',
     marginBottom: 16,
+    // color will be set dynamically
   },
   featuredPriceRow: {
     flexDirection: 'row',
@@ -471,12 +488,13 @@ const styles = StyleSheet.create({
   featuredPrice: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 4,
+    // color will be set dynamically
   },
   featuredChange: {
     fontSize: 14,
     fontWeight: '500',
+    // color will be set dynamically
   },
   featuredChart: {
     marginBottom: 20,
@@ -492,13 +510,13 @@ const styles = StyleSheet.create({
   indicatorLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#94A3B8',
     marginBottom: 4,
+    // color will be set dynamically
   },
   indicatorValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    // color will be set dynamically
   },
   trendingSection: {
     marginBottom: 32,
@@ -524,12 +542,11 @@ const styles = StyleSheet.create({
   },
   trendingCard: {
     width: 140,
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 12,
     padding: 16,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
+    // backgroundColor and borderColor will be set dynamically
   },
   stockIconSquare: {
     width: 48,
@@ -549,37 +566,37 @@ const styles = StyleSheet.create({
   stockIconText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    // color will be set dynamically
   },
   trendingSymbol: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 2,
+    // color will be set dynamically
   },
   trendingName: {
     fontSize: 12,
     fontWeight: '400',
-    color: '#94A3B8',
     marginBottom: 8,
+    // color will be set dynamically
   },
   trendingPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 4,
+    // color will be set dynamically
   },
   trendingChange: {
     fontSize: 13,
     fontWeight: '600',
+    // color will be set dynamically
   },
   gainsSection: {
     marginBottom: 32,
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
+    // backgroundColor and borderColor will be set dynamically
   },
   gainsHeader: {
     flexDirection: 'row',
@@ -590,7 +607,7 @@ const styles = StyleSheet.create({
   gainsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    // color will be set dynamically
   },
   timeframeButton: {
     flexDirection: 'row',
@@ -604,13 +621,13 @@ const styles = StyleSheet.create({
   timeframeText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#7C3AED',
+    // color will be set dynamically
   },
   gainsValue: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 20,
+    // color will be set dynamically
   },
   gainsChart: {
     height: 150,
@@ -639,26 +656,26 @@ const styles = StyleSheet.create({
   portfolioIconText: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    // color will be set dynamically
   },
   portfolioSymbol: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000000',
     marginBottom: 2,
+    // color will be set dynamically
   },
   portfolioName: {
     fontSize: 12,
     fontWeight: '400',
-    color: '#6B7280',
     marginBottom: 8,
     textAlign: 'center',
+    // color will be set dynamically
   },
   portfolioPrice: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000000',
     marginBottom: 4,
+    // color will be set dynamically
   },
   portfolioChangeRow: {
     flexDirection: 'row',
@@ -678,11 +695,10 @@ const styles = StyleSheet.create({
   watchlistItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
+    // backgroundColor and borderColor will be set dynamically
   },
   watchlistIconCircle: {
     width: 48,
@@ -695,7 +711,7 @@ const styles = StyleSheet.create({
   watchlistIconText: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    // color will be set dynamically
   },
   watchlistInfo: {
     flex: 1,
@@ -704,13 +720,13 @@ const styles = StyleSheet.create({
   watchlistSymbol: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 2,
+    // color will be set dynamically
   },
   watchlistName: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#94A3B8',
+    // color will be set dynamically
   },
   watchlistChart: {
     marginRight: 12,
@@ -721,8 +737,8 @@ const styles = StyleSheet.create({
   watchlistPriceValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 4,
+    // color will be set dynamically
   },
   watchlistChangeRow: {
     flexDirection: 'row',

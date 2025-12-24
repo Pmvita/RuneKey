@@ -90,6 +90,10 @@ const Stack = createStackNavigator<RootStackParamList>();
 // Main Tab Navigator
 const TabNavigator = () => {
   const insets = useSafeAreaInsets();
+  const { theme } = useAppStore();
+  const systemColorScheme = useColorScheme();
+  const { getThemeColors } = require('./src/utils/theme');
+  const colors = getThemeColors(theme, systemColorScheme);
   
   return (
     <Tab.Navigator
@@ -139,17 +143,17 @@ const TabNavigator = () => {
           }
 
           return (
-            <View style={styles.tabIconContainer}>
+              <View style={styles.tabIconContainer}>
               <View style={[styles.tabIconWrapper, focused && styles.tabIconFocused]}>
                 <IoniconSet 
                   name={iconName} 
                   size={focused ? 24 : 22} 
-                  color={focused ? '#FFFFFF' : '#94A3B8'} 
+                  color={focused ? colors.textPrimary : colors.textTertiary} 
                 />
               </View>
               {focused && (
                 <Text 
-                  style={styles.tabLabel}
+                  style={[styles.tabLabel, { color: colors.textPrimary }]}
                   numberOfLines={1}
                   accessibilityLabel={label}
                 >
@@ -159,20 +163,28 @@ const TabNavigator = () => {
             </View>
           );
         },
-        tabBarBackground: () => (
-          <View style={styles.tabBarBackgroundWrapper}>
-            <LinearGradient
-              colors={['rgba(15, 23, 42, 0.85)', 'rgba(2, 6, 23, 0.95)', 'rgba(0, 0, 0, 0.98)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.tabBarGradient}
-            />
-            <View style={styles.tabBarBlurOverlay} />
-          </View>
-        ),
+        tabBarBackground: () => {
+          const gradientColors = [
+            colors.backgroundSecondary + 'D9',
+            colors.backgroundTertiary + 'F2',
+            colors.background + 'FA',
+          ];
+          
+          return (
+            <View style={styles.tabBarBackgroundWrapper}>
+              <LinearGradient
+                colors={gradientColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.tabBarGradient}
+              />
+              <View style={[styles.tabBarBlurOverlay, { backgroundColor: colors.background + '4D' }]} />
+            </View>
+          );
+        },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: colors.textPrimary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: [
           styles.tabBar,
           {
@@ -183,9 +195,9 @@ const TabNavigator = () => {
         tabBarItemStyle: styles.tabBarItem,
         tabBarLabelStyle: styles.tabLabel,
         headerStyle: {
-          backgroundColor: '#000000',
+          backgroundColor: colors.background,
         },
-        headerTintColor: '#FFFFFF',
+        headerTintColor: colors.textPrimary,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -291,17 +303,22 @@ const TabNavigator = () => {
 
 // Main Stack Navigator
 const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
+  const { theme } = useAppStore();
+  const systemColorScheme = useColorScheme();
+  const { getThemeColors } = require('./src/utils/theme');
+  const colors = getThemeColors(theme, systemColorScheme);
+
   return (
     <NavigationContainer
       theme={{
         dark: actualTheme === 'dark',
         colors: {
-          primary: '#3B82F6',
-          background: '#000000',
-          card: '#000000',
-          text: '#FFFFFF',
-          border: '#1F2937',
-          notification: '#EF4444',
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.backgroundCard,
+          text: colors.textPrimary,
+          border: colors.border,
+          notification: colors.error,
         },
       }}
     >
@@ -392,27 +409,58 @@ class ErrorBoundary extends Component<
 
   render() {
     if (this.state.hasError) {
+      const { theme } = useAppStore.getState();
+      const systemColorScheme = useColorScheme();
+      const { getThemeColors } = require('./src/utils/theme');
+      const colors = getThemeColors(theme, systemColorScheme);
+
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#000000' }}>
-          <Text style={{ color: '#EF4444', fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>
+        <View style={{ 
+          flex: 1, 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          padding: 20, 
+          backgroundColor: colors.background
+        }}>
+          <Text style={{ 
+            color: colors.error, 
+            fontSize: 20, 
+            fontWeight: 'bold', 
+            marginBottom: 10 
+          }}>
             Something went wrong
           </Text>
-          <Text style={{ color: '#9CA3AF', fontSize: 14, textAlign: 'center', marginBottom: 20 }}>
+          <Text style={{ 
+            color: colors.textSecondary, 
+            fontSize: 14, 
+            textAlign: 'center', 
+            marginBottom: 20 
+          }}>
             {this.state.error?.message || 'An unexpected error occurred'}
           </Text>
           <TouchableOpacity
             onPress={() => this.setState({ hasError: false, error: null })}
             style={{
-              backgroundColor: '#3B82F6',
+              backgroundColor: colors.primary,
               paddingHorizontal: 20,
               paddingVertical: 10,
               borderRadius: 8,
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Try Again</Text>
+            <Text style={{ 
+              color: colors.textInverse, 
+              fontWeight: '600' 
+            }}>
+              Try Again
+            </Text>
           </TouchableOpacity>
           {Platform.OS === 'web' && (
-            <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 20, textAlign: 'center' }}>
+            <Text style={{ 
+              color: colors.textTertiary, 
+              fontSize: 12, 
+              marginTop: 20, 
+              textAlign: 'center' 
+            }}>
               Check the browser console for more details
             </Text>
           )}
@@ -457,7 +505,16 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
+        <GestureHandlerRootView style={{ 
+          flex: 1, 
+          backgroundColor: (() => {
+            const { theme } = useAppStore.getState();
+            const systemColorScheme = useColorScheme();
+            const { getThemeColors } = require('./src/utils/theme');
+            const colors = getThemeColors(theme, systemColorScheme);
+            return colors.background;
+          })()
+        }}>
           <SelectionHighlightProvider>
             <SafeAreaProvider>
               {shouldShowOnboarding ? (
@@ -466,8 +523,14 @@ function App() {
                 <AppNavigator actualTheme={actualTheme} />
               )}
               <StatusBar 
-                style="light"
-                backgroundColor="#000000"
+                style={actualTheme === 'dark' ? 'light' : 'dark'}
+                backgroundColor={(() => {
+                  const { theme } = useAppStore.getState();
+                  const systemColorScheme = useColorScheme();
+                  const { getThemeColors } = require('./src/utils/theme');
+                  const colors = getThemeColors(theme, systemColorScheme);
+                  return colors.background;
+                })()}
               />
             </SafeAreaProvider>
           </SelectionHighlightProvider>
@@ -658,7 +721,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginTop: 2,
     letterSpacing: 0.3,
   },

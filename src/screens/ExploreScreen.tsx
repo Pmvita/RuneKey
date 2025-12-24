@@ -8,6 +8,7 @@ import { stocksService, StockNewsItem, TrendingStock } from '../services/api/sto
 import { formatLargeCurrency, formatAddress } from '../utils/formatters';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import mockDevWallet from '../mockData/api/dev-wallet.json';
+import { useThemeColors, useIsDark } from '../utils/theme';
 
 // Helper function to get greeting based on time of day
 const getGreeting = (): string => {
@@ -17,34 +18,40 @@ const getGreeting = (): string => {
   return 'Good evening';
 };
 
-// Helper function to get gradient colors based on sentiment
-const getGradientColors = (sentiment: 'positive' | 'negative' | 'neutral'): string[] => {
-  switch (sentiment) {
-    case 'positive':
-      return ['rgba(34, 197, 94, 0.15)', 'rgba(15, 23, 42, 0.85)', 'rgba(15, 23, 42, 0.95)'];
-    case 'negative':
-      return ['rgba(239, 68, 68, 0.15)', 'rgba(15, 23, 42, 0.85)', 'rgba(15, 23, 42, 0.95)'];
-    default:
-      return ['rgba(59, 130, 246, 0.15)', 'rgba(15, 23, 42, 0.85)', 'rgba(15, 23, 42, 0.95)'];
-  }
-};
-
-// Helper function to get card border style based on sentiment
-const getCardStyle = (sentiment: 'positive' | 'negative' | 'neutral'): any => {
-  switch (sentiment) {
-    case 'positive':
-      return { borderColor: 'rgba(34, 197, 94, 0.3)' };
-    case 'negative':
-      return { borderColor: 'rgba(239, 68, 68, 0.3)' };
-    default:
-      return { borderColor: 'rgba(59, 130, 246, 0.3)' };
-  }
-};
-
 // News Card Component
 const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDark();
   const [logoError, setLogoError] = useState(false);
   const sentiment = news.sentiment || 'neutral';
+  
+  // Helper function to get gradient colors based on sentiment and theme
+  const getGradientColors = (sentiment: 'positive' | 'negative' | 'neutral'): string[] => {
+    const baseBg = isDark ? colors.backgroundSecondary : colors.background;
+    const secondaryBg = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
+    
+    switch (sentiment) {
+      case 'positive':
+        return [colors.success + '26', baseBg, secondaryBg];
+      case 'negative':
+        return [colors.error + '26', baseBg, secondaryBg];
+      default:
+        return [colors.primary + '26', baseBg, secondaryBg];
+    }
+  };
+
+  // Helper function to get card border style based on sentiment
+  const getCardStyle = (sentiment: 'positive' | 'negative' | 'neutral'): any => {
+    switch (sentiment) {
+      case 'positive':
+        return { borderColor: colors.success + '4D' };
+      case 'negative':
+        return { borderColor: colors.error + '4D' };
+      default:
+        return { borderColor: colors.primary + '4D' };
+    }
+  };
+  
   const gradientColors = getGradientColors(sentiment);
   const cardStyle = getCardStyle(sentiment);
 
@@ -78,8 +85,8 @@ const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <View style={styles.newsLogoPlaceholder}>
-                  <Text style={styles.newsLogoPlaceholderText}>
+                <View style={[styles.newsLogoPlaceholder, { backgroundColor: colors.primary + '33' }]}>
+                  <Text style={[styles.newsLogoPlaceholderText, { color: colors.primary }]}>
                     {news.symbol?.charAt(0) || 'M'}
                   </Text>
                 </View>
@@ -87,26 +94,26 @@ const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
             </View>
             <View style={styles.newsHeaderInfo}>
               <View style={styles.newsHeaderTop}>
-                <View style={styles.newsSymbolBadge}>
-                  <Text style={styles.newsSymbolText}>
+                <View style={[styles.newsSymbolBadge, { backgroundColor: colors.backgroundTertiary }]}>
+                  <Text style={[styles.newsSymbolText, { color: colors.textPrimary }]}>
                     {news.symbol || 'MARKET'}
                   </Text>
                 </View>
                 {sentiment !== 'neutral' && (
                   <View style={[
                     styles.sentimentBadge,
-                    sentiment === 'positive' ? styles.sentimentBadgePositive : styles.sentimentBadgeNegative
+                    { backgroundColor: sentiment === 'positive' ? colors.success + '4D' : colors.error + '4D' }
                   ]}>
                     <Ionicons
                       name={sentiment === 'positive' ? 'trending-up' : 'trending-down'}
                       size={10}
-                      color="#FFFFFF"
+                      color={colors.textInverse}
                     />
                   </View>
                 )}
               </View>
               {news.companyName && (
-                <Text style={styles.newsCompanyName} numberOfLines={1}>
+                <Text style={[styles.newsCompanyName, { color: colors.textSecondary }]} numberOfLines={1}>
                   {news.companyName}
                 </Text>
               )}
@@ -114,13 +121,13 @@ const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
           </View>
 
           {/* Title */}
-          <Text style={styles.newsTitle} numberOfLines={2}>
+          <Text style={[styles.newsTitle, { color: colors.textPrimary }]} numberOfLines={2}>
             {news.title}
           </Text>
 
           {/* Description */}
           {news.text ? (
-            <Text style={styles.newsText} numberOfLines={3}>
+            <Text style={[styles.newsText, { color: colors.textSecondary }]} numberOfLines={3}>
               {news.text}
             </Text>
           ) : null}
@@ -128,15 +135,15 @@ const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
           {/* Footer */}
           <View style={styles.newsFooter}>
             <View style={styles.newsFooterLeft}>
-              <Text style={styles.newsSite}>{news.site}</Text>
-              <Text style={styles.newsTime}>
+              <Text style={[styles.newsSite, { color: colors.textTertiary }]}>{news.site}</Text>
+              <Text style={[styles.newsTime, { color: colors.textTertiary }]}>
                 • {new Date(news.publishedAt).toLocaleTimeString([], { 
                   hour: '2-digit', 
                   minute: '2-digit' 
                 })}
               </Text>
             </View>
-            <Ionicons name="arrow-forward-circle" size={20} color="rgba(255, 255, 255, 0.7)" />
+            <Ionicons name="arrow-forward-circle" size={20} color={colors.textSecondary} />
           </View>
         </View>
       </LinearGradient>
@@ -145,6 +152,7 @@ const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
 };
 
 export const ExploreScreen: React.FC = () => {
+  const colors = useThemeColors();
   const { currentWallet, isConnected } = useWalletStore();
   const [newsItems, setNewsItems] = useState<StockNewsItem[]>([]);
   const [trendingStocks, setTrendingStocks] = useState<TrendingStock[]>([]);
@@ -240,20 +248,20 @@ export const ExploreScreen: React.FC = () => {
         <View style={styles.userHeader}>
           <View style={styles.userInfoLeft}>
             <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={24} color="#FFFFFF" />
+              <View style={[styles.avatar, { backgroundColor: colors.backgroundCard }]}>
+                <Ionicons name="person" size={24} color={colors.textPrimary} />
               </View>
-              <View style={styles.avatarBadge}>
-                <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+              <View style={[styles.avatarBadge, { backgroundColor: colors.success, borderColor: colors.background }]}>
+                <Ionicons name="checkmark" size={10} color={colors.textInverse} />
               </View>
             </View>
             <View style={styles.userTextContainer}>
-              <Text style={styles.greetingText}>{greeting}</Text>
-              <Text style={styles.userNameText} numberOfLines={1}>
+              <Text style={[styles.greetingText, { color: colors.textTertiary }]}>{greeting}</Text>
+              <Text style={[styles.userNameText, { color: colors.textPrimary }]} numberOfLines={1}>
                 {displayName}
               </Text>
               {walletAddress && (
-                <Text style={styles.walletAddressText} numberOfLines={1}>
+                <Text style={[styles.walletAddressText, { color: colors.textSecondary }]} numberOfLines={1}>
                   {formatAddress(walletAddress, 6, 4)}
                 </Text>
               )}
@@ -267,9 +275,9 @@ export const ExploreScreen: React.FC = () => {
               // TODO: Navigate to notifications screen
             }}
           >
-            <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>1</Text>
+            <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+            <View style={[styles.notificationBadge, { backgroundColor: colors.error }]}>
+              <Text style={[styles.notificationBadgeText, { color: colors.textInverse }]}>1</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -279,7 +287,7 @@ export const ExploreScreen: React.FC = () => {
           {/* Trending Section - Outside FlatList */}
           <View style={styles.trendingContainer}>
             <View style={styles.trendingHeader}>
-              <Text style={styles.sectionTitle}>Trending</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>Trending</Text>
               <TouchableOpacity
                 activeOpacity={0.75}
                 onPress={() => {
@@ -288,8 +296,8 @@ export const ExploreScreen: React.FC = () => {
                 }}
                 style={styles.seeAllButton}
               >
-                <Text style={styles.seeAllText}>See All</Text>
-                <Ionicons name="chevron-forward" size={14} color="#3B82F6" />
+                <Text style={[styles.seeAllText, { color: colors.primary }]}>See All</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
               </TouchableOpacity>
             </View>
             {isLoadingTrending && trendingStocks.length === 0 ? (
@@ -321,19 +329,19 @@ export const ExploreScreen: React.FC = () => {
                       onPress={() => {
                         logger.logButtonPress('Trending Stock', stock.symbol);
                       }}
-                      style={styles.trendingCard}
+                      style={[styles.trendingCard, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}
                     >
                       <View style={styles.trendingSymbolContainer}>
-                        <Text style={styles.trendingSymbol}>{stock.symbol}</Text>
+                        <Text style={[styles.trendingSymbol, { color: colors.textPrimary }]}>{stock.symbol}</Text>
                       </View>
-                      <Text style={styles.trendingPrice}>{formatLargeCurrency(stock.price)}</Text>
+                      <Text style={[styles.trendingPrice, { color: colors.textPrimary }]}>{formatLargeCurrency(stock.price)}</Text>
                       <View style={styles.trendingChangeRow}>
                         <Ionicons
                           name={isPositive ? 'trending-up' : 'trending-down'}
                           size={12}
-                          color={isPositive ? '#22C55E' : '#EF4444'}
+                          color={isPositive ? colors.success : colors.error}
                         />
-                        <Text style={[styles.trendingChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+                        <Text style={[styles.trendingChange, { color: isPositive ? colors.success : colors.error }]}>
                           {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
                         </Text>
                       </View>
@@ -352,7 +360,7 @@ export const ExploreScreen: React.FC = () => {
             renderItem={({ item: news }) => <NewsCard news={news} />}
             ListHeaderComponent={
               <View style={styles.newsHeaderContainer}>
-                <Text style={styles.newsSectionTitle}>Market News</Text>
+                <Text style={[styles.newsSectionTitle, { color: colors.textTertiary }]}>Market News</Text>
               </View>
             }
             ListEmptyComponent={
@@ -364,7 +372,7 @@ export const ExploreScreen: React.FC = () => {
                 />
               ) : (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No news available</Text>
+                  <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No news available</Text>
                 </View>
               )
             }
@@ -422,7 +430,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -433,9 +440,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#94A3B8',
     borderWidth: 2,
-    borderColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -444,18 +449,15 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: 13,
-    color: '#94A3B8',
     marginBottom: 2,
   },
   userNameText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
     marginBottom: 2,
   },
   walletAddressText: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.6)',
     fontFamily: 'monospace',
   },
   notificationButton: {
@@ -472,13 +474,11 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
   },
   notificationBadgeText: {
-    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
   },
@@ -503,7 +503,6 @@ const styles = StyleSheet.create({
   newsSectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -514,7 +513,6 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   loadingText: {
-    color: '#94A3B8',
     marginTop: 12,
     fontSize: 14,
   },
@@ -523,7 +521,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: '#94A3B8',
     fontSize: 16,
   },
   newsCardWrapper: {
@@ -550,18 +547,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   newsLogoPlaceholder: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   newsLogoPlaceholderText: {
-    color: '#3B82F6',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -575,14 +569,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   newsSymbolBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
     marginRight: 8,
   },
   newsSymbolText: {
-    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -595,25 +587,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sentimentBadgePositive: {
-    backgroundColor: 'rgba(34, 197, 94, 0.3)',
+    // backgroundColor will be set dynamically
   },
   sentimentBadgeNegative: {
-    backgroundColor: 'rgba(239, 68, 68, 0.3)',
+    // backgroundColor will be set dynamically
   },
   newsCompanyName: {
-    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 12,
     fontWeight: '500',
   },
   newsTitle: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 8,
     lineHeight: 22,
   },
   newsText: {
-    color: 'rgba(255, 255, 255, 0.75)',
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 12,
@@ -630,12 +619,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   newsSite: {
-    color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 11,
     fontWeight: '600',
   },
   newsTime: {
-    color: 'rgba(255, 255, 255, 0.5)',
     fontSize: 11,
     marginLeft: 6,
   },
@@ -656,7 +643,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -668,7 +654,6 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#3B82F6',
   },
   trendingLoadingContainer: {
     paddingVertical: 20,
@@ -692,9 +677,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     padding: 14,
     borderRadius: 16,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     borderWidth: 1,
-    borderColor: 'rgba(30, 41, 59, 0.55)',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -706,13 +689,11 @@ const styles = StyleSheet.create({
   trendingSymbol: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
     textAlign: 'center',
   },
   trendingPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
     marginBottom: 6,
     textAlign: 'center',
   },

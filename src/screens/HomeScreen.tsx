@@ -41,6 +41,7 @@ import { formatLargeCurrency } from '../utils/formatters';
 import investingData from '../mockData/api/investing.json';
 import { investingService } from '../services/api/investingService';
 import { Investment } from '../types';
+import { useThemeColors } from '../utils/theme';
 
 const initialInvestingHoldings: Investment[] = Array.isArray((investingData as any)?.investments)
   ? ((investingData as any).investments as Investment[])
@@ -51,6 +52,7 @@ const { width: screenWidth } = Dimensions.get('window');
 type AssetFilter = 'all' | 'gainer' | 'loser';
 
 export const HomeScreen: React.FC = () => {
+  const colors = useThemeColors();
   const { isConnected, currentWallet, activeNetwork } = useWalletStore();
   const { connectDevWallet, refreshDevWallet } = useDevWallet();
   const { 
@@ -534,29 +536,31 @@ export const HomeScreen: React.FC = () => {
     }, [currentWallet, animationsTriggered, loadingData])
   );
 
-  const truncateAddress = (address: string) => {
+  // Memoized utility functions to prevent recreation on every render
+  const truncateAddress = useCallback((address: string) => {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  }, []);
 
-  const formatUSD = (amount: number) => {
+  const formatUSD = useCallback((amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-  };
+  }, []);
 
-  const formatTokenBalance = (balance: string, decimals: number) => {
+  const formatTokenBalance = useCallback((balance: string, decimals: number) => {
     const num = parseFloat(balance);
     return num.toLocaleString('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 4,
     });
-  };
+  }, []);
 
-  const calculateTotalValue = () => {
+  // Memoized total value calculation - only recalculates when dependencies change
+  const totalValue = useMemo(() => {
     if (!currentWallet || !currentWallet.tokens) return 0;
     
     return currentWallet.tokens.reduce((total: number, token: any) => {
@@ -567,12 +571,13 @@ export const HomeScreen: React.FC = () => {
       
       return total + tokenValue;
     }, 0);
-  };
+  }, [currentWallet?.tokens, getTokenPrice]);
 
-  const calculatePortfolioChange = () => {
+  const calculateTotalValue = useCallback(() => totalValue, [totalValue]);
+
+  // Memoized portfolio change calculation - only recalculates when total value or timeframe changes
+  const portfolioChange = useMemo(() => {
     if (!currentWallet || !currentWallet.tokens) return { percentage: 0, absolute: 0 };
-    
-    const currentValue = calculateTotalValue();
     
     // Generate mock historical data based on timeframe
     let historicalMultiplier = 1;
@@ -596,15 +601,17 @@ export const HomeScreen: React.FC = () => {
         historicalMultiplier = 0.99;
     }
     
-    const historicalValue = currentValue * historicalMultiplier;
-    const absoluteChange = currentValue - historicalValue;
+    const historicalValue = totalValue * historicalMultiplier;
+    const absoluteChange = totalValue - historicalValue;
     const percentageChange = historicalValue > 0 ? (absoluteChange / historicalValue) * 100 : 0;
     
     return {
       percentage: percentageChange,
       absolute: absoluteChange
     };
-  };
+  }, [totalValue, selectedTimeframe, currentWallet?.tokens]);
+
+  const calculatePortfolioChange = useCallback(() => portfolioChange, [portfolioChange]);
 
   const onRefresh = async () => {
     const now = Date.now();
@@ -636,7 +643,8 @@ export const HomeScreen: React.FC = () => {
     logger.logButtonPress('Asset Filter', `switch to ${filter}`);
   };
 
-  const getFilteredMarketData = () => {
+  // Memoized filtered market data - only recalculates when dependencies change
+  const filteredMarketData = useMemo(() => {
     // Combine crypto tokens and investments
     const cryptoAssets = currentWallet?.tokens || [];
     const investmentAssets = investmentHoldings || [];
@@ -708,7 +716,9 @@ export const HomeScreen: React.FC = () => {
     });
     
     return sortedAssets;
-  };
+  }, [currentWallet?.tokens, investmentHoldings, selectedFilter, getTokenPrice, getTokenPriceChange]);
+
+  const getFilteredMarketData = useCallback(() => filteredMarketData, [filteredMarketData]);
 
   const activeCapitalValue = useMemo(() => {
     if (!currentWallet?.tokens) {
@@ -734,7 +744,8 @@ export const HomeScreen: React.FC = () => {
     return Number.isFinite(usdValue) ? usdValue : 0;
   }, [currentWallet?.tokens, getTokenPrice]);
 
-  const generateSparklineData = (priceChange: number) => {
+  // Memoized sparkline data generator - use useCallback to prevent recreation
+  const generateSparklineData = useCallback((priceChange: number) => {
     // Generate mock sparkline data based on price change
     const basePrice = 100;
     const dataPoints = 20;
@@ -748,7 +759,7 @@ export const HomeScreen: React.FC = () => {
     }
     
     return data;
-  };
+  }, []);
 
   const initialInvestingCost = useMemo(() => {
     return initialInvestingHoldings.reduce((total, holding) => {
@@ -857,7 +868,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 24,
                 fontWeight: '800',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
                 letterSpacing: -0.3,
                 marginRight: 8,
               }}>
@@ -866,14 +877,14 @@ export const HomeScreen: React.FC = () => {
               <TouchableOpacity
                 style={{
                   padding: 6,
-                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  backgroundColor: colors.backgroundSecondary,
                   borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Balance Visibility', 'toggle visibility');
                 }}
               >
-                <Ionicons name="eye" size={18} color="#94A3B8" />
+                <Ionicons name="eye" size={18} color={colors.textTertiary} />
               </TouchableOpacity>
             </View>
             
@@ -881,33 +892,33 @@ export const HomeScreen: React.FC = () => {
               <TouchableOpacity
                 style={{
                   padding: 6,
-                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  backgroundColor: colors.backgroundSecondary,
                   borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Chart', 'open chart');
                 }}
               >
-                <Ionicons name="trending-up-outline" size={18} color="#94A3B8" />
+                <Ionicons name="trending-up-outline" size={18} color={colors.textTertiary} />
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={{
                   padding: 6,
-                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  backgroundColor: colors.backgroundSecondary,
                   borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Notifications', 'open notifications');
                 }}
               >
-                <Ionicons name="notifications-outline" size={18} color="#94A3B8" />
+                <Ionicons name="notifications-outline" size={18} color={colors.textTertiary} />
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={{
                   padding: 6,
-                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  backgroundColor: colors.backgroundSecondary,
                   borderRadius: 8,
                 }}
                 onPress={() => {
@@ -915,7 +926,7 @@ export const HomeScreen: React.FC = () => {
                   navigation.navigate('Settings' as never);
                 }}
               >
-                <Ionicons name="settings-outline" size={18} color="#94A3B8" />
+                <Ionicons name="settings-outline" size={18} color={colors.textTertiary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -925,12 +936,12 @@ export const HomeScreen: React.FC = () => {
         <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 16 }, portfolioAnimatedStyle]}>
           {currentWallet ? (
             <View style={{
-              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              backgroundColor: colors.backgroundCard,
               borderRadius: 20,
               padding: 20,
               borderWidth: 1,
-              borderColor: 'rgba(59, 130, 246, 0.2)',
-              shadowColor: '#3B82F6',
+              borderColor: colors.primary + '33',
+              shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.15,
               shadowRadius: 12,
@@ -940,15 +951,15 @@ export const HomeScreen: React.FC = () => {
                 {/* Main Balance - Scaled Down */}
                 <View style={{ marginBottom: 8 }}>
                   <AnimatedNumber
-                    value={calculateTotalValue()}
+                    value={totalValue}
                     format="currency"
                     style={{
                       fontSize: 42,
                       fontWeight: '800',
-                      color: '#FFFFFF',
+                      color: colors.textPrimary,
                       letterSpacing: -1.5,
                       textAlign: 'center',
-                      textShadowColor: 'rgba(59, 130, 246, 0.3)',
+                      textShadowColor: colors.primary + '4D',
                       textShadowOffset: { width: 0, height: 1 },
                       textShadowRadius: 4,
                     }}
@@ -961,25 +972,25 @@ export const HomeScreen: React.FC = () => {
                   flexDirection: 'row', 
                   alignItems: 'center', 
                   marginBottom: 12,
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: colors.backgroundTertiary,
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 10,
                 }}>
                   {(() => {
-                    const change = calculatePortfolioChange();
+                    const change = portfolioChange;
                     const isPositive = change.percentage >= 0;
                     return (
                       <>
                         <Ionicons 
                           name={isPositive ? "trending-up" : "trending-down"} 
                           size={16} 
-                          color={isPositive ? "#22c55e" : "#ef4444"} 
+                          color={isPositive ? colors.success : colors.error} 
                         />
                         <Text style={{
                           fontSize: 15,
                           fontWeight: '700',
-                          color: isPositive ? "#22c55e" : "#ef4444",
+                          color: isPositive ? colors.success : colors.error,
                           marginLeft: 4,
                         }}>
                           {change.percentage.toFixed(2)}%
@@ -987,7 +998,7 @@ export const HomeScreen: React.FC = () => {
                         <Text style={{
                           fontSize: 13,
                           fontWeight: '600',
-                          color: '#94A3B8',
+                          color: colors.textTertiary,
                           marginLeft: 6,
                         }}>
                           ({isPositive ? '+' : ''}{formatLargeCurrency(change.absolute)})
@@ -1002,19 +1013,19 @@ export const HomeScreen: React.FC = () => {
                   width: '100%', 
                   height: 50, 
                   marginBottom: 4,
-                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  backgroundColor: colors.backgroundTertiary,
                   borderRadius: 10,
                   padding: 6,
                 }}>
                   {(() => {
-                    const change = calculatePortfolioChange();
+                    const change = portfolioChange;
                     const isPositive = change.percentage >= 0;
                     return (
                       <SparklineChart
                         data={generateSparklineData(change.percentage)}
                         width={screenWidth - 72}
                         height={38}
-                        color={isPositive ? "#22c55e" : "#ef4444"}
+                        color={isPositive ? colors.success : colors.error}
                         strokeWidth={2.5}
                       />
                     );
@@ -1025,16 +1036,16 @@ export const HomeScreen: React.FC = () => {
           ) : (
             <View style={{
               alignItems: 'center',
-              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              backgroundColor: colors.backgroundCard,
               borderRadius: 20,
               padding: 24,
               borderWidth: 1,
-              borderColor: 'rgba(148, 163, 184, 0.2)',
+              borderColor: colors.border,
             }}>
               <Text style={{
                 fontSize: 42,
                 fontWeight: '800',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
                 letterSpacing: -1.5,
                 textAlign: 'center',
                 marginBottom: 8,
@@ -1043,7 +1054,7 @@ export const HomeScreen: React.FC = () => {
               </Text>
               <Text style={{
                 fontSize: 14,
-                color: '#94A3B8',
+                color: colors.textTertiary,
                 fontWeight: '600',
                 marginBottom: 4,
               }}>
@@ -1058,11 +1069,11 @@ export const HomeScreen: React.FC = () => {
           <View style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-            backgroundColor: 'rgba(30, 41, 59, 0.6)',
+            backgroundColor: colors.backgroundSecondary,
             borderRadius: 12,
             padding: 4,
             borderWidth: 1,
-            borderColor: 'rgba(148, 163, 184, 0.15)',
+            borderColor: colors.border,
           }}>
             {['1D', '1W', '1M', '1Y', 'ALL'].map((timeframe) => (
               <TouchableOpacity
@@ -1072,7 +1083,7 @@ export const HomeScreen: React.FC = () => {
                   paddingVertical: 8,
                   paddingHorizontal: 4,
                   borderRadius: 10,
-                  backgroundColor: selectedTimeframe === timeframe ? '#3B82F6' : 'transparent',
+                  backgroundColor: selectedTimeframe === timeframe ? colors.primary : 'transparent',
                   alignItems: 'center',
                 }}
                 onPress={() => {
@@ -1083,7 +1094,7 @@ export const HomeScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 13,
                   fontWeight: '700',
-                  color: selectedTimeframe === timeframe ? '#FFFFFF' : '#94A3B8',
+                  color: selectedTimeframe === timeframe ? colors.textInverse : colors.textTertiary,
                 }}>
                   {timeframe}
                 </Text>
@@ -1105,10 +1116,10 @@ export const HomeScreen: React.FC = () => {
                 flex: 1,
                 alignItems: 'center',
                 paddingVertical: 12,
-                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                backgroundColor: colors.primary + '26',
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: 'rgba(59, 130, 246, 0.4)',
+                borderColor: colors.primary + '66',
               }}
               onPress={() => {
                 logger.logButtonPress('Buy', 'navigate to buy screen');
@@ -1121,23 +1132,23 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 48,
                 height: 48,
-                backgroundColor: '#3B82F6',
+                backgroundColor: colors.primary,
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 6,
-                shadowColor: '#3B82F6',
+                shadowColor: colors.primary,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 6,
                 elevation: 4,
               }}>
-                <Ionicons name="add" size={22} color="#FFFFFF" />
+                <Ionicons name="add" size={22} color={colors.textInverse} />
               </View>
               <Text style={{
                 fontSize: 11,
                 fontWeight: '700',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
               }}>
                 Buy
               </Text>
@@ -1149,10 +1160,10 @@ export const HomeScreen: React.FC = () => {
                 flex: 1,
                 alignItems: 'center',
                 paddingVertical: 12,
-                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                backgroundColor: colors.success + '26',
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: 'rgba(34, 197, 94, 0.4)',
+                borderColor: colors.success + '66',
               }}
               onPress={() => {
                 logger.logButtonPress('Swap Shortcut', 'navigate to swap screen');
@@ -1165,23 +1176,23 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 48,
                 height: 48,
-                backgroundColor: '#22c55e',
+                backgroundColor: colors.success,
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 6,
-                shadowColor: '#22c55e',
+                shadowColor: colors.success,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 6,
                 elevation: 4,
               }}>
-                <Ionicons name="swap-horizontal" size={22} color="#FFFFFF" />
+                <Ionicons name="swap-horizontal" size={22} color={colors.textInverse} />
               </View>
               <Text style={{
                 fontSize: 11,
                 fontWeight: '700',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
               }}>
                 Swap
               </Text>
@@ -1193,10 +1204,10 @@ export const HomeScreen: React.FC = () => {
                 flex: 1,
                 alignItems: 'center',
                 paddingVertical: 12,
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                backgroundColor: colors.error + '26',
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: 'rgba(239, 68, 68, 0.4)',
+                borderColor: colors.error + '66',
               }}
               onPress={() => {
                 logger.logButtonPress('Send', 'navigate to send screen');
@@ -1209,23 +1220,23 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 48,
                 height: 48,
-                backgroundColor: '#ef4444',
+                backgroundColor: colors.error,
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 6,
-                shadowColor: '#ef4444',
+                shadowColor: colors.error,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 6,
                 elevation: 4,
               }}>
-                <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
+                <Ionicons name="arrow-up" size={22} color={colors.textInverse} />
               </View>
               <Text style={{
                 fontSize: 11,
                 fontWeight: '700',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
               }}>
                 Send
               </Text>
@@ -1264,12 +1275,12 @@ export const HomeScreen: React.FC = () => {
                 shadowRadius: 6,
                 elevation: 4,
               }}>
-                <Ionicons name="arrow-down" size={22} color="#FFFFFF" />
+                <Ionicons name="arrow-down" size={22} color={colors.textInverse} />
               </View>
               <Text style={{
                 fontSize: 11,
                 fontWeight: '700',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
               }}>
                 Receive
               </Text>
@@ -1288,12 +1299,12 @@ export const HomeScreen: React.FC = () => {
               }}
               style={{
               flex: 1,
-              backgroundColor: 'rgba(30, 41, 59, 0.7)',
+              backgroundColor: colors.backgroundCard,
               borderRadius: 16,
               borderWidth: 1.5,
-              borderColor: 'rgba(59, 130, 246, 0.3)',
+              borderColor: colors.primary + '4D',
               padding: 16,
-              shadowColor: '#3B82F6',
+              shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.15,
               shadowRadius: 8,
@@ -1303,7 +1314,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 16,
                 fontWeight: '800',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
                 marginBottom: 12,
                 letterSpacing: 0.5,
               }}>
@@ -1317,24 +1328,24 @@ export const HomeScreen: React.FC = () => {
                   width: 70,
                   height: 70,
                   borderRadius: 35,
-                  backgroundColor: '#111827',
+                  backgroundColor: colors.backgroundTertiary,
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderWidth: 4,
-                  borderColor: '#3b82f6',
+                  borderColor: colors.primary,
                 }}>
                   <View style={{
                     width: 50,
                     height: 50,
                     borderRadius: 25,
-                    backgroundColor: '#111827',
+                    backgroundColor: colors.backgroundTertiary,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <Text style={{
                       fontSize: 9,
                       fontWeight: '600',
-                      color: '#94A3B8',
+                      color: colors.textTertiary,
                     }}>
                       Portfolio
                     </Text>
@@ -1347,8 +1358,8 @@ export const HomeScreen: React.FC = () => {
                   alignItems: 'center',
                 }}>
                   {[
-                    getFilteredMarketData().slice(0, 3),
-                    getFilteredMarketData().slice(3, 6),
+                    filteredMarketData.slice(0, 3),
+                    filteredMarketData.slice(3, 6),
                   ].map((group, columnIndex) => {
                     const colorPalette = columnIndex === 0
                       ? ['#3b82f6', '#22c55e', '#f59e0b']
@@ -1382,7 +1393,7 @@ export const HomeScreen: React.FC = () => {
                                 <Text style={{
                                   fontSize: 10,
                                   fontWeight: '500',
-                                  color: '#FFFFFF',
+                                  color: colors.textPrimary,
                                 }}>
                                 {token.symbol}
                               </Text>
@@ -1395,7 +1406,7 @@ export const HomeScreen: React.FC = () => {
                 </View>
 
                 <View style={{ alignSelf: 'flex-end', marginTop: 8 }}>
-                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
                 </View>
               </View>
             </TouchableOpacity>
@@ -1405,12 +1416,12 @@ export const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('Investing')}
               style={{
                 flex: 1,
-                backgroundColor: 'rgba(30, 41, 59, 0.7)',
+                backgroundColor: colors.backgroundCard,
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: 'rgba(34, 197, 94, 0.3)',
+                borderColor: colors.success + '4D',
                 padding: 16,
-                shadowColor: '#22c55e',
+                shadowColor: colors.success,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.15,
                 shadowRadius: 8,
@@ -1421,12 +1432,12 @@ export const HomeScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 16,
                   fontWeight: '800',
-                  color: '#FFFFFF',
+                  color: colors.textPrimary,
                   letterSpacing: 0.5,
                 }}>
                   INVESTING
                 </Text>
-                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
               </View>
 
               <View style={{
@@ -1437,7 +1448,7 @@ export const HomeScreen: React.FC = () => {
                   <Text style={{
                     fontSize: 28,
                     fontWeight: '800',
-                    color: '#FFFFFF',
+                    color: colors.textPrimary,
                     letterSpacing: -0.8,
                     marginBottom: 4,
                   }}>
@@ -1445,7 +1456,7 @@ export const HomeScreen: React.FC = () => {
                   </Text>
                   <Text style={{
                     fontSize: 13,
-                    color: '#94A3B8',
+                    color: colors.textTertiary,
                     fontWeight: '600',
                   }}>
                     Active capital
@@ -1456,19 +1467,19 @@ export const HomeScreen: React.FC = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginTop: 12,
-                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  backgroundColor: colors.success + '26',
                   paddingHorizontal: 10,
                   paddingVertical: 6,
                   borderRadius: 8,
                   borderWidth: 1,
-                  borderColor: 'rgba(34, 197, 94, 0.3)',
+                  borderColor: colors.success + '4D',
                   alignSelf: 'flex-start',
                 }}>
-                  <Ionicons name="trending-up" size={14} color="#22c55e" style={{ marginRight: 4 }} />
+                  <Ionicons name="trending-up" size={14} color={colors.success} style={{ marginRight: 4 }} />
                   <Text style={{
                     fontSize: 13,
                     fontWeight: '700',
-                    color: '#22c55e',
+                    color: colors.success,
                   }}>
                     +4.2% today
                   </Text>
@@ -1492,12 +1503,12 @@ export const HomeScreen: React.FC = () => {
                     style={{
                       paddingVertical: 6,
                       borderBottomWidth: 1,
-                      borderBottomColor: 'rgba(148, 163, 184, 0.1)',
+                      borderBottomColor: colors.border,
                     }}
                   >
                     <Text style={{
                       fontSize: 11,
-                      color: '#94A3B8',
+                      color: colors.textTertiary,
                       fontWeight: '600',
                       marginBottom: 2,
                     }}>
@@ -1505,7 +1516,7 @@ export const HomeScreen: React.FC = () => {
                     </Text>
                     <Text style={{
                       fontSize: 14,
-                      color: '#FFFFFF',
+                      color: colors.textPrimary,
                       fontWeight: '700',
                     }}>
                       {item.value}
@@ -1525,7 +1536,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 24,
                 fontWeight: '800',
-                color: '#FFFFFF',
+                color: colors.textPrimary,
                 letterSpacing: -0.4,
                 marginBottom: 4,
               }}>
@@ -1533,7 +1544,7 @@ export const HomeScreen: React.FC = () => {
               </Text>
               <Text style={{
                 fontSize: 13,
-                color: '#94A3B8',
+                color: colors.textTertiary,
                 fontWeight: '500',
               }}>
                 Crypto & Traditional Investments
@@ -1556,7 +1567,7 @@ export const HomeScreen: React.FC = () => {
                 message="Loading market data..."
                 size="medium"
                 variant="inline"
-                backgroundColor="rgba(30, 41, 59, 0.4)"
+                backgroundColor={colors.backgroundSecondary}
               />
             </View>
           )}
@@ -1564,9 +1575,9 @@ export const HomeScreen: React.FC = () => {
           {/* Live Price Indicator - Enhanced */}
           {isLoadingPrices && !loadingMarketData && (
             <View style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.2)',
+              backgroundColor: colors.success + '33',
               borderWidth: 1.5,
-              borderColor: 'rgba(34, 197, 94, 0.5)',
+              borderColor: colors.success + '80',
               borderRadius: 12,
               padding: 12,
               marginBottom: 16,
@@ -1577,16 +1588,16 @@ export const HomeScreen: React.FC = () => {
               <View style={{
                 width: 8,
                 height: 8,
-                backgroundColor: '#22c55e',
+                backgroundColor: colors.success,
                 borderRadius: 4,
                 marginRight: 8,
-                shadowColor: '#22c55e',
+                shadowColor: colors.success,
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.8,
                 shadowRadius: 3,
               }} />
               <Text style={{
-                color: '#22c55e',
+                color: colors.success,
                 fontWeight: '700',
                 fontSize: 13,
               }}>
@@ -1598,9 +1609,9 @@ export const HomeScreen: React.FC = () => {
           {/* Fallback Data Indicator - Enhanced */}
           {!isLoadingPrices && !loadingMarketData && marketData.length === 0 && (
             <View style={{
-              backgroundColor: 'rgba(250, 204, 21, 0.2)',
+              backgroundColor: colors.warning + '33',
               borderWidth: 1.5,
-              borderColor: 'rgba(250, 204, 21, 0.5)',
+              borderColor: colors.warning + '80',
               borderRadius: 12,
               padding: 12,
               marginBottom: 16,
@@ -1608,10 +1619,10 @@ export const HomeScreen: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Ionicons name="warning" size={16} color="#facc15" style={{ marginRight: 8 }} />
+              <Ionicons name="warning" size={16} color={colors.warning} style={{ marginRight: 8 }} />
               <Text style={{
                 fontSize: 13,
-                color: '#facc15',
+                color: colors.warning,
                 fontWeight: '600',
               }}>
                 Using fallback data - API rate limited
@@ -1620,7 +1631,7 @@ export const HomeScreen: React.FC = () => {
           )}
           
           {/* Asset List - Enhanced (Combined Crypto + Stocks) */}
-          {getFilteredMarketData().map((asset: any, index: number) => {
+          {filteredMarketData.map((asset: any, index: number) => {
             const isCrypto = asset.assetType === 'crypto';
             const priceChange = asset.priceChange || 0;
             const isPositive = priceChange >= 0;
@@ -1650,7 +1661,7 @@ export const HomeScreen: React.FC = () => {
                   paddingVertical: 14,
                   paddingHorizontal: 14,
                   marginBottom: 10,
-                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                  backgroundColor: colors.backgroundCard,
                   borderRadius: 16,
                   borderWidth: 1,
                   borderColor: 'rgba(148, 163, 184, 0.1)',
@@ -1692,7 +1703,7 @@ export const HomeScreen: React.FC = () => {
                   width: 48,
                   height: 48,
                   borderRadius: 16,
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: colors.backgroundTertiary,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 14,
@@ -1712,7 +1723,7 @@ export const HomeScreen: React.FC = () => {
                     />
                   ) : (
                     <Text style={{
-                      color: '#FFFFFF',
+                      color: colors.textPrimary,
                       fontWeight: '800',
                       fontSize: 14,
                     }}>
@@ -1727,7 +1738,7 @@ export const HomeScreen: React.FC = () => {
                     <Text style={{
                       fontSize: 17,
                       fontWeight: '800',
-                      color: '#FFFFFF',
+                      color: colors.textPrimary,
                       letterSpacing: -0.3,
                       marginRight: 6,
                     }}>
@@ -1735,17 +1746,17 @@ export const HomeScreen: React.FC = () => {
                     </Text>
                     {isCrypto ? (
                       <View style={{
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        backgroundColor: colors.primary + '33',
                         paddingHorizontal: 6,
                         paddingVertical: 2,
                         borderRadius: 5,
                         borderWidth: 1,
-                        borderColor: 'rgba(59, 130, 246, 0.4)',
+                        borderColor: colors.primary + '66',
                       }}>
                         <Text style={{
                           fontSize: 9,
                           fontWeight: '800',
-                          color: '#3B82F6',
+                          color: colors.primary,
                           letterSpacing: 0.5,
                         }}>
                           CRYPTO
@@ -1753,17 +1764,17 @@ export const HomeScreen: React.FC = () => {
                       </View>
                     ) : (
                       <View style={{
-                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        backgroundColor: colors.success + '33',
                         paddingHorizontal: 6,
                         paddingVertical: 2,
                         borderRadius: 5,
                         borderWidth: 1,
-                        borderColor: 'rgba(34, 197, 94, 0.4)',
+                        borderColor: colors.success + '66',
                       }}>
                         <Text style={{
                           fontSize: 9,
                           fontWeight: '800',
-                          color: '#22c55e',
+                          color: colors.success,
                           letterSpacing: 0.5,
                         }}>
                           {asset.type?.toUpperCase() || 'STOCK'}
@@ -1773,7 +1784,7 @@ export const HomeScreen: React.FC = () => {
                   </View>
                   <Text style={{
                     fontSize: 13,
-                    color: '#94A3B8',
+                    color: colors.textTertiary,
                     fontWeight: '600',
                   }}>
                     {balanceDisplay} {isCrypto ? asset.symbol : 'shares'}
@@ -1785,7 +1796,7 @@ export const HomeScreen: React.FC = () => {
                   <Text style={{
                     fontSize: 18,
                     fontWeight: '800',
-                    color: '#FFFFFF',
+                    color: colors.textPrimary,
                     marginBottom: 6,
                     letterSpacing: -0.4,
                   }}>
@@ -1794,22 +1805,22 @@ export const HomeScreen: React.FC = () => {
                   <View style={{ 
                     flexDirection: 'row', 
                     alignItems: 'center',
-                    backgroundColor: isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    backgroundColor: isPositive ? colors.success + '26' : colors.error + '26',
                     paddingHorizontal: 8,
                     paddingVertical: 4,
                     borderRadius: 8,
                     borderWidth: 1.5,
-                    borderColor: isPositive ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                    borderColor: isPositive ? colors.success + '66' : colors.error + '66',
                   }}>
                     <Ionicons 
                       name={isPositive ? "trending-up" : "trending-down"} 
                       size={13} 
-                      color={isPositive ? '#22c55e' : '#ef4444'} 
+                      color={isPositive ? colors.success : colors.error} 
                     />
                     <Text style={{
                       fontSize: 12,
                       fontWeight: '800',
-                      color: isPositive ? '#22c55e' : '#ef4444',
+                      color: isPositive ? colors.success : colors.error,
                       marginLeft: 4,
                       letterSpacing: 0.2,
                     }}>
@@ -1822,20 +1833,20 @@ export const HomeScreen: React.FC = () => {
           })}
           
           {/* Fallback for no data - Enhanced */}
-          {getFilteredMarketData().length === 0 && !loadingMarketData && (
+          {filteredMarketData.length === 0 && !loadingMarketData && (
             <View style={{
               padding: 40,
               alignItems: 'center',
-              backgroundColor: 'rgba(30, 41, 59, 0.5)',
+              backgroundColor: colors.backgroundCard,
               borderRadius: 20,
               borderWidth: 1.5,
-              borderColor: 'rgba(148, 163, 184, 0.2)',
+              borderColor: colors.border,
             }}>
               <View style={{
                 width: 64,
                 height: 64,
                 borderRadius: 32,
-                backgroundColor: 'rgba(148, 163, 184, 0.15)',
+                backgroundColor: colors.backgroundSecondary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 16,
@@ -1845,7 +1856,7 @@ export const HomeScreen: React.FC = () => {
                 <Ionicons name="wallet-outline" size={36} color="#94a3b8" />
               </View>
               <Text style={{
-                color: '#FFFFFF',
+                color: colors.textPrimary,
                 textAlign: 'center',
                 fontSize: 18,
                 fontWeight: '800',

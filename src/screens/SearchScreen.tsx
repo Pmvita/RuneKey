@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Image, Dimensions, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -129,8 +129,11 @@ export const SearchScreen: React.FC = () => {
     transform: [{ translateY: trendingTranslateY.value }],
   }));
 
-  // Fetch trending tokens from API
-  const fetchTrendingTokens = async () => {
+  // Memoized fetch trending tokens - prevents duplicate calls
+  const fetchTrendingTokens = useCallback(async () => {
+    // Prevent duplicate concurrent requests
+    if (isLoadingTrending) return;
+    
     setIsLoadingTrending(true);
     try {
       const result = await priceService.fetchTrendingTokens();
@@ -166,7 +169,7 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingTrending(false);
     }
-  };
+  }, [isLoadingTrending]);
 
   // Fetch data when category is selected
   useEffect(() => {
@@ -185,8 +188,11 @@ export const SearchScreen: React.FC = () => {
     }
   }, [selectedCategory]);
 
-  // Fetch top crypto tokens
-  const fetchTopTokens = async (page: number = 1, append: boolean = false) => {
+  // Memoized fetch top crypto tokens - prevents duplicate calls
+  const fetchTopTokens = useCallback(async (page: number = 1, append: boolean = false) => {
+    // Prevent duplicate concurrent requests
+    if (isLoadingTokens && !append) return;
+    
     setIsLoadingTokens(true);
     try {
       const result = await priceService.fetchTopCoins(tokensPerPage, page);
@@ -214,17 +220,24 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingTokens(false);
     }
-  };
+  }, [isLoadingTokens, tokensPerPage]);
 
-  // Fetch DeFi tokens (filter from top coins by category)
-  const fetchDeFiTokens = async (page: number = 1, append: boolean = false) => {
+  // Memoized fetch DeFi tokens - prevents duplicate calls and expensive filtering on every call
+  const defiKeywords = useMemo(() => 
+    ['uniswap', 'aave', 'compound', 'maker', 'curve', 'yearn', 'sushi', 'pancake', 'balancer', 'synthetix', 'chainlink', 'lido', 'staked', 'wrapped', 'wbtc', 'weth'],
+    []
+  );
+
+  const fetchDeFiTokens = useCallback(async (page: number = 1, append: boolean = false) => {
+    // Prevent duplicate concurrent requests
+    if (isLoadingTokens && !append) return;
+    
     setIsLoadingTokens(true);
     try {
       // Fetch more tokens to filter DeFi ones
       const result = await priceService.fetchTopCoins(250, 1);
       if (result.success && result.data.length > 0) {
         // Filter tokens that are likely DeFi (common DeFi token names/patterns)
-        const defiKeywords = ['uniswap', 'aave', 'compound', 'maker', 'curve', 'yearn', 'sushi', 'pancake', 'balancer', 'synthetix', 'chainlink', 'lido', 'staked', 'wrapped', 'wbtc', 'weth'];
         const defiTokens = result.data.filter(token => 
           defiKeywords.some(keyword => 
             token.name.toLowerCase().includes(keyword) || 
@@ -261,10 +274,12 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingTokens(false);
     }
-  };
+  }, [isLoadingTokens, tokensPerPage, defiKeywords]);
 
-  // Fetch stocks
-  const fetchStocks = async () => {
+  // Memoized fetch stocks - prevents duplicate calls
+  const fetchStocks = useCallback(async () => {
+    if (isLoadingStocks) return;
+    
     setIsLoadingStocks(true);
     try {
       const stocksData = await stocksService.fetchTrending();
@@ -275,26 +290,28 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingStocks(false);
     }
-  };
+  }, [isLoadingStocks]);
 
-  // Fetch ETFs
-  const fetchETFs = async () => {
+  // Memoized ETF symbols - prevent recreation on every render
+  const etfSymbols = useMemo(() => [
+    { symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust' },
+    { symbol: 'QQQ', name: 'Invesco QQQ Trust' },
+    { symbol: 'VTI', name: 'Vanguard Total Stock Market ETF' },
+    { symbol: 'VOO', name: 'Vanguard S&P 500 ETF' },
+    { symbol: 'IWM', name: 'iShares Russell 2000 ETF' },
+    { symbol: 'EFA', name: 'iShares MSCI EAFE ETF' },
+    { symbol: 'EEM', name: 'iShares MSCI Emerging Markets ETF' },
+    { symbol: 'GLD', name: 'SPDR Gold Trust' },
+    { symbol: 'SLV', name: 'iShares Silver Trust' },
+    { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF' },
+  ], []);
+
+  // Memoized fetch ETFs - prevents duplicate calls
+  const fetchETFs = useCallback(async () => {
+    if (isLoadingEtfs) return;
+    
     setIsLoadingEtfs(true);
     try {
-      // Popular ETF symbols
-      const etfSymbols = [
-        { symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust' },
-        { symbol: 'QQQ', name: 'Invesco QQQ Trust' },
-        { symbol: 'VTI', name: 'Vanguard Total Stock Market ETF' },
-        { symbol: 'VOO', name: 'Vanguard S&P 500 ETF' },
-        { symbol: 'IWM', name: 'iShares Russell 2000 ETF' },
-        { symbol: 'EFA', name: 'iShares MSCI EAFE ETF' },
-        { symbol: 'EEM', name: 'iShares MSCI Emerging Markets ETF' },
-        { symbol: 'GLD', name: 'SPDR Gold Trust' },
-        { symbol: 'SLV', name: 'iShares Silver Trust' },
-        { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF' },
-      ];
-
       const quotesResult = await investingService.fetchQuotes(
         etfSymbols.map(etf => ({
           symbol: etf.symbol,
@@ -323,25 +340,28 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingEtfs(false);
     }
-  };
+  }, [isLoadingEtfs, etfSymbols]);
 
-  // Fetch bonds
-  const fetchBonds = async () => {
+  // Memoized bond symbols - prevent recreation on every render
+  const bondSymbols = useMemo(() => [
+    { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF' },
+    { symbol: 'IEF', name: 'iShares 7-10 Year Treasury Bond ETF' },
+    { symbol: 'SHY', name: 'iShares 1-3 Year Treasury Bond ETF' },
+    { symbol: 'AGG', name: 'iShares Core U.S. Aggregate Bond ETF' },
+    { symbol: 'BND', name: 'Vanguard Total Bond Market ETF' },
+    { symbol: 'LQD', name: 'iShares iBoxx $ Investment Grade Corporate Bond ETF' },
+    { symbol: 'HYG', name: 'iShares iBoxx $ High Yield Corporate Bond ETF' },
+    { symbol: 'MUB', name: 'iShares National Muni Bond ETF' },
+    { symbol: 'TIP', name: 'iShares TIPS Bond ETF' },
+    { symbol: 'VCIT', name: 'Vanguard Intermediate-Term Corporate Bond ETF' },
+  ], []);
+
+  // Memoized fetch bonds - prevents duplicate calls
+  const fetchBonds = useCallback(async () => {
+    if (isLoadingBonds) return;
+    
     setIsLoadingBonds(true);
     try {
-      // Popular bond ETF symbols (using ETFs as proxy for bonds since direct bond data is limited)
-      const bondSymbols = [
-        { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond ETF' },
-        { symbol: 'IEF', name: 'iShares 7-10 Year Treasury Bond ETF' },
-        { symbol: 'SHY', name: 'iShares 1-3 Year Treasury Bond ETF' },
-        { symbol: 'AGG', name: 'iShares Core U.S. Aggregate Bond ETF' },
-        { symbol: 'BND', name: 'Vanguard Total Bond Market ETF' },
-        { symbol: 'LQD', name: 'iShares iBoxx $ Investment Grade Corporate Bond ETF' },
-        { symbol: 'HYG', name: 'iShares iBoxx $ High Yield Corporate Bond ETF' },
-        { symbol: 'MUB', name: 'iShares National Muni Bond ETF' },
-        { symbol: 'TIP', name: 'iShares TIPS Bond ETF' },
-        { symbol: 'VCIT', name: 'Vanguard Intermediate-Term Corporate Bond ETF' },
-      ];
 
       const quotesResult = await investingService.fetchQuotes(
         bondSymbols.map(bond => ({
@@ -371,7 +391,7 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingBonds(false);
     }
-  };
+  }, [isLoadingBonds, bondSymbols]);
 
   // Load next page of tokens
   const loadNextPage = () => {
@@ -380,8 +400,10 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
-  // Fetch DApps
-  const fetchDApps = async () => {
+  // Memoized fetch DApps - prevents duplicate calls
+  const fetchDApps = useCallback(async () => {
+    if (isLoadingDapps) return;
+    
     setIsLoadingDapps(true);
     try {
       const result = await dappService.fetchDApps();
@@ -402,7 +424,7 @@ export const SearchScreen: React.FC = () => {
     } finally {
       setIsLoadingDapps(false);
     }
-  };
+  }, [isLoadingDapps]);
 
   // Filter DApps by category
   const filterDAppsByCategory = async (category: string) => {

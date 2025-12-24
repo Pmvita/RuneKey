@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
@@ -10,6 +10,7 @@ import Animated, {
   Easing,
   interpolate
 } from 'react-native-reanimated';
+import { useThemeColors, useIsDark } from '../../utils/theme';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -50,11 +51,50 @@ const bubbles: Bubble[] = [
 ];
 
 const BubbleBackground: React.FC = () => {
+  const colors = useThemeColors();
+  const isDark = useIsDark();
   const animatedValues = bubbles.map(() => useSharedValue(0));
+
+  // Generate theme-aware bubble colors
+  const themeBubbles = useMemo(() => {
+    const baseOpacity = isDark ? 0.15 : 0.08;
+    const primaryOpacity = isDark ? 0.2 : 0.12;
+    
+    return bubbles.map((bubble) => {
+      // Adjust bubble colors based on theme
+      if (bubble.color.includes('255, 255, 255')) {
+        // White bubbles - use text colors
+        return {
+          ...bubble,
+          color: isDark 
+            ? `rgba(255, 255, 255, ${baseOpacity})`
+            : `rgba(15, 23, 42, ${baseOpacity * 0.6})`,
+        };
+      } else if (bubble.color.includes('59, 130, 246')) {
+        // Primary color bubbles - convert hex to rgba
+        const hex = colors.primary.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        return {
+          ...bubble,
+          color: `rgba(${r}, ${g}, ${b}, ${primaryOpacity})`,
+        };
+      } else {
+        // Gray/slate bubbles - use border colors
+        return {
+          ...bubble,
+          color: isDark
+            ? `rgba(148, 163, 184, ${baseOpacity * 1.5})`
+            : `rgba(100, 116, 139, ${baseOpacity})`,
+        };
+      }
+    });
+  }, [isDark, colors]);
 
   useEffect(() => {
     // Start with static bubbles first to ensure visibility
-    bubbles.forEach((bubble, index) => {
+    themeBubbles.forEach((bubble, index) => {
       // Set initial opacity to make bubbles visible immediately
       animatedValues[index].value = 0.5;
       
@@ -73,7 +113,7 @@ const BubbleBackground: React.FC = () => {
         );
       }, 1000);
     });
-  }, []);
+  }, [themeBubbles]);
 
   const renderBubble = (bubble: Bubble, index: number) => {
     const animatedStyle = useAnimatedStyle(() => {
@@ -120,6 +160,7 @@ const BubbleBackground: React.FC = () => {
             left: bubble.x,
             top: bubble.y,
             backgroundColor: bubble.color,
+            borderColor: isDark ? colors.border : colors.borderLight,
           },
           animatedStyle,
         ]}
@@ -127,16 +168,23 @@ const BubbleBackground: React.FC = () => {
     );
   };
 
+  // Theme-aware gradient colors
+  const gradientColors = [
+    colors.background,
+    colors.backgroundSecondary,
+    colors.backgroundTertiary,
+  ];
+
   return (
     <View style={styles.container} pointerEvents="none">
       {/* Gradient Background */}
       <LinearGradient
-        colors={['#020617', '#0b1120', '#111827']}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBackground}
       />
-      {bubbles.map((bubble, index) => renderBubble(bubble, index))}
+      {themeBubbles.map((bubble, index) => renderBubble(bubble, index))}
     </View>
   );
 };
@@ -160,13 +208,11 @@ const styles = StyleSheet.create({
   bubble: {
     position: 'absolute',
     borderRadius: 1000, // Large value to ensure perfect circles
-    shadowColor: 'rgba(15, 118, 110, 0.6)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
   },
 });
 

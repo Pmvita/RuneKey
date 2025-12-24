@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, Dimensions, FlatList } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -104,25 +104,25 @@ export const AllocationScreen: React.FC = () => {
     }
   };
 
-  // Get filtered market data (combines wallet tokens with market data)
-  const getFilteredMarketData = () => {
+  // Memoized fallback prices - prevent recreation on every render
+  const fallbackPrices = useMemo(() => ({
+    'BTC': 51200,
+    'ETH': 3200,
+    'XRP': 0.52,
+    'SOL': 95,
+    'USDT': 1.00,
+    'USDC': 1.00,
+    'BNB': 320,
+    'DOGE': 0.08,
+    'ADA': 0.45,
+    'TRX': 0.12,
+  }), []);
+
+  // Memoized filtered market data - only recalculates when dependencies change
+  const filteredMarketData = useMemo(() => {
     if (!currentWallet?.tokens) {
       return [];
     }
-
-    // Fallback prices for common tokens
-    const fallbackPrices: { [key: string]: number } = {
-      'BTC': 51200,
-      'ETH': 3200,
-      'XRP': 0.52,
-      'SOL': 95,
-      'USDT': 1.00,
-      'USDC': 1.00,
-      'BNB': 320,
-      'DOGE': 0.08,
-      'ADA': 0.45,
-      'TRX': 0.12,
-    };
 
     return currentWallet.tokens.map(token => {
       // Find matching market data
@@ -142,7 +142,10 @@ export const AllocationScreen: React.FC = () => {
         logoURI: marketToken?.image || token.logoURI,
       };
     });
-  };
+  }, [currentWallet?.tokens, marketData, fallbackPrices]);
+
+  // Get filtered market data (wrapper for backward compatibility)
+  const getFilteredMarketData = useCallback(() => filteredMarketData, [filteredMarketData]);
 
   // Calculate allocation data
   const calculateAllocations = useCallback(async () => {
@@ -154,8 +157,8 @@ export const AllocationScreen: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Get filtered market data
-      const filteredTokens = getFilteredMarketData();
+      // Get filtered market data (use memoized version)
+      const filteredTokens = filteredMarketData;
       
       // Calculate USD values for all tokens
       const tokensWithValues = filteredTokens.map((token) => {
