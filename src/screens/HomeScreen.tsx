@@ -42,7 +42,7 @@ import investingData from '../mockData/api/investing.json';
 import { investingService } from '../services/api/investingService';
 import { Investment } from '../types';
 
-const investingHoldings: Investment[] = Array.isArray((investingData as any)?.investments)
+const initialInvestingHoldings: Investment[] = Array.isArray((investingData as any)?.investments)
   ? ((investingData as any).investments as Investment[])
   : [];
 
@@ -72,6 +72,8 @@ export const HomeScreen: React.FC = () => {
   const [animationsTriggered, setAnimationsTriggered] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
+  const [investmentHoldings, setInvestmentHoldings] = useState<any[]>([]);
+  const [loadingInvestments, setLoadingInvestments] = useState(false);
   const navigation = useNavigation<any>();
 
   // Animation values
@@ -83,6 +85,46 @@ export const HomeScreen: React.FC = () => {
   const actionsOpacity = useSharedValue(0);
   const assetsTranslateY = useSharedValue(50);
   const assetsOpacity = useSharedValue(0);
+
+  // Load investment quotes
+  const loadInvestmentQuotes = useCallback(async () => {
+    if (investmentHoldings.length === 0) return;
+    
+    setLoadingInvestments(true);
+    try {
+      const response = await investingService.fetchQuotes(investmentHoldings);
+      const quotes = response.data || {};
+      
+      const holdingsWithPrices = investmentHoldings.map((investment) => {
+        const symbol = investment.symbol.toUpperCase();
+        const quote = quotes[symbol];
+        
+        const currentPrice = typeof quote?.price === 'number' && Number.isFinite(quote.price)
+          ? quote.price
+          : investment.averagePrice || 0;
+        
+        const changePercent = typeof quote?.changePercent === 'number' && Number.isFinite(quote.changePercent)
+          ? quote.changePercent
+          : 0;
+        
+        const marketValue = investment.quantity * currentPrice;
+        
+        return {
+          ...investment,
+          currentPrice,
+          changePercent,
+          marketValue,
+          assetType: 'investment' as const,
+        };
+      });
+      
+      setInvestmentHoldings(holdingsWithPrices);
+    } catch (error) {
+      console.error('Error loading investment quotes:', error);
+    } finally {
+      setLoadingInvestments(false);
+    }
+  }, [investmentHoldings]);
 
   // Load market data from CoinGecko
   const loadMarketData = async () => {
@@ -315,6 +357,20 @@ export const HomeScreen: React.FC = () => {
       setLoadingMarketData(false);
     }
   };
+
+  // Initialize investment holdings from imported data
+  useEffect(() => {
+    if (initialInvestingHoldings.length > 0 && investmentHoldings.length === 0) {
+      setInvestmentHoldings(initialInvestingHoldings);
+    }
+  }, []);
+
+  // Load investment quotes when holdings are available
+  useEffect(() => {
+    if (investmentHoldings.length > 0) {
+      loadInvestmentQuotes();
+    }
+  }, [investmentHoldings.length, loadInvestmentQuotes]);
 
   // Load data on mount
   useEffect(() => {
@@ -567,10 +623,11 @@ export const HomeScreen: React.FC = () => {
     
     setLastRefreshTime(now);
     
-    // Refresh both market data and dev wallet data for consistency
+    // Refresh both market data, dev wallet data, and investment quotes for consistency
     await Promise.all([
       loadMarketData(),
-      currentWallet?.id === 'developer-wallet' ? refreshDevWallet() : Promise.resolve()
+      currentWallet?.id === 'developer-wallet' ? refreshDevWallet() : Promise.resolve(),
+      investmentHoldings.length > 0 ? loadInvestmentQuotes() : Promise.resolve()
     ]);
   };
 
@@ -580,47 +637,77 @@ export const HomeScreen: React.FC = () => {
   };
 
   const getFilteredMarketData = () => {
-    // Use current wallet tokens with live API data
-    if (!currentWallet || !currentWallet.tokens) return [];
+    // Combine crypto tokens and investments
+    const cryptoAssets = currentWallet?.tokens || [];
+    const investmentAssets = investmentHoldings || [];
     
+    // Format crypto assets
+    const formattedCrypto = cryptoAssets.map((token: any) => {
+      const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
+      const currentPrice = token.currentPrice || getTokenPrice(token.address) || 0;
+      const balance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
+      const marketValue = balance * currentPrice;
+      
+      return {
+        ...token,
+        assetType: 'crypto' as const,
+        marketValue,
+        priceChange,
+        currentPrice,
+        balance,
+        decimals: token.decimals || 18,
+      };
+    });
+    
+    // Format investment assets
+    const formattedInvestments = investmentAssets.map((investment: any) => {
+      const currentPrice = investment.currentPrice || investment.averagePrice || 0;
+      const marketValue = investment.marketValue || (investment.quantity * currentPrice);
+      const priceChange = investment.changePercent || 0;
+      
+      return {
+        ...investment,
+        assetType: 'investment' as const,
+        marketValue,
+        priceChange,
+        currentPrice,
+        balance: investment.quantity,
+        symbol: investment.symbol,
+        name: investment.name,
+        logoURI: investment.icon,
+        decimals: 0, // Stocks don't use decimals
+      };
+    });
+    
+    // Combine both asset types
+    const allAssets = [...formattedCrypto, ...formattedInvestments];
+    
+    // Apply filter
     const filtered = (() => {
       switch (selectedFilter) {
         case 'gainer':
-          return currentWallet.tokens.filter((token: any) => {
-            const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
-            return priceChange > 0;
-          });
+          return allAssets.filter((asset: any) => asset.priceChange > 0);
         case 'loser':
-          return currentWallet.tokens.filter((token: any) => {
-            const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
-            return priceChange < 0;
-          });
+          return allAssets.filter((asset: any) => asset.priceChange < 0);
         default:
-          return currentWallet.tokens;
+          return allAssets;
       }
     })();
     
-    // Remove duplicates by address (keep first occurrence)
-    const uniqueTokens = filtered.filter((token: any, index: number, self: any[]) => 
-      index === self.findIndex((t: any) => 
-        t.address?.toLowerCase() === token.address?.toLowerCase() ||
-        (t.symbol === token.symbol && t.address === token.address)
+    // Remove duplicates by symbol (keep first occurrence)
+    const uniqueAssets = filtered.filter((asset: any, index: number, self: any[]) => 
+      index === self.findIndex((a: any) => 
+        a.symbol?.toUpperCase() === asset.symbol?.toUpperCase() &&
+        a.assetType === asset.assetType
       )
     );
     
-    // Sort tokens by USD value from largest to smallest
-    const sortedTokens = uniqueTokens.sort((a: any, b: any) => {
-      const aPrice = a.currentPrice || getTokenPrice(a.address) || 0;
-      const bPrice = b.currentPrice || getTokenPrice(b.address) || 0;
-      const aBalance = typeof a.balance === 'string' ? parseFloat(a.balance) : a.balance || 0;
-      const bBalance = typeof b.balance === 'string' ? parseFloat(b.balance) : b.balance || 0;
-      const aValue = aBalance * aPrice;
-      const bValue = bBalance * bPrice;
-      
-      return bValue - aValue; // Sort descending (largest first)
+    // Sort by market value from largest to smallest
+    const sortedAssets = uniqueAssets.sort((a: any, b: any) => {
+      return (b.marketValue || 0) - (a.marketValue || 0);
     });
     
-    return sortedTokens;
+    return sortedAssets;
   };
 
   const activeCapitalValue = useMemo(() => {
@@ -664,7 +751,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const initialInvestingCost = useMemo(() => {
-    return investingHoldings.reduce((total, holding) => {
+    return initialInvestingHoldings.reduce((total, holding) => {
       return total + holding.quantity * holding.averagePrice;
     }, 0);
   }, []);
@@ -675,15 +762,15 @@ export const HomeScreen: React.FC = () => {
   });
 
   const refreshInvestingTotals = useCallback(async () => {
-    if (investingHoldings.length === 0) {
+    if (investmentHoldings.length === 0) {
       setInvestingTotals({ cost: 0, market: 0 });
       return;
     }
 
-    const response = await investingService.fetchQuotes(investingHoldings);
+    const response = await investingService.fetchQuotes(investmentHoldings);
     const quotes = response.data || {};
 
-    const { totalMarket, missingSymbols } = investingHoldings.reduce(
+    const { totalMarket, missingSymbols } = investmentHoldings.reduce(
       (acc, holding) => {
         const symbol = holding.symbol.toUpperCase();
         const quote = quotes[symbol];
@@ -740,7 +827,7 @@ export const HomeScreen: React.FC = () => {
             loadingMarketData ? "Loading Market Data..." : 
             "Loading Data..."
           }
-          spinnerSize={80}
+          spinnerSize="large"
           spinnerColor="#3B82F6"
         />
         
@@ -1505,37 +1592,26 @@ export const HomeScreen: React.FC = () => {
         </Animated.View>
 
         {/* Assets Title - Enhanced */}
-        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 12 }, actionsAnimatedStyle]}>
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 16 }, actionsAnimatedStyle]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{
-              fontSize: 20,
-              fontWeight: '800',
-              color: '#FFFFFF',
-              letterSpacing: -0.3,
-            }}>
-              Assets
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                logger.logButtonPress('View All Assets', 'navigate to assets');
-              }}
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: 'rgba(59, 130, 246, 0.3)',
-              }}
-            >
+            <View>
               <Text style={{
-                fontSize: 12,
-                fontWeight: '600',
-                color: '#3B82F6',
+                fontSize: 24,
+                fontWeight: '800',
+                color: '#FFFFFF',
+                letterSpacing: -0.4,
+                marginBottom: 4,
               }}>
-                View All
+                Assets
               </Text>
-            </TouchableOpacity>
+              <Text style={{
+                fontSize: 13,
+                color: '#94A3B8',
+                fontWeight: '500',
+              }}>
+                Crypto & Traditional Investments
+              </Text>
+            </View>
           </View>
         </Animated.View>
 
@@ -1616,21 +1692,27 @@ export const HomeScreen: React.FC = () => {
             </View>
           )}
           
-          {/* Asset List - Enhanced */}
-          {getFilteredMarketData().map((token: any, index: number) => {
-            // Use live prices from dev wallet if available, otherwise fallback to mock prices
-            const currentPrice = token.currentPrice || getTokenPrice(token.address) || 0;
-            const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
+          {/* Asset List - Enhanced (Combined Crypto + Stocks) */}
+          {getFilteredMarketData().map((asset: any, index: number) => {
+            const isCrypto = asset.assetType === 'crypto';
+            const priceChange = asset.priceChange || 0;
             const isPositive = priceChange >= 0;
+            const marketValue = asset.marketValue || 0;
             
-            // Calculate USD value based on balance and live price
-            const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
-            const usdValue = tokenBalance * currentPrice;
+            // Format balance/quantity display
+            const balanceDisplay = isCrypto
+              ? formatTokenBalance(asset.balance?.toString() || '0', asset.decimals || 18)
+              : asset.balance?.toLocaleString() || '0';
             
-            // Create unique key combining address and index to prevent duplicates
-            const uniqueKey = token.address 
-              ? `${token.address}-${index}` 
-              : `${token.symbol}-${index}`;
+            // Create unique key
+            const uniqueKey = isCrypto && asset.address
+              ? `${asset.address}-${index}`
+              : `${asset.symbol}-${asset.assetType}-${index}`;
+            
+            // Determine icon border color based on asset type
+            const iconBorderColor = isCrypto 
+              ? '#3B82F6' 
+              : '#22c55e';
             
             return (
               <TouchableOpacity
@@ -1639,97 +1721,170 @@ export const HomeScreen: React.FC = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   paddingVertical: 14,
-                  paddingHorizontal: 12,
+                  paddingHorizontal: 14,
                   marginBottom: 10,
                   backgroundColor: 'rgba(30, 41, 59, 0.5)',
                   borderRadius: 16,
                   borderWidth: 1,
                   borderColor: 'rgba(148, 163, 184, 0.1)',
+                  shadowColor: iconBorderColor,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
                 }}
                 onPress={() => {
-                  logger.logButtonPress(`${token.symbol} Token`, 'view token details');
-                  navigation.navigate('TokenDetails', { 
-                    token: {
-                      id: token.coinId,
-                      symbol: token.symbol,
-                      name: token.name,
-                      image: token.logoURI,
-                      current_price: currentPrice,
-                      price_change_percentage_24h: priceChange,
-                    }
-                  });
+                  if (isCrypto) {
+                    logger.logButtonPress(`${asset.symbol} Token`, 'view token details');
+                    navigation.navigate('TokenDetails', { 
+                      token: {
+                        id: asset.coinId,
+                        symbol: asset.symbol,
+                        name: asset.name,
+                        image: asset.logoURI,
+                        current_price: asset.currentPrice,
+                        price_change_percentage_24h: priceChange,
+                      }
+                    });
+                  } else {
+                    logger.logButtonPress(`${asset.symbol} Investment`, 'view investment details');
+                    navigation.navigate('InvestmentDetails', { 
+                      holding: {
+                        ...asset,
+                        currentPrice: asset.currentPrice,
+                        changePercent: priceChange,
+                        marketValue: marketValue,
+                      }
+                    });
+                  }
                 }}
-                activeOpacity={0.7}
+                activeOpacity={0.85}
               >
-                {/* Token Icon - Scaled Down */}
+                {/* Asset Icon - Enhanced */}
                 <View style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: 12,
-                  borderWidth: 1.5,
-                  borderColor: 'rgba(148, 163, 184, 0.2)',
+                  marginRight: 14,
+                  borderWidth: 2,
+                  borderColor: iconBorderColor,
+                  shadowColor: iconBorderColor,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 3,
                 }}>
-                  <Image 
-                    source={{ uri: token.logoURI }} 
-                    style={{ width: 30, height: 30, borderRadius: 15 }}
-                  />
+                  {asset.logoURI || asset.icon ? (
+                    <Image 
+                      source={{ uri: asset.logoURI || asset.icon }} 
+                      style={{ width: 32, height: 32, borderRadius: 12 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={{
+                      color: '#FFFFFF',
+                      fontWeight: '800',
+                      fontSize: 14,
+                    }}>
+                      {asset.symbol?.slice(0, 2).toUpperCase()}
+                    </Text>
+                  )}
                 </View>
 
-                {/* Token Info - Scaled Down */}
-                <View style={{ flex: 1 }}>
-                  <Text style={{
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    marginBottom: 3,
-                    letterSpacing: -0.2,
-                  }}>
-                    {token.symbol}
-                  </Text>
+                {/* Asset Info - Enhanced */}
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={{
+                      fontSize: 17,
+                      fontWeight: '800',
+                      color: '#FFFFFF',
+                      letterSpacing: -0.3,
+                      marginRight: 6,
+                    }}>
+                      {asset.symbol}
+                    </Text>
+                    {isCrypto ? (
+                      <View style={{
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 5,
+                        borderWidth: 1,
+                        borderColor: 'rgba(59, 130, 246, 0.4)',
+                      }}>
+                        <Text style={{
+                          fontSize: 9,
+                          fontWeight: '800',
+                          color: '#3B82F6',
+                          letterSpacing: 0.5,
+                        }}>
+                          CRYPTO
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={{
+                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 5,
+                        borderWidth: 1,
+                        borderColor: 'rgba(34, 197, 94, 0.4)',
+                      }}>
+                        <Text style={{
+                          fontSize: 9,
+                          fontWeight: '800',
+                          color: '#22c55e',
+                          letterSpacing: 0.5,
+                        }}>
+                          {asset.type?.toUpperCase() || 'STOCK'}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={{
                     fontSize: 13,
                     color: '#94A3B8',
-                    fontWeight: '500',
+                    fontWeight: '600',
                   }}>
-                    {formatTokenBalance(token.balance, token.decimals || 18)} {token.symbol}
+                    {balanceDisplay} {isCrypto ? asset.symbol : 'shares'}
                   </Text>
                 </View>
 
-                {/* Price and Change - Scaled Down */}
+                {/* Price and Change - Enhanced */}
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{
-                    fontSize: 16,
-                    fontWeight: '700',
+                    fontSize: 18,
+                    fontWeight: '800',
                     color: '#FFFFFF',
-                    marginBottom: 3,
-                    letterSpacing: -0.2,
+                    marginBottom: 6,
+                    letterSpacing: -0.4,
                   }}>
-                    {formatLargeCurrency(usdValue)}
+                    {formatLargeCurrency(marketValue)}
                   </Text>
                   <View style={{ 
                     flexDirection: 'row', 
                     alignItems: 'center',
                     backgroundColor: isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                     paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    borderRadius: 6,
-                    borderWidth: 1,
-                    borderColor: isPositive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+                    paddingVertical: 4,
+                    borderRadius: 8,
+                    borderWidth: 1.5,
+                    borderColor: isPositive ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)',
                   }}>
                     <Ionicons 
                       name={isPositive ? "trending-up" : "trending-down"} 
-                      size={12} 
+                      size={13} 
                       color={isPositive ? '#22c55e' : '#ef4444'} 
                     />
                     <Text style={{
                       fontSize: 12,
-                      fontWeight: '700',
+                      fontWeight: '800',
                       color: isPositive ? '#22c55e' : '#ef4444',
-                      marginLeft: 3,
+                      marginLeft: 4,
+                      letterSpacing: 0.2,
                     }}>
                       {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
                     </Text>
@@ -1742,41 +1897,44 @@ export const HomeScreen: React.FC = () => {
           {/* Fallback for no data - Enhanced */}
           {getFilteredMarketData().length === 0 && !loadingMarketData && (
             <View style={{
-              padding: 32,
+              padding: 40,
               alignItems: 'center',
-              backgroundColor: 'rgba(30, 41, 59, 0.4)',
-              borderRadius: 16,
-              borderWidth: 1,
+              backgroundColor: 'rgba(30, 41, 59, 0.5)',
+              borderRadius: 20,
+              borderWidth: 1.5,
               borderColor: 'rgba(148, 163, 184, 0.2)',
             }}>
               <View style={{
-                width: 60,
-                height: 60,
-                borderRadius: 30,
-                backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: 'rgba(148, 163, 184, 0.15)',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 16,
+                borderWidth: 1.5,
+                borderColor: 'rgba(148, 163, 184, 0.3)',
               }}>
                 <Ionicons name="wallet-outline" size={36} color="#94a3b8" />
               </View>
               <Text style={{
                 color: '#FFFFFF',
                 textAlign: 'center',
-                marginTop: 4,
-                fontSize: 16,
-                fontWeight: '700',
-                marginBottom: 6,
+                fontSize: 18,
+                fontWeight: '800',
+                marginBottom: 8,
+                letterSpacing: -0.3,
               }}>
-                No assets found
+                No Assets Found
               </Text>
               <Text style={{
                 color: '#94A3B8',
                 textAlign: 'center',
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: '500',
+                lineHeight: 20,
               }}>
-                Connect a wallet to see your assets
+                Connect a wallet or add investments to see your portfolio
               </Text>
             </View>
           )}
