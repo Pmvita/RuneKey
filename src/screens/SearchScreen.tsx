@@ -20,6 +20,7 @@ import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
 import { LiquidGlass, LoadingSpinner, UniversalBackground, CustomLoadingAnimation } from '../components';
 import { Token } from '../types';
+import { useThemeColors } from '../utils/theme';
 import {
   NormalizedTrendingToken,
   mapTrendingResponse,
@@ -40,6 +41,7 @@ interface SearchResult {
 }
 
 export const SearchScreen: React.FC = () => {
+  const colors = useThemeColors();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'crypto' | 'defi' | 'stocks' | 'bonds' | 'etfs' | 'dapps' | 'collections'>('all');
   const [apiTrendingTokens, setApiTrendingTokens] = useState<NormalizedTrendingToken[]>([]);
@@ -597,14 +599,14 @@ export const SearchScreen: React.FC = () => {
               style={styles.assetIconImage}
             />
           ) : (
-            <Ionicons name="ellipse" size={20} color="#94A3B8" style={styles.iconGlyph} />
+            <Ionicons name="ellipse" size={20} color={colors.textTertiary} style={styles.iconGlyph} />
           )}
         </View>
 
         <View style={styles.assetInfo}>
-          <Text style={styles.assetName}>{token.name}</Text>
+          <Text style={[styles.assetName, { color: colors.textPrimary }]}>{token.name}</Text>
           {(selectedCategory === 'crypto' || selectedCategory === 'defi') && (
-            <Text style={styles.assetMetaText}>
+            <Text style={[styles.assetMetaText, { color: colors.textSecondary }]}>
               #{(token as CoinInfo).market_cap_rank || 'N/A'}
             </Text>
           )}
@@ -612,7 +614,7 @@ export const SearchScreen: React.FC = () => {
 
         <View style={styles.assetMetrics}>
           {showPrice && (
-            <Text style={styles.assetPrice}>
+            <Text style={[styles.assetPrice, { color: colors.textPrimary }]}>
               {formatCurrency(currentPrice)}
             </Text>
           )}
@@ -622,7 +624,7 @@ export const SearchScreen: React.FC = () => {
               {priceChange.value}%
             </Text>
           </View>
-          <Text style={styles.assetSymbol}>
+          <Text style={[styles.assetSymbol, { color: colors.textSecondary }]}>
             {token.symbol}
           </Text>
         </View>
@@ -648,13 +650,13 @@ export const SearchScreen: React.FC = () => {
               style={styles.dappIconImage}
             />
           ) : (
-            <Ionicons name="apps" size={22} color="#94A3B8" style={styles.iconGlyph} />
+            <Ionicons name="apps" size={22} color={colors.textTertiary} style={styles.iconGlyph} />
           )}
         </View>
 
         <View style={styles.dappInfo}>
           <View style={styles.dappTitleRow}>
-            <Text style={styles.assetName}>{dapp.name}</Text>
+            <Text style={[styles.assetName, { color: colors.textPrimary }]}>{dapp.name}</Text>
             {dapp.trending && (
               <View style={styles.dappTrendingPill}>
                 <Text style={styles.dappTrendingText}>
@@ -664,27 +666,27 @@ export const SearchScreen: React.FC = () => {
             )}
           </View>
           
-          <Text style={styles.dappDescription}>
+          <Text style={[styles.dappDescription, { color: colors.textSecondary }]}>
             {dapp.description}
           </Text>
           
           <View style={styles.dappStatsRow}>
             <View style={styles.dappStat}>
               <Ionicons name="star" size={12} color="#fbbf24" />
-              <Text style={styles.dappStatText}>
+              <Text style={[styles.dappStatText, { color: colors.textSecondary }]}>
                 {dapp.rating}
               </Text>
             </View>
             
             <View style={styles.dappStat}>
-              <Ionicons name="people" size={12} color="#94A3B8" />
-              <Text style={styles.dappStatText}>
+              <Ionicons name="people" size={12} color={colors.textTertiary} />
+              <Text style={[styles.dappStatText, { color: colors.textSecondary }]}>
                 {formatNumber(dapp.users)}
               </Text>
             </View>
             
             <View style={styles.dappCategoryPill}>
-              <Text style={styles.dappCategoryText}>
+              <Text style={[styles.dappCategoryText, { color: colors.primary }]}>
                 {dapp.category}
               </Text>
             </View>
@@ -740,14 +742,14 @@ export const SearchScreen: React.FC = () => {
         </View>
 
         <View style={styles.assetInfo}>
-          <Text style={styles.assetName}>{stock.name}</Text>
-          <Text style={styles.assetMetaText}>
+          <Text style={[styles.assetName, { color: colors.textPrimary }]}>{stock.name}</Text>
+          <Text style={[styles.assetMetaText, { color: colors.textSecondary }]}>
             {stock.exchange || 'MARKET'} • {stock.symbol}
           </Text>
         </View>
 
         <View style={styles.assetMetrics}>
-          <Text style={styles.assetPrice}>
+          <Text style={[styles.assetPrice, { color: colors.textPrimary }]}>
             {formatCurrency(stock.price)}
           </Text>
           <View style={styles.assetChangeRow}>
@@ -756,7 +758,7 @@ export const SearchScreen: React.FC = () => {
               {priceChange.value}%
             </Text>
           </View>
-          <Text style={styles.assetSymbol}>
+          <Text style={[styles.assetSymbol, { color: colors.textSecondary }]}>
             Vol: {formatNumber(stock.volume)}
           </Text>
         </View>
@@ -780,18 +782,18 @@ export const SearchScreen: React.FC = () => {
         activeOpacity={0.75}
       >
         <View style={styles.assetIcon}>
-          <Ionicons name="bar-chart" size={20} color="#94A3B8" style={styles.iconGlyph} />
+          <Ionicons name="bar-chart" size={20} color={colors.textTertiary} style={styles.iconGlyph} />
         </View>
 
         <View style={styles.assetInfo}>
-          <Text style={styles.assetName}>{etf.name}</Text>
-          <Text style={styles.assetMetaText}>
+          <Text style={[styles.assetName, { color: colors.textPrimary }]}>{etf.name}</Text>
+          <Text style={[styles.assetMetaText, { color: colors.textSecondary }]}>
             {etf.quote.exchange || 'MARKET'} • {etf.symbol}
           </Text>
         </View>
 
         <View style={styles.assetMetrics}>
-          <Text style={styles.assetPrice}>
+          <Text style={[styles.assetPrice, { color: colors.textPrimary }]}>
             {formatCurrency(etf.quote.price)}
           </Text>
           <View style={styles.assetChangeRow}>
@@ -801,7 +803,7 @@ export const SearchScreen: React.FC = () => {
             </Text>
           </View>
           {etf.quote.dividendYield && (
-            <Text style={styles.assetSymbol}>
+            <Text style={[styles.assetSymbol, { color: colors.textSecondary }]}>
               Yield: {etf.quote.dividendYield.toFixed(2)}%
             </Text>
           )}
@@ -826,18 +828,18 @@ export const SearchScreen: React.FC = () => {
         activeOpacity={0.75}
       >
         <View style={styles.assetIcon}>
-          <Ionicons name="shield" size={20} color="#94A3B8" style={styles.iconGlyph} />
+          <Ionicons name="shield" size={20} color={colors.textTertiary} style={styles.iconGlyph} />
         </View>
 
         <View style={styles.assetInfo}>
-          <Text style={styles.assetName}>{bond.name}</Text>
-          <Text style={styles.assetMetaText}>
+          <Text style={[styles.assetName, { color: colors.textPrimary }]}>{bond.name}</Text>
+          <Text style={[styles.assetMetaText, { color: colors.textSecondary }]}>
             {bond.quote.exchange || 'MARKET'} • {bond.symbol}
           </Text>
         </View>
 
         <View style={styles.assetMetrics}>
-          <Text style={styles.assetPrice}>
+          <Text style={[styles.assetPrice, { color: colors.textPrimary }]}>
             {formatCurrency(bond.quote.price)}
           </Text>
           <View style={styles.assetChangeRow}>
@@ -847,7 +849,7 @@ export const SearchScreen: React.FC = () => {
             </Text>
           </View>
           {bond.quote.dividendYield && (
-            <Text style={styles.assetSymbol}>
+            <Text style={[styles.assetSymbol, { color: colors.textSecondary }]}>
               Yield: {bond.quote.dividendYield.toFixed(2)}%
             </Text>
           )}
@@ -915,12 +917,12 @@ export const SearchScreen: React.FC = () => {
     return (
       <LiquidGlass variant="transparent" cornerRadius={18} elasticity={0.18} style={styles.borderlessCard} className="p-4">
         <View style={styles.paginationRow}>
-          <Text style={styles.paginationMeta}>
+          <Text style={[styles.paginationMeta, { color: colors.textSecondary }]}>
             Showing {topTokens.length} of {hasMorePages ? 'many' : totalTokens} tokens
           </Text>
           
           <View style={styles.paginationControls}>
-            <Text style={styles.paginationMeta}>
+            <Text style={[styles.paginationMeta, { color: colors.textSecondary }]}>
               Page {currentPage}
             </Text>
             
@@ -935,7 +937,7 @@ export const SearchScreen: React.FC = () => {
                   <LoadingSpinner size={16} color="#0F172A" />
                 ) : (
                   <>
-                    <Text style={styles.paginationButtonText}>
+                    <Text style={[styles.paginationButtonText, { color: colors.textPrimary }]}>
                       Next
                     </Text>
                     <Ionicons name="chevron-forward" size={16} color="#0F172A" />
@@ -1003,17 +1005,17 @@ export const SearchScreen: React.FC = () => {
             className="p-1"
           >
             <View style={styles.searchRow}>
-              <Ionicons name="search" size={20} color="#94A3B8" style={styles.searchIcon} />
+              <Ionicons name="search" size={20} color={colors.textTertiary} style={styles.searchIcon} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.textPrimary }]}
                 placeholder="Search tokens, DApps, NFTs..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors.textTertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
               {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton} activeOpacity={0.75}>
-                  <Ionicons name="close" size={18} color="#94A3B8" />
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={[styles.clearButton, { backgroundColor: colors.backgroundTertiary }]} activeOpacity={0.75}>
+                  <Ionicons name="close" size={18} color={colors.textTertiary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -1050,13 +1052,13 @@ export const SearchScreen: React.FC = () => {
                   <Ionicons 
                     name={category.icon as any} 
                     size={16} 
-                    color={selectedCategory === category.key ? '#0F172A' : '#94A3B8'} 
+                    color={selectedCategory === category.key ? colors.textInverse : colors.textTertiary} 
                     style={styles.categoryChipIcon}
                   />
                   <Text
                     style={[
                       styles.categoryChipText,
-                      selectedCategory === category.key && styles.categoryChipTextSelected,
+                      { color: selectedCategory === category.key ? colors.textInverse : colors.textTertiary },
                     ]}
                   >
                     {category.label}
@@ -1079,16 +1081,16 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Top Crypto</Text>
-                  <Text style={styles.sectionSubtitle}>Live market leaders ranked by market cap</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Top Crypto</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Live market leaders ranked by market cap</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1106,8 +1108,8 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="logo-bitcoin" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="logo-bitcoin" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No crypto tokens available
                   </Text>
                 </View>
@@ -1127,16 +1129,16 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>DeFi Tokens</Text>
-                  <Text style={styles.sectionSubtitle}>Decentralized finance protocols and tokens</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>DeFi Tokens</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Decentralized finance protocols and tokens</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1154,8 +1156,8 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="swap-horizontal-outline" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="swap-horizontal-outline" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No DeFi tokens available
                   </Text>
                 </View>
@@ -1175,16 +1177,16 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Trending Stocks</Text>
-                  <Text style={styles.sectionSubtitle}>Top market movers from major exchanges</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Trending Stocks</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Top market movers from major exchanges</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1202,8 +1204,8 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="trending-up-outline" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="trending-up-outline" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No stocks available
                   </Text>
                 </View>
@@ -1221,16 +1223,16 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Exchange-Traded Funds</Text>
-                  <Text style={styles.sectionSubtitle}>Popular ETFs with live pricing</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Exchange-Traded Funds</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Popular ETFs with live pricing</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1248,8 +1250,8 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="bar-chart-outline" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="bar-chart-outline" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No ETFs available
                   </Text>
                 </View>
@@ -1267,16 +1269,16 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Bond ETFs</Text>
-                  <Text style={styles.sectionSubtitle}>Fixed income securities and bond funds</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Bond ETFs</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Fixed income securities and bond funds</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1294,8 +1296,8 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="shield-outline" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="shield-outline" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No bonds available
                   </Text>
                 </View>
@@ -1313,16 +1315,16 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Decentralized Apps</Text>
-                  <Text style={styles.sectionSubtitle}>Trusted tools hand-picked for RuneKey users</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Decentralized Apps</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Trusted tools hand-picked for RuneKey users</Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1342,8 +1344,8 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="apps-outline" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="apps-outline" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No DApps available
                   </Text>
                 </View>
@@ -1361,18 +1363,18 @@ export const SearchScreen: React.FC = () => {
             >
               <View style={styles.sectionHeaderRow}>
                 <View>
-                  <Text style={styles.sectionTitle}>Trending Tokens</Text>
-                  <Text style={styles.sectionSubtitle}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Trending Tokens</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
                     Updated {lastUpdated ? formatTime(lastUpdated) : 'just now'}
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.sectionActionButton}
+                  style={[styles.sectionActionButton, { backgroundColor: colors.primary }]}
                   onPress={handleRefresh}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name="refresh" size={16} color="#0F172A" style={styles.sectionActionIcon} />
-                  <Text style={styles.sectionActionText}>
+                  <Ionicons name="refresh" size={16} color={colors.textInverse} style={styles.sectionActionIcon} />
+                  <Text style={[styles.sectionActionText, { color: colors.textInverse }]}>
                     Refresh
                   </Text>
                 </TouchableOpacity>
@@ -1390,15 +1392,15 @@ export const SearchScreen: React.FC = () => {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="trending-down" size={48} color="#94A3B8" />
-                  <Text style={styles.emptyText}>
+                  <Ionicons name="trending-down" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                     No trending tokens available
                   </Text>
                 </View>
               )}
 
               <TouchableOpacity style={styles.sectionLink} onPress={handleViewDetailedList} activeOpacity={0.75}>
-                <Text style={styles.sectionLinkText}>
+                <Text style={[styles.sectionLinkText, { color: colors.primary }]}>
                   View detailed list
                 </Text>
                 <Ionicons name="chevron-forward" size={16} color="#38BDF8" />
