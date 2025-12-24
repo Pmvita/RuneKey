@@ -16,6 +16,9 @@ export interface StockNewsItem {
   site: string;
   image?: string;
   text?: string;
+  logoUrl?: string;
+  companyName?: string;
+  sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
 export interface SymbolSearchResult {
@@ -29,6 +32,47 @@ export interface SymbolSearchResult {
 
 const FMP_BASE = 'https://financialmodelingprep.com/api/v3';
 const FMP_API_KEY = 'demo'; // Replace with a secure key for production use
+
+// NewsAPI configuration (free tier: 100 requests/day)
+const NEWS_API_BASE = 'https://newsapi.org/v2';
+const NEWS_API_KEY = process.env.EXPO_PUBLIC_NEWS_API_KEY || '';
+
+// Finnhub for company logos (free tier: 60 calls/minute)
+const FINNHUB_BASE = 'https://finnhub.io/api/v1';
+const FINNHUB_API_KEY = process.env.EXPO_PUBLIC_FINNHUB_API_KEY || 'demo';
+
+// Helper to get company logo URL
+const getCompanyLogoUrl = (symbol: string): string => {
+  // Use Finnhub logo API or fallback to a logo service
+  if (FINNHUB_API_KEY && FINNHUB_API_KEY !== 'demo') {
+    return `${FINNHUB_BASE}/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+  }
+  // Fallback: Use a public logo service
+  return `https://logo.clearbit.com/${getCompanyDomain(symbol)}.com`;
+};
+
+// Map stock symbols to company domains for logo fetching
+const getCompanyDomain = (symbol: string): string => {
+  const domainMap: Record<string, string> = {
+    AAPL: 'apple',
+    MSFT: 'microsoft',
+    GOOGL: 'google',
+    AMZN: 'amazon',
+    META: 'meta',
+    TSLA: 'tesla',
+    NVDA: 'nvidia',
+    NFLX: 'netflix',
+    AMD: 'amd',
+    INTC: 'intel',
+    JPM: 'jpmorgan',
+    V: 'visa',
+    MA: 'mastercard',
+    DIS: 'disney',
+    CRM: 'salesforce',
+    ADBE: 'adobe',
+  };
+  return domainMap[symbol] || symbol.toLowerCase();
+};
 
 const FALLBACK_TRENDING: TrendingStock[] = [
   {
@@ -338,50 +382,284 @@ class StocksService {
     }
   }
 
-  async fetchNews(limit: number = 15, page: number = 1): Promise<StockNewsItem[]> {
+  /**
+   * Fetch company logo URL from Finnhub or Clearbit
+   */
+  private async fetchCompanyLogo(symbol: string, companyName?: string): Promise<string | undefined> {
     try {
-      // Try to use Financial Modeling Prep API first
-      const url = `${FMP_BASE}/stock_news?limit=${limit}&apikey=${FMP_API_KEY}`;
-      const response = await axios.get(url);
-      const data = Array.isArray(response.data) ? response.data : [];
+      // Try Finnhub first if API key is available
+      if (FINNHUB_API_KEY && FINNHUB_API_KEY !== 'demo') {
+        const profileUrl = `${FINNHUB_BASE}/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+        const response = await axios.get(profileUrl, { timeout: 5000 });
+        if (response.data?.logo) {
+          return response.data.logo;
+        }
+      }
+      
+      // Fallback to Clearbit logo service
+      const domain = getCompanyDomain(symbol);
+      const clearbitUrl = `https://logo.clearbit.com/${domain}.com`;
+      
+      // Test if logo exists by making a HEAD request
+      try {
+        const testResponse = await axios.head(clearbitUrl, { timeout: 3000 });
+        if (testResponse.status === 200) {
+          return clearbitUrl;
+        }
+      } catch {
+        // Logo doesn't exist, return undefined
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.warn(`Failed to fetch logo for ${symbol}:`, error);
+      return undefined;
+    }
+  }
 
-      if (data.length > 0) {
-        return data.map((item: any) => ({
-          symbol: item.symbol || item.ticker || '',
-          title: item.title || 'Market update',
-          url: item.url,
-          publishedAt: item.publishedDate || item.date || new Date().toISOString(),
-          site: item.site || item.source || 'Finance',
-          image: item.image,
-          text: item.text,
-        }));
+  /**
+   * Fetch news from multiple sources with enhanced data
+   */
+  async fetchNews(limit: number = 15, page: number = 1): Promise<StockNewsItem[]> {
+    const newsItems: StockNewsItem[] = [];
+    
+    try {
+      // Strategy 1: Try NewsAPI (if API key is available)
+      if (NEWS_API_KEY && NEWS_API_KEY !== '') {
+        try {
+          const newsApiUrl = `${NEWS_API_BASE}/everything?q=stock+market+OR+finance+OR+investing&sortBy=publishedAt&pageSize=${limit}&page=${page}&apiKey=${NEWS_API_KEY}`;
+          const newsApiResponse = await axios.get(newsApiUrl, { timeout: 8000 });
+          
+          if (newsApiResponse.data?.articles?.length > 0) {
+            const articles = newsApiResponse.data.articles;
+            
+            // Process articles and extract symbols from titles
+            for (const article of articles) {
+              const symbol = this.extractSymbolFromTitle(article.title || '');
+              const logoUrl = symbol ? await this.fetchCompanyLogo(symbol) : undefined;
+              
+              newsItems.push({
+                symbol: symbol || 'MARKET',
+                title: article.title || 'Market update',
+                url: article.url || '',
+                publishedAt: article.publishedAt || new Date().toISOString(),
+                site: article.source?.name || 'News',
+                image: article.urlToImage,
+                text: article.description,
+                logoUrl,
+                companyName: symbol ? this.getCompanyName(symbol) : undefined,
+                sentiment: this.analyzeSentiment(article.title || ''),
+              });
+              
+              if (newsItems.length >= limit) break;
+            }
+            
+            if (newsItems.length > 0) {
+              console.log(`📰 Fetched ${newsItems.length} news items from NewsAPI`);
+              return newsItems;
+            }
+          }
+        } catch (newsApiError) {
+          console.warn('NewsAPI fetch failed, trying alternatives:', newsApiError);
+        }
       }
 
-      // If API fails, use expanded fallback news with pagination
+      // Strategy 2: Try Financial Modeling Prep API
+      try {
+        const url = `${FMP_BASE}/stock_news?limit=${limit}&apikey=${FMP_API_KEY}`;
+        const response = await axios.get(url, { timeout: 8000 });
+        const data = Array.isArray(response.data) ? response.data : [];
+
+        if (data.length > 0) {
+          // Fetch logos for all symbols in parallel
+          const logoPromises = data.map((item: any) => {
+            const symbol = item.symbol || item.ticker || '';
+            return this.fetchCompanyLogo(symbol).then(logoUrl => ({ symbol, logoUrl }));
+          });
+          
+          const logoResults = await Promise.all(logoPromises);
+          const logoMap = new Map(logoResults.map(r => [r.symbol, r.logoUrl]));
+
+          const mappedNews = data.map((item: any) => {
+            const symbol = item.symbol || item.ticker || '';
+            return {
+              symbol,
+              title: item.title || 'Market update',
+              url: item.url || '',
+              publishedAt: item.publishedDate || item.date || new Date().toISOString(),
+              site: item.site || item.source || 'Finance',
+              image: item.image,
+              text: item.text,
+              logoUrl: logoMap.get(symbol),
+              companyName: this.getCompanyName(symbol),
+              sentiment: this.analyzeSentiment(item.title || ''),
+            };
+          });
+
+          console.log(`📰 Fetched ${mappedNews.length} news items from FMP`);
+          return mappedNews;
+        }
+      } catch (fmpError) {
+        console.warn('FMP API fetch failed, using fallback:', fmpError);
+      }
+
+      // Strategy 3: Use enhanced fallback data with logos
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedNews = FALLBACK_NEWS.slice(startIndex, endIndex);
       
-      if (paginatedNews.length === 0 && page === 1) {
+      // Fetch logos for fallback news
+      const fallbackWithLogos = await Promise.all(
+        paginatedNews.map(async (news) => {
+          const logoUrl = await this.fetchCompanyLogo(news.symbol);
+          return {
+            ...news,
+            logoUrl,
+            companyName: this.getCompanyName(news.symbol),
+            sentiment: this.analyzeSentiment(news.title),
+          };
+        })
+      );
+      
+      if (fallbackWithLogos.length === 0 && page === 1) {
         // Return all fallback news if first page is empty
-        return FALLBACK_NEWS.slice(0, limit);
+        const allFallback = FALLBACK_NEWS.slice(0, limit);
+        return await Promise.all(
+          allFallback.map(async (news) => {
+            const logoUrl = await this.fetchCompanyLogo(news.symbol);
+            return {
+              ...news,
+              logoUrl,
+              companyName: this.getCompanyName(news.symbol),
+              sentiment: this.analyzeSentiment(news.title),
+            };
+          })
+        );
       }
       
-      return paginatedNews;
+      return fallbackWithLogos;
     } catch (error) {
       console.warn('stocksService.fetchNews: using fallback data', error);
       
-      // Use fallback news with pagination
+      // Final fallback with logos
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedNews = FALLBACK_NEWS.slice(startIndex, endIndex);
       
-      if (paginatedNews.length === 0 && page === 1) {
-        return FALLBACK_NEWS.slice(0, limit);
+      const fallbackWithLogos = await Promise.all(
+        paginatedNews.map(async (news) => {
+          const logoUrl = await this.fetchCompanyLogo(news.symbol);
+          return {
+            ...news,
+            logoUrl,
+            companyName: this.getCompanyName(news.symbol),
+            sentiment: this.analyzeSentiment(news.title),
+          };
+        })
+      );
+      
+      if (fallbackWithLogos.length === 0 && page === 1) {
+        const allFallback = FALLBACK_NEWS.slice(0, limit);
+        return await Promise.all(
+          allFallback.map(async (news) => {
+            const logoUrl = await this.fetchCompanyLogo(news.symbol);
+            return {
+              ...news,
+              logoUrl,
+              companyName: this.getCompanyName(news.symbol),
+              sentiment: this.analyzeSentiment(news.title),
+            };
+          })
+        );
       }
       
-      return paginatedNews;
+      return fallbackWithLogos;
     }
+  }
+
+  /**
+   * Extract stock symbol from news title
+   */
+  private extractSymbolFromTitle(title: string): string {
+    // Common stock symbols in titles (e.g., "Apple (AAPL) announces...")
+    const symbolPattern = /\(([A-Z]{1,5})\)/;
+    const match = title.match(symbolPattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+    
+    // Check for common company names
+    const companyMap: Record<string, string> = {
+      'apple': 'AAPL',
+      'microsoft': 'MSFT',
+      'google': 'GOOGL',
+      'alphabet': 'GOOGL',
+      'amazon': 'AMZN',
+      'meta': 'META',
+      'facebook': 'META',
+      'tesla': 'TSLA',
+      'nvidia': 'NVDA',
+      'netflix': 'NFLX',
+      'amd': 'AMD',
+      'intel': 'INTC',
+      'jpmorgan': 'JPM',
+      'visa': 'V',
+      'mastercard': 'MA',
+      'disney': 'DIS',
+      'salesforce': 'CRM',
+      'adobe': 'ADBE',
+    };
+    
+    const lowerTitle = title.toLowerCase();
+    for (const [company, symbol] of Object.entries(companyMap)) {
+      if (lowerTitle.includes(company)) {
+        return symbol;
+      }
+    }
+    
+    return '';
+  }
+
+  /**
+   * Get company name from symbol
+   */
+  private getCompanyName(symbol: string): string | undefined {
+    const nameMap: Record<string, string> = {
+      AAPL: 'Apple Inc.',
+      MSFT: 'Microsoft Corporation',
+      GOOGL: 'Alphabet Inc.',
+      AMZN: 'Amazon.com Inc.',
+      META: 'Meta Platforms Inc.',
+      TSLA: 'Tesla Inc.',
+      NVDA: 'NVIDIA Corporation',
+      NFLX: 'Netflix Inc.',
+      AMD: 'Advanced Micro Devices Inc.',
+      INTC: 'Intel Corporation',
+      JPM: 'JPMorgan Chase & Co.',
+      V: 'Visa Inc.',
+      MA: 'Mastercard Inc.',
+      DIS: 'The Walt Disney Company',
+      CRM: 'Salesforce Inc.',
+      ADBE: 'Adobe Inc.',
+    };
+    return nameMap[symbol];
+  }
+
+  /**
+   * Simple sentiment analysis based on keywords
+   */
+  private analyzeSentiment(text: string): 'positive' | 'negative' | 'neutral' {
+    const lowerText = text.toLowerCase();
+    
+    const positiveWords = ['gain', 'rise', 'surge', 'jump', 'soar', 'up', 'growth', 'profit', 'success', 'breakthrough', 'record', 'beat'];
+    const negativeWords = ['fall', 'drop', 'plunge', 'crash', 'down', 'loss', 'decline', 'miss', 'warn', 'concern', 'risk', 'fail'];
+    
+    const positiveCount = positiveWords.filter(word => lowerText.includes(word)).length;
+    const negativeCount = negativeWords.filter(word => lowerText.includes(word)).length;
+    
+    if (positiveCount > negativeCount) return 'positive';
+    if (negativeCount > positiveCount) return 'negative';
+    return 'neutral';
   }
 
   async searchSymbols(query: string): Promise<SymbolSearchResult[]> {

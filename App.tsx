@@ -256,7 +256,7 @@ const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Stocks" 
-        component={StocksScreen}
+        component={MarketScreen}
         options={{
           title: '',
           headerShown: false,

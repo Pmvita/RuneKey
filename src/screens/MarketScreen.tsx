@@ -1,195 +1,220 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dimensions, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dimensions, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
-import { UniversalBackground, Card, SparklineChart, AnimatedNumber } from '../components';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { UniversalBackground, SparklineChart } from '../components';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-interface MetricCardProps {
-  title: string;
-  value: number;
-  iconColor: string;
-  iconName: keyof typeof Ionicons.glyphMap;
-  trend: 'up' | 'down';
-}
+type TabType = 'Overview' | 'Watchlist' | 'Chart';
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, iconColor, iconName, trend }) => {
-  return (
-    <Animated.View entering={FadeInUp.delay(100)} style={styles.metricCard}>
-      <View style={[styles.metricIconContainer, { backgroundColor: `${iconColor}20` }]}>
-        <Ionicons name={iconName} size={24} color={iconColor} />
-      </View>
-      <Text style={styles.metricTitle}>{title}</Text>
-      <Text style={styles.metricValue}>{formatCurrency(value)}</Text>
-    </Animated.View>
-  );
-};
-
-interface BarChartData {
-  day: string;
-  value: number;
-  isHighlighted?: boolean;
-}
-
-interface PortfolioBarChartProps {
-  data: BarChartData[];
-  maxValue: number;
-}
-
-const PortfolioBarChart: React.FC<PortfolioBarChartProps> = ({ data, maxValue }) => {
-  const chartHeight = 200;
-  const barWidth = (SCREEN_WIDTH - 80) / data.length - 8;
-
-  return (
-    <View style={styles.chartContainer}>
-      <View style={styles.chartYAxis}>
-        {[0, 25, 50, 75, 100].map((val) => (
-          <Text key={val} style={styles.chartYLabel}>
-            ${val}k
-          </Text>
-        ))}
-      </View>
-      <View style={styles.chartBarsContainer}>
-        {data.map((item, index) => {
-          const barHeight = (item.value / maxValue) * chartHeight;
-          const isHighlighted = item.isHighlighted || false;
-          
-          return (
-            <View key={index} style={styles.barWrapper}>
-              {item.value > 0 && (
-                <View style={styles.barValueLabel}>
-                  <Text style={styles.barValueText}>
-                    {formatCurrency(item.value).replace('.00', '')}
-                  </Text>
-                </View>
-              )}
-              <View
-                style={[
-                  styles.bar,
-                  {
-                    height: Math.max(barHeight, 4),
-                    width: barWidth,
-                    backgroundColor: isHighlighted ? '#EF4444' : '#3B82F6',
-                  },
-                ]}
-              />
-              <Text style={styles.barLabel}>{item.day}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-};
-
-interface StockItem {
+interface FeaturedStock {
   symbol: string;
   name: string;
+  exchange: string;
   price: number;
   change: number;
   changePercent: number;
-  sparklineData: number[];
+  chartData: number[];
+  rsi: number;
+  sma: number;
 }
 
-interface StockListItemProps {
-  stock: StockItem;
+interface TrendingStock {
+  symbol: string;
+  name: string;
+  price: number;
+  changePercent: number;
+  chartData: number[];
+  iconColor: string;
 }
 
-const StockListItem: React.FC<StockListItemProps> = ({ stock }) => {
-  const isPositive = stock.change >= 0;
-  
-  return (
-    <Animated.View entering={FadeInUp} style={styles.stockItem}>
-      <View style={styles.stockIconContainer}>
-        <View style={[styles.stockIcon, { backgroundColor: '#3B82F6' }]}>
-          <Text style={styles.stockIconText}>{stock.symbol[0]}</Text>
-        </View>
-      </View>
-      <View style={styles.stockInfo}>
-        <Text style={styles.stockSymbol}>{stock.symbol}</Text>
-        <Text style={styles.stockName}>{stock.name}</Text>
-      </View>
-      <View style={styles.stockChart}>
-        <SparklineChart
-          data={stock.sparklineData}
-          width={80}
-          height={40}
-          color={isPositive ? '#22C55E' : '#EF4444'}
-          strokeWidth={2}
-        />
-      </View>
-      <View style={styles.stockPrice}>
-        <Text style={styles.stockPriceValue}>{formatCurrency(stock.price)}</Text>
-        <Text style={[styles.stockChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
-          {isPositive ? '+' : ''}{formatPercentage(stock.changePercent)}
-        </Text>
-      </View>
-    </Animated.View>
-  );
-};
+interface PortfolioStock {
+  symbol: string;
+  name: string;
+  price: number;
+  changePercent: number;
+  iconColor: string;
+}
 
-type Timeframe = '12H' | '1D' | '1W' | '1M' | '1Y';
+interface WatchlistStock {
+  symbol: string;
+  name: string;
+  price: number;
+  changePercent: number;
+  chartData: number[];
+  iconColor: string;
+}
 
 export const MarketScreen: React.FC = () => {
-  const { width: screenWidth } = useWindowDimensions();
-  const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('1W');
+  const [activeTab, setActiveTab] = useState<TabType>('Overview');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('This week');
 
-  // Mock data - replace with actual data from your stores/services
-  const todayGains = 2202.42;
-  const overallLoss = 5200.11;
-  const totalBalance = 25901.41;
-  const balanceChange = 1521.4;
-  const balanceChangePercent = 8.1;
+  const featuredStock: FeaturedStock = useMemo(() => ({
+    symbol: 'BRK-A',
+    name: 'Berkshire Hathaway Inc. Class A',
+    exchange: 'NYSE',
+    price: 752546.07,
+    change: 0,
+    changePercent: 0,
+    chartData: [750000, 751000, 752000, 751500, 752500, 753000, 752546],
+    rsi: 42.8,
+    sma: 752546.07,
+  }), []);
 
-  const chartData: BarChartData[] = useMemo(() => {
-    const baseData = [
-      { day: 'Mo', value: 25000 },
-      { day: 'Tu', value: 35000 },
-      { day: 'We', value: 74902, isHighlighted: true },
-      { day: 'Th', value: 45000 },
-      { day: 'Fr', value: 55000 },
-      { day: 'Sa', value: 40000 },
-      { day: 'Su', value: 30000 },
-    ];
-    return baseData;
-  }, []);
+  const trendingStocks: TrendingStock[] = useMemo(() => [
+    {
+      symbol: 'AAPL',
+      name: 'Apple Inc.',
+      price: 178.23,
+      changePercent: 1.24,
+      chartData: [175, 176, 177, 176.5, 177.5, 178, 178.23],
+      iconColor: '#FFFFFF',
+    },
+    {
+      symbol: 'MSFT',
+      name: 'Microsoft Corporation',
+      price: 328.71,
+      changePercent: 2.0,
+      chartData: [325, 326, 327, 326.5, 327.5, 328, 328.71],
+      iconColor: '#3B82F6',
+    },
+    {
+      symbol: 'NVDA',
+      name: 'NVIDIA Corporation',
+      price: 472.5,
+      changePercent: 4.0,
+      chartData: [465, 470, 472, 471, 472.5, 473, 472.5],
+      iconColor: '#22C55E',
+    },
+  ], []);
 
-  const maxChartValue = useMemo(() => {
-    return Math.max(...chartData.map((d) => d.value), 100000);
-  }, [chartData]);
+  const portfolioStocks: PortfolioStock[] = useMemo(() => [
+    {
+      symbol: 'AAPL',
+      name: 'Apple Inc.',
+      price: 357.57,
+      changePercent: 1.7,
+      iconColor: '#000000',
+    },
+    {
+      symbol: 'LYFT',
+      name: 'Lyft Inc.',
+      price: 635.07,
+      changePercent: 3.5,
+      iconColor: '#FF00BF',
+    },
+  ], []);
 
-  const topStocks: StockItem[] = useMemo(() => {
-    return [
-      {
-        symbol: 'MSFT',
-        name: 'Microsoft Corp.',
-        price: 213.10,
-        change: 2.5,
-        changePercent: 2.5,
-        sparklineData: [210, 211, 212, 211.5, 212.5, 213, 213.1],
-      },
-      {
-        symbol: 'AAPL',
-        name: 'Apple Inc.',
-        price: 175.50,
-        change: -1.2,
-        changePercent: -0.68,
-        sparklineData: [176, 175.5, 175, 175.2, 175.8, 175.6, 175.5],
-      },
-      {
-        symbol: 'GOOGL',
-        name: 'Alphabet Inc.',
-        price: 142.30,
-        change: 3.1,
-        changePercent: 2.23,
-        sparklineData: [139, 140, 141, 141.5, 142, 142.2, 142.3],
-      },
-    ];
-  }, []);
+  const watchlistStocks: WatchlistStock[] = useMemo(() => [
+    {
+      symbol: 'SPOT',
+      name: 'Spotify Technology',
+      price: 213.10,
+      changePercent: 3.3,
+      chartData: [210, 211, 212, 211.5, 212.5, 213, 213.1],
+      iconColor: '#1DB954',
+    },
+    {
+      symbol: 'GOOGL',
+      name: 'Alphabet Inc.',
+      price: 213.10,
+      changePercent: 2.8,
+      chartData: [210, 211, 212, 211.5, 212.5, 213, 213.1],
+      iconColor: '#4285F4',
+    },
+    {
+      symbol: 'MSFT',
+      name: 'Microsoft Corp.',
+      price: 213.10,
+      changePercent: -3.5,
+      chartData: [220, 218, 215, 214, 213.5, 213.2, 213.1],
+      iconColor: '#00A4EF',
+    },
+  ], []);
 
-  const timeframes: Timeframe[] = ['12H', '1D', '1W', '1M', '1Y'];
+  const stockGainsValue = 29855.35;
+
+  const renderTrendingStock = ({ item }: { item: TrendingStock }) => {
+    const isPositive = item.changePercent >= 0;
+    return (
+      <Animated.View entering={FadeInUp} style={styles.trendingCard}>
+        <View style={[styles.stockIconSquare, { backgroundColor: '#1E293B' }]}>
+          <View style={[styles.stockIconCircle, { backgroundColor: item.iconColor }]}>
+            <Text style={styles.stockIconText}>{item.symbol[0]}</Text>
+          </View>
+        </View>
+        <Text style={styles.trendingSymbol}>{item.symbol}</Text>
+        <Text style={styles.trendingName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.trendingPrice}>{formatCurrency(item.price)}</Text>
+        <Text style={[styles.trendingChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+          {isPositive ? '+' : ''}{formatPercentage(item.changePercent)}
+        </Text>
+      </Animated.View>
+    );
+  };
+
+  const renderPortfolioStock = ({ item }: { item: PortfolioStock }) => {
+    const isPositive = item.changePercent >= 0;
+    return (
+      <Animated.View entering={FadeInUp} style={[styles.portfolioCard, { backgroundColor: '#F3F4F6' }]}>
+        <View style={[styles.portfolioIconCircle, { backgroundColor: item.iconColor }]}>
+          <Text style={styles.portfolioIconText}>{item.symbol[0]}</Text>
+        </View>
+        <Text style={styles.portfolioSymbol}>{item.symbol}</Text>
+        <Text style={styles.portfolioName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.portfolioPrice}>{item.price.toFixed(2)}</Text>
+        <View style={styles.portfolioChangeRow}>
+          <Ionicons 
+            name={isPositive ? 'arrow-up' : 'arrow-down'} 
+            size={14} 
+            color={isPositive ? '#22C55E' : '#EF4444'} 
+          />
+          <Text style={[styles.portfolioChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+            {formatPercentage(item.changePercent)}
+          </Text>
+        </View>
+      </Animated.View>
+    );
+  };
+
+  const renderWatchlistStock = ({ item }: { item: WatchlistStock }) => {
+    const isPositive = item.changePercent >= 0;
+    return (
+      <Animated.View entering={FadeInUp} style={styles.watchlistItem}>
+        <View style={[styles.watchlistIconCircle, { backgroundColor: item.iconColor }]}>
+          <Text style={styles.watchlistIconText}>{item.symbol[0]}</Text>
+        </View>
+        <View style={styles.watchlistInfo}>
+          <Text style={styles.watchlistSymbol}>{item.symbol}</Text>
+          <Text style={styles.watchlistName} numberOfLines={1}>{item.name}</Text>
+        </View>
+        <View style={styles.watchlistChart}>
+          <SparklineChart
+            data={item.chartData}
+            width={60}
+            height={30}
+            color={isPositive ? '#22C55E' : '#EF4444'}
+            strokeWidth={2}
+          />
+        </View>
+        <View style={styles.watchlistPrice}>
+          <Text style={styles.watchlistPriceValue}>{formatCurrency(item.price)}</Text>
+          <View style={styles.watchlistChangeRow}>
+            <Ionicons 
+              name={isPositive ? 'arrow-up' : 'arrow-down'} 
+              size={12} 
+              color={isPositive ? '#22C55E' : '#EF4444'} 
+            />
+            <Text style={[styles.watchlistChange, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+              {formatPercentage(item.changePercent)}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  };
 
   return (
     <UniversalBackground>
@@ -199,87 +224,150 @@ export const MarketScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header Metric Cards */}
-          <View style={styles.metricsRow}>
-            <MetricCard
-              title="Today Gains"
-              value={todayGains}
-              iconColor="#3B82F6"
-              iconName="trending-down"
-              trend="down"
-            />
-            <MetricCard
-              title="Overall Loss"
-              value={overallLoss}
-              iconColor="#EF4444"
-              iconName="trending-up"
-              trend="up"
-            />
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.title}>Markets</Text>
+              <Text style={styles.subtitle}>Live equity, ETF, forex & commodity signals</Text>
+            </View>
           </View>
 
-          {/* Total Balance Section */}
-          <Animated.View entering={FadeInUp.delay(200)} style={styles.balanceSection}>
-            <Text style={styles.balanceLabel}>Your total balance</Text>
-            <View style={styles.balanceRow}>
-              <View style={styles.balanceMain}>
-                <Text style={styles.balanceValue}>{formatCurrency(totalBalance)}</Text>
-                <Text style={styles.balanceSubValue}>{formatCurrency(balanceChange)}</Text>
-              </View>
-              <View style={styles.balanceIndicators}>
-                <View style={[styles.changePill, { backgroundColor: '#22C55E' }]}>
-                  <Ionicons name="arrow-up" size={14} color="#FFFFFF" />
-                  <Text style={styles.changePillText}>{balanceChangePercent}%</Text>
-                </View>
-                <TouchableOpacity style={styles.bellButton}>
-                  <Ionicons name="notifications-outline" size={24} color="#000000" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Animated.View>
-
-          {/* Portfolio Chart Section */}
-          <Animated.View entering={FadeInUp.delay(300)} style={styles.chartSection}>
-            <PortfolioBarChart data={chartData} maxValue={maxChartValue} />
-            
-            {/* Timeframe Selector */}
-            <View style={styles.timeframeContainer}>
-              {timeframes.map((timeframe) => (
-                <TouchableOpacity
-                  key={timeframe}
-                  style={[
-                    styles.timeframeButton,
-                    selectedTimeframe === timeframe && styles.timeframeButtonActive,
-                  ]}
-                  onPress={() => setSelectedTimeframe(timeframe)}
-                >
-                  <Text
-                    style={[
-                      styles.timeframeText,
-                      selectedTimeframe === timeframe && styles.timeframeTextActive,
-                    ]}
-                  >
-                    {timeframe}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </Animated.View>
-
-          {/* Top Stocks Section */}
-          <Animated.View entering={FadeInUp.delay(400)} style={styles.stocksSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top stocks</Text>
-              <TouchableOpacity>
-                <Text style={styles.viewAllText}>View all</Text>
+          {/* Navigation Tabs */}
+          <View style={styles.tabsContainer}>
+            {(['Overview', 'Watchlist', 'Chart'] as TabType[]).map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.tab, activeTab === tab && styles.tabActive]}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                  {tab}
+                </Text>
               </TouchableOpacity>
-            </View>
-            
-            <View style={styles.stocksList}>
-              {topStocks.map((stock, index) => (
-                <StockListItem key={stock.symbol} stock={stock} />
-              ))}
-            </View>
-          </Animated.View>
+            ))}
+            <TouchableOpacity style={styles.refreshButton}>
+              <Ionicons name="refresh" size={16} color="#3B82F6" />
+              <Text style={styles.refreshText}>Refresh data</Text>
+            </TouchableOpacity>
+          </View>
+
+          {activeTab === 'Overview' && (
+            <>
+              {/* Featured Section */}
+              <View style={styles.featuredSection}>
+                <Text style={styles.featuredLabel}>FEATURED</Text>
+                <Text style={styles.featuredName}>{featuredStock.name}</Text>
+                <Text style={styles.featuredTicker}>
+                  {featuredStock.symbol} • {featuredStock.exchange}
+                </Text>
+                <View style={styles.featuredPriceRow}>
+                  <View>
+                    <Text style={styles.featuredPrice}>{formatCurrency(featuredStock.price)}</Text>
+                    <Text style={[styles.featuredChange, { color: '#22C55E' }]}>
+                      {featuredStock.change >= 0 ? '+' : ''}{formatCurrency(featuredStock.change)} ({featuredStock.changePercent >= 0 ? '+' : ''}{formatPercentage(featuredStock.changePercent)})
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.featuredChart}>
+                  <SparklineChart
+                    data={featuredStock.chartData}
+                    width={SCREEN_WIDTH - 64}
+                    height={200}
+                    color="#22C55E"
+                    strokeWidth={3}
+                  />
+                </View>
+                <View style={styles.featuredIndicators}>
+                  <View style={styles.indicator}>
+                    <Text style={styles.indicatorLabel}>RSI N</Text>
+                    <Text style={styles.indicatorValue}>{featuredStock.rsi}</Text>
+                  </View>
+                  <View style={styles.indicator}>
+                    <Text style={styles.indicatorLabel}>SMA(20)</Text>
+                    <Text style={styles.indicatorValue}>{formatCurrency(featuredStock.sma)}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Trending Section */}
+              <View style={styles.trendingSection}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Trending</Text>
+                  <TouchableOpacity>
+                    <Text style={styles.refreshLink}>Refresh</Text>
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={trendingStocks}
+                  renderItem={renderTrendingStock}
+                  keyExtractor={(item) => item.symbol}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.trendingList}
+                />
+              </View>
+            </>
+          )}
+
+          {activeTab === 'Watchlist' && (
+            <>
+              {/* Stock Gains Section */}
+              <View style={styles.gainsSection}>
+                <View style={styles.gainsHeader}>
+                  <Text style={styles.gainsTitle}>Stock Gains</Text>
+                  <TouchableOpacity style={styles.timeframeButton}>
+                    <Text style={styles.timeframeText}>{selectedTimeframe}</Text>
+                    <Ionicons name="chevron-down" size={16} color="#7C3AED" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.gainsValue}>{formatCurrency(stockGainsValue)}</Text>
+                <View style={styles.gainsChart}>
+                  <SparklineChart
+                    data={[25000, 26000, 27000, 28000, 29000, 28500, 29855]}
+                    width={SCREEN_WIDTH - 64}
+                    height={150}
+                    color="#7C3AED"
+                    strokeWidth={3}
+                  />
+                </View>
+              </View>
+
+              {/* Portfolio Section */}
+              <View style={styles.portfolioSection}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Portfolio</Text>
+                  <TouchableOpacity>
+                    <Text style={styles.viewAllText}>View all</Text>
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={portfolioStocks}
+                  renderItem={renderPortfolioStock}
+                  keyExtractor={(item) => item.symbol}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.portfolioList}
+                />
+              </View>
+
+              {/* Watchlist Section */}
+              <View style={styles.watchlistSection}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Watchlist</Text>
+                  <TouchableOpacity>
+                    <Ionicons name="chevron-forward" size={20} color="#7C3AED" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.watchlistList}>
+                  {watchlistStocks.map((stock) => (
+                    <View key={stock.symbol}>
+                      {renderWatchlistStock({ item: stock })}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </UniversalBackground>
@@ -297,173 +385,123 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 12,
+  header: {
     marginBottom: 20,
   },
-  metricCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  metricIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  metricTitle: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
-  metricValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#000000',
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#94A3B8',
   },
-  balanceSection: {
+  tabsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 24,
+    gap: 8,
   },
-  balanceLabel: {
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+  },
+  tabActive: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#9CA3AF',
+    color: '#94A3B8',
+  },
+  tabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    gap: 4,
+  },
+  refreshText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#3B82F6',
+  },
+  featuredSection: {
+    marginBottom: 32,
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  featuredLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: 8,
   },
-  balanceRow: {
+  featuredName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  featuredTicker: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#94A3B8',
+    marginBottom: 16,
+  },
+  featuredPriceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: 20,
   },
-  balanceMain: {
-    flex: 1,
-  },
-  balanceValue: {
-    fontSize: 36,
+  featuredPrice: {
+    fontSize: 24,
     fontWeight: '700',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
-  balanceSubValue: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  balanceIndicators: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  changePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 4,
-  },
-  changePillText: {
+  featuredChange: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  bellButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartSection: {
-    marginBottom: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  chartContainer: {
-    flexDirection: 'row',
-    height: 240,
-    marginBottom: 16,
-  },
-  chartYAxis: {
-    width: 40,
-    justifyContent: 'space-between',
-    paddingRight: 8,
-  },
-  chartYLabel: {
-    fontSize: 11,
     fontWeight: '500',
-    color: '#6B7280',
   },
-  chartBarsContainer: {
+  featuredChart: {
+    marginBottom: 20,
+    height: 200,
+  },
+  featuredIndicators: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  indicator: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingLeft: 8,
   },
-  barWrapper: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    position: 'relative',
+  indicatorLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#94A3B8',
+    marginBottom: 4,
   },
-  barValueLabel: {
-    position: 'absolute',
-    top: -20,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  barValueText: {
-    fontSize: 10,
+  indicatorValue: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  bar: {
-    borderRadius: 4,
-    minHeight: 4,
-  },
-  barLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginTop: 8,
-  },
-  timeframeContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
-  },
-  timeframeButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'transparent',
-  },
-  timeframeButtonActive: {
-    backgroundColor: '#EF4444',
-  },
-  timeframeText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  timeframeTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  stocksSection: {
-    marginBottom: 24,
+  trendingSection: {
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -474,32 +512,37 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000000',
+    color: '#FFFFFF',
   },
-  viewAllText: {
+  refreshLink: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#EF4444',
+    fontWeight: '500',
+    color: '#3B82F6',
   },
-  stocksList: {
-    gap: 12,
+  trendingList: {
+    paddingRight: 16,
   },
-  stockItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
+  trendingCard: {
+    width: 140,
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  stockIconContainer: {
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
   },
-  stockIcon: {
+  stockIconSquare: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  stockIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -508,35 +551,191 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  stockInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  stockSymbol: {
+  trendingSymbol: {
     fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  trendingName: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#94A3B8',
+    marginBottom: 8,
+  },
+  trendingPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  trendingChange: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  gainsSection: {
+    marginBottom: 32,
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  gainsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  gainsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  timeframeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(124, 58, 237, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+  },
+  timeframeText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#7C3AED',
+  },
+  gainsValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  gainsChart: {
+    height: 150,
+  },
+  portfolioSection: {
+    marginBottom: 32,
+  },
+  portfolioList: {
+    paddingRight: 16,
+  },
+  portfolioCard: {
+    width: 160,
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  portfolioIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  portfolioIconText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  portfolioSymbol: {
+    fontSize: 18,
     fontWeight: '700',
     color: '#000000',
     marginBottom: 2,
   },
-  stockName: {
-    fontSize: 13,
-    fontWeight: '500',
+  portfolioName: {
+    fontSize: 12,
+    fontWeight: '400',
     color: '#6B7280',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  stockChart: {
-    marginRight: 12,
-  },
-  stockPrice: {
-    alignItems: 'flex-end',
-  },
-  stockPriceValue: {
-    fontSize: 16,
+  portfolioPrice: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#000000',
     marginBottom: 4,
   },
-  stockChange: {
+  portfolioChangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  portfolioChange: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  watchlistSection: {
+    marginBottom: 32,
+  },
+  watchlistList: {
+    gap: 12,
+  },
+  watchlistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  watchlistIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  watchlistIconText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  watchlistInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  watchlistSymbol: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  watchlistName: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#94A3B8',
+  },
+  watchlistChart: {
+    marginRight: 12,
+  },
+  watchlistPrice: {
+    alignItems: 'flex-end',
+  },
+  watchlistPriceValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  watchlistChangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  watchlistChange: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#7C3AED',
   },
 });

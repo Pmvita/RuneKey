@@ -10,7 +10,7 @@
       "currency": "USD",
       "quantity": 7,
       "averagePrice": 700000.0,
-      "icon": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2022%2F05%2FBerkshire-Hathaway-Logo.png&f=1&nofb=1&ipt=bae7d1beee456941e736514bd39aa1d3eff6136143c0e2f54b076d964b838b17"
+      "icon": "https://logo.clearbit.com/berkshirehathaway.com"
     },
     {
       "id": "^GSPC",
@@ -76,7 +76,7 @@
       "currency": "USD",
       "quantity": 2000,
       "averagePrice": 180.00,
-      "icon": "https://logo.clearbit.com/abc.xyz"
+      "icon": "https://logo.clearbit.com/google.com"
     },
     {
       "id": "MSFT",

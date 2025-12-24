@@ -885,19 +885,6 @@ export const HomeScreen: React.FC = () => {
                   borderRadius: 8,
                 }}
                 onPress={() => {
-                  logger.logButtonPress('Calendar', 'open calendar');
-                }}
-              >
-                <Ionicons name="calendar-outline" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={{
-                  padding: 6,
-                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
-                  borderRadius: 8,
-                }}
-                onPress={() => {
                   logger.logButtonPress('Chart', 'open chart');
                 }}
               >
@@ -931,66 +918,6 @@ export const HomeScreen: React.FC = () => {
                 <Ionicons name="settings-outline" size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
-          </View>
-        </Animated.View>
-
-        {/* Crypto/Market Tabs - Enhanced */}
-        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 12 }, headerAnimatedStyle]}>
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: 'rgba(30, 41, 59, 0.6)',
-            borderRadius: 12,
-            padding: 3,
-            borderWidth: 1,
-            borderColor: 'rgba(148, 163, 184, 0.15)',
-          }}>
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: '#3B82F6',
-                borderRadius: 10,
-                paddingVertical: 8,
-                alignItems: 'center',
-                shadowColor: '#3B82F6',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 4,
-              }}
-              onPress={() => {
-                logger.logButtonPress('Crypto Tab', 'switch to crypto view');
-              }}
-            >
-              <Text style={{
-                fontSize: 13,
-                fontWeight: '700',
-                color: '#ffffff',
-              }}>
-                Crypto
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: 'transparent',
-                borderRadius: 10,
-                paddingVertical: 8,
-                alignItems: 'center',
-              }}
-              onPress={() => {
-                logger.logButtonPress('Market Tab', 'switch to market view');
-                navigation.navigate('Market' as never);
-              }}
-            >
-              <Text style={{
-                fontSize: 13,
-                fontWeight: '700',
-                color: '#94A3B8',
-              }}>
-                Market
-              </Text>
-            </TouchableOpacity>
           </View>
         </Animated.View>
           
