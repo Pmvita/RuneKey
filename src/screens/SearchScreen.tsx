@@ -18,7 +18,7 @@ import { stocksService, TrendingStock } from '../services/api/stocksService';
 import { investingService, InvestmentQuote } from '../services/api/investingService';
 import { logger } from '../utils/logger';
 import { useNavigation } from '@react-navigation/native';
-import { LiquidGlass, LoadingSpinner, UniversalBackground } from '../components';
+import { LiquidGlass, LoadingSpinner, UniversalBackground, CustomLoadingAnimation } from '../components';
 import { Token } from '../types';
 import {
   NormalizedTrendingToken,
@@ -1073,12 +1073,11 @@ export const SearchScreen: React.FC = () => {
               </View>
 
               {isLoadingTokens && topTokens.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading crypto tokens...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading crypto tokens..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : topTokens.length > 0 ? (
                 <View style={styles.assetList}>
                   {topTokens.map((token, index) => renderTokenItem(token, index))}
@@ -1122,12 +1121,11 @@ export const SearchScreen: React.FC = () => {
               </View>
 
               {isLoadingTokens && topTokens.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading DeFi tokens...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading DeFi tokens..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : topTokens.length > 0 ? (
                 <View style={styles.assetList}>
                   {topTokens.map((token, index) => renderTokenItem(token, index))}
@@ -1171,12 +1169,11 @@ export const SearchScreen: React.FC = () => {
               </View>
 
               {isLoadingStocks && stocks.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading stocks...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading stocks..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : stocks.length > 0 ? (
                 <View style={styles.assetList}>
                   {stocks.map((stock, index) => renderStockItem(stock, index))}
@@ -1218,12 +1215,11 @@ export const SearchScreen: React.FC = () => {
               </View>
 
               {isLoadingEtfs && etfs.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading ETFs...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading ETFs..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : etfs.length > 0 ? (
                 <View style={styles.assetList}>
                   {etfs.map((etf, index) => renderETFItem(etf, index))}
@@ -1265,12 +1261,11 @@ export const SearchScreen: React.FC = () => {
               </View>
 
               {isLoadingBonds && bonds.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading bonds...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading bonds..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : bonds.length > 0 ? (
                 <View style={styles.assetList}>
                   {bonds.map((bond, index) => renderBondItem(bond, index))}
@@ -1314,12 +1309,11 @@ export const SearchScreen: React.FC = () => {
               {renderDAppCategories()}
 
               {isLoadingDapps && dapps.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading DApps...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading DApps..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : dapps.length > 0 ? (
                 <View style={styles.assetList}>
                   {dapps.map((dapp, index) => renderDAppItem(dapp, index))}
@@ -1363,12 +1357,11 @@ export const SearchScreen: React.FC = () => {
               </View>
 
               {isLoadingTrending ? (
-                <View style={styles.loadingContainer}>
-                  <LoadingSpinner size={32} color="#3B82F6" />
-                  <Text style={styles.loadingText}>
-                    Loading trending tokens...
-                  </Text>
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading trending tokens..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : apiTrendingTokens.length > 0 ? (
                 <View style={styles.assetList}>
                   {apiTrendingTokens.slice(0, 5).map((token, index) => renderTokenItem(token, index))}

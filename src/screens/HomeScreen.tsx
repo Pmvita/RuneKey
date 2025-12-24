@@ -27,8 +27,8 @@ import {
   LoadingOverlay,
   TabSelector,
   UniversalBackground,
+  CustomLoadingAnimation,
 } from '../components';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { usePrices } from '../hooks/token/usePrices';
@@ -38,7 +38,7 @@ import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { formatLargeCurrency } from '../utils/formatters';
-import investingData from '../../mockData/investing.json';
+import investingData from '../mockData/api/investing.json';
 import { investingService } from '../services/api/investingService';
 import { Investment } from '../types';
 
@@ -1546,22 +1546,15 @@ export const HomeScreen: React.FC = () => {
           {loadingMarketData && (
             <View style={{ 
               marginBottom: 16, 
-              alignItems: 'center',
-              paddingVertical: 24,
-              backgroundColor: 'rgba(30, 41, 59, 0.4)',
               borderRadius: 16,
-              borderWidth: 1,
-              borderColor: 'rgba(59, 130, 246, 0.2)',
+              overflow: 'hidden',
             }}>
-              <LoadingSpinner size={40} color="#3B82F6" />
-              <Text style={{
-                marginTop: 12,
-                fontSize: 14,
-                color: '#FFFFFF',
-                fontWeight: '600',
-              }}>
-                Loading market data...
-              </Text>
+              <CustomLoadingAnimation
+                message="Loading market data..."
+                size="medium"
+                variant="inline"
+                backgroundColor="rgba(30, 41, 59, 0.4)"
+              />
             </View>
           )}
 

@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp, FadeOutDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import investingData from '../../mockData/investing.json';
+import investingData from '../mockData/api/investing.json';
 import { Investment, InvestmentHolding, RootStackParamList, PortfolioMetrics, HoldingPerformance, DiversificationMetrics } from '../types';
 import { formatLargeCurrency, formatPercentage } from '../utils/formatters';
 import { investingService } from '../services/api/investingService';
@@ -245,36 +245,51 @@ export const InvestingScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+      {/* Enhanced Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
+            width: 36,
+            height: 36,
+            borderRadius: 18,
             borderWidth: 1,
-            borderColor: 'rgba(148, 163, 184, 0.25)',
+            borderColor: 'rgba(148, 163, 184, 0.2)',
             alignItems: 'center',
             justifyContent: 'center',
-            marginRight: 16,
-            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            marginRight: 12,
+            backgroundColor: 'rgba(148, 163, 184, 0.1)',
           }}
         >
-          <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <View>
-          <Text style={{ fontSize: 24, fontWeight: '700', color: '#FFFFFF' }}>Investing</Text>
-          <Text style={{ fontSize: 13, color: '#94A3B8', marginTop: 4 }}>
-            Stocks, forex & managed strategies
+        <View style={{ flex: 1 }}>
+          <Text style={{ 
+            fontSize: 24, 
+            fontWeight: '800', 
+            color: '#FFFFFF',
+            letterSpacing: -0.3,
+          }}>
+            Investing Portfolio
+          </Text>
+          <Text style={{ 
+            fontSize: 13, 
+            color: '#94A3B8', 
+            marginTop: 2,
+            fontWeight: '500',
+          }}>
+            Stocks, ETFs, forex & managed strategies
           </Text>
         </View>
       </View>
 
+      {/* Enhanced Metric Cards - Scaled Down */}
       <View
         style={{
           flexDirection: isWideLayout ? 'row' : 'column',
           justifyContent: isWideLayout ? 'space-between' : 'flex-start',
-          marginBottom: isWideLayout ? 32 : 24,
+          marginBottom: 16,
+          gap: 12,
         }}
       >
         {metricCards.map((card, index) => (
@@ -283,25 +298,35 @@ export const InvestingScreen: React.FC = () => {
             entering={FadeInUp.delay(100 + index * 100)}
             exiting={FadeOutDown}
             style={{
-              backgroundColor: 'rgba(15, 23, 42, 0.85)',
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: 'rgba(30, 41, 59, 0.65)',
-              padding: metricCardVerticalPadding,
+              backgroundColor: 'rgba(30, 41, 59, 0.7)',
+              borderRadius: 16,
+              borderWidth: 1.5,
+              borderColor: `${card.accentColor}40`,
+              padding: 16,
               flex: isWideLayout ? 1 : undefined,
-              marginRight: isWideLayout && index < metricCards.length - 1 ? 16 : 0,
-              marginBottom: !isWideLayout && index < metricCards.length - 1 ? 16 : 0,
+              shadowColor: card.accentColor,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <Text style={{ color: '#94A3B8', fontSize: metricSubtitleFontSize, fontWeight: '600', letterSpacing: 0.75 }}>
+            <Text style={{ 
+              color: '#94A3B8', 
+              fontSize: 11, 
+              fontWeight: '700', 
+              letterSpacing: 0.5,
+              marginBottom: 8,
+            }}>
               {card.title}
             </Text>
             <Text
               style={{
                 color: '#FFFFFF',
-                fontSize: metricValueFontSize,
-                fontWeight: '700',
-                marginTop: 12,
+                fontSize: 22,
+                fontWeight: '800',
+                marginBottom: 6,
+                letterSpacing: -0.5,
               }}
             >
               {card.value}
@@ -309,8 +334,9 @@ export const InvestingScreen: React.FC = () => {
             <Text
               style={{
                 color: card.accentColor,
-                fontSize: metricDescriptionFontSize,
-                marginTop: 4,
+                fontSize: 12,
+                marginTop: 2,
+                fontWeight: '600',
               }}
             >
               {card.description}
@@ -319,53 +345,103 @@ export const InvestingScreen: React.FC = () => {
         ))}
       </View>
 
-      {/* Portfolio Analytics Section */}
+      {/* Portfolio Analytics Section - Enhanced */}
       {portfolioMetrics && (
         <View
           style={{
-            backgroundColor: 'rgba(15, 23, 42, 0.85)',
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: 'rgba(30, 41, 59, 0.65)',
-            padding: 20,
-            marginBottom: 24,
+            backgroundColor: 'rgba(30, 41, 59, 0.7)',
+            borderRadius: 16,
+            borderWidth: 1.5,
+            borderColor: 'rgba(34, 197, 94, 0.3)',
+            padding: 16,
+            marginBottom: 16,
+            shadowColor: '#22c55e',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 4,
           }}
         >
-          <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.75, marginBottom: 16 }}>
+          <Text style={{ 
+            color: '#94A3B8', 
+            fontSize: 12, 
+            fontWeight: '800', 
+            letterSpacing: 0.5, 
+            marginBottom: 12,
+          }}>
             PORTFOLIO ANALYTICS
           </Text>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-            <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>Total Return</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <View style={{ 
+              flex: 1, 
+              minWidth: '45%', 
+              marginBottom: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              borderRadius: 12,
+              padding: 12,
+            }}>
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 10, 
+                marginBottom: 6,
+                fontWeight: '600',
+              }}>
+                Total Return
+              </Text>
               <Text
                 style={{
-                  color: portfolioMetrics.metrics.totalReturn >= 0 ? '#34D399' : '#F87171',
-                  fontSize: 18,
-                  fontWeight: '600',
+                  color: portfolioMetrics.metrics.totalReturn >= 0 ? '#22c55e' : '#ef4444',
+                  fontSize: 20,
+                  fontWeight: '800',
+                  letterSpacing: -0.5,
                 }}
               >
                 {portfolioMetrics.metrics.totalReturn >= 0 ? '+' : ''}
                 {formatLargeCurrency(portfolioMetrics.metrics.totalReturn)}
               </Text>
-              <Text
-                style={{
-                  color: portfolioMetrics.metrics.totalReturnPercent >= 0 ? '#34D399' : '#F87171',
-                  fontSize: 13,
-                  marginTop: 2,
-                }}
-              >
-                ({portfolioMetrics.metrics.totalReturnPercent >= 0 ? '+' : ''}
-                {portfolioMetrics.metrics.totalReturnPercent.toFixed(2)}%)
-              </Text>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 4,
+                backgroundColor: portfolioMetrics.metrics.totalReturnPercent >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 6,
+                alignSelf: 'flex-start',
+                borderWidth: 1,
+                borderColor: portfolioMetrics.metrics.totalReturnPercent >= 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+              }}>
+                <Ionicons 
+                  name={portfolioMetrics.metrics.totalReturnPercent >= 0 ? "trending-up" : "trending-down"} 
+                  size={12} 
+                  color={portfolioMetrics.metrics.totalReturnPercent >= 0 ? '#22c55e' : '#ef4444'} 
+                />
+                <Text
+                  style={{
+                    color: portfolioMetrics.metrics.totalReturnPercent >= 0 ? '#22c55e' : '#ef4444',
+                    fontSize: 12,
+                    fontWeight: '700',
+                    marginLeft: 4,
+                  }}
+                >
+                  {portfolioMetrics.metrics.totalReturnPercent >= 0 ? '+' : ''}
+                  {portfolioMetrics.metrics.totalReturnPercent.toFixed(2)}%
+                </Text>
+              </View>
               {/* Breakdown: Capital Gains + Dividends */}
-              <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(30, 41, 59, 0.5)' }}>
-                <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>
+              <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(148, 163, 184, 0.15)' }}>
+                <Text style={{ color: '#94A3B8', fontSize: 9, marginBottom: 4, fontWeight: '500' }}>
                   Capital: {portfolioMetrics.metrics.capitalGains >= 0 ? '+' : ''}
                   {formatLargeCurrency(portfolioMetrics.metrics.capitalGains)} ({portfolioMetrics.metrics.capitalGainsPercent >= 0 ? '+' : ''}
                   {portfolioMetrics.metrics.capitalGainsPercent.toFixed(2)}%)
                 </Text>
-                <Text style={{ color: portfolioMetrics.metrics.dividendIncome > 0 ? '#5EEAD4' : '#64748B', fontSize: 10, marginTop: 2 }}>
+                <Text style={{ 
+                  color: portfolioMetrics.metrics.dividendIncome > 0 ? '#5EEAD4' : '#64748B', 
+                  fontSize: 9, 
+                  marginTop: 2,
+                  fontWeight: '500',
+                }}>
                   Dividends: {portfolioMetrics.metrics.dividendIncome > 0 ? '+' : ''}
                   {portfolioMetrics.metrics.dividendIncome > 0 
                     ? `${formatLargeCurrency(portfolioMetrics.metrics.dividendIncome)}/yr`
@@ -374,23 +450,49 @@ export const InvestingScreen: React.FC = () => {
               </View>
             </View>
 
-            <View style={{ flex: 1, minWidth: '45%', marginBottom: 12 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 4 }}>Diversification</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '500' }}>
+            <View style={{ 
+              flex: 1, 
+              minWidth: '45%', 
+              marginBottom: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              borderRadius: 12,
+              padding: 12,
+            }}>
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 10, 
+                marginBottom: 6,
+                fontWeight: '600',
+              }}>
+                Diversification
+              </Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginBottom: 4 }}>
                 {portfolioMetrics.diversification.effectiveHoldings.toFixed(1)} effective holdings
               </Text>
-              <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
-                Concentration: {(portfolioMetrics.diversification.concentration * 100).toFixed(1)}%
-              </Text>
-              <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(30, 41, 59, 0.5)' }}>
-                <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 2 }}>Dividend Yield</Text>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 6,
+                alignSelf: 'flex-start',
+                borderWidth: 1,
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+              }}>
+                <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '600' }}>
+                  Concentration: {(portfolioMetrics.diversification.concentration * 100).toFixed(1)}%
+                </Text>
+              </View>
+              <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(148, 163, 184, 0.15)' }}>
+                <Text style={{ color: '#94A3B8', fontSize: 10, marginBottom: 4, fontWeight: '600' }}>Dividend Yield</Text>
                 {portfolioMetrics.metrics.dividendYield > 0 ? (
                   <>
-                    <Text style={{ color: '#5EEAD4', fontSize: 14, fontWeight: '600' }}>
+                    <Text style={{ color: '#5EEAD4', fontSize: 16, fontWeight: '700' }}>
                       {portfolioMetrics.metrics.dividendYield.toFixed(2)}%
                     </Text>
-                    <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>
-                      Annual income: {formatLargeCurrency(portfolioMetrics.metrics.dividendIncome)}
+                    <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 4, fontWeight: '500' }}>
+                      Annual: {formatLargeCurrency(portfolioMetrics.metrics.dividendIncome)}
                     </Text>
                   </>
                 ) : (
@@ -399,7 +501,7 @@ export const InvestingScreen: React.FC = () => {
                       N/A
                     </Text>
                     <Text style={{ color: '#64748B', fontSize: 10, marginTop: 2 }}>
-                      No dividend data available
+                      No dividend data
                     </Text>
                   </>
                 )}
@@ -407,8 +509,23 @@ export const InvestingScreen: React.FC = () => {
             </View>
 
             {portfolioMetrics.holdingsPerformance.length > 0 && (
-              <View style={{ flex: 1, minWidth: '100%', marginTop: 8 }}>
-                <Text style={{ color: '#94A3B8', fontSize: 11, marginBottom: 8 }}>Top Holdings by Weight</Text>
+              <View style={{ 
+                flex: 1, 
+                minWidth: '100%', 
+                marginTop: 8,
+                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                borderRadius: 12,
+                padding: 12,
+              }}>
+                <Text style={{ 
+                  color: '#94A3B8', 
+                  fontSize: 11, 
+                  marginBottom: 10,
+                  fontWeight: '700',
+                  letterSpacing: 0.5,
+                }}>
+                  TOP HOLDINGS BY WEIGHT
+                </Text>
                 {portfolioMetrics.holdingsPerformance
                   .sort((a, b) => b.weight - a.weight)
                   .slice(0, 3)
@@ -419,27 +536,65 @@ export const InvestingScreen: React.FC = () => {
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: 8,
-                        paddingBottom: 8,
+                        marginBottom: index < 2 ? 10 : 0,
+                        paddingBottom: index < 2 ? 10 : 0,
                         borderBottomWidth: index < 2 ? 1 : 0,
-                        borderBottomColor: 'rgba(30, 41, 59, 0.5)',
+                        borderBottomColor: 'rgba(148, 163, 184, 0.15)',
                       }}
                     >
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '500' }}>{holding.symbol}</Text>
-                        <Text style={{ color: '#94A3B8', fontSize: 11 }}>
-                          {holding.profitLossPercent >= 0 ? '+' : ''}
-                          {holding.profitLossPercent.toFixed(2)}% P&L
+                        <Text style={{ 
+                          color: '#FFFFFF', 
+                          fontSize: 14, 
+                          fontWeight: '700',
+                          marginBottom: 4,
+                        }}>
+                          {holding.symbol}
                         </Text>
+                        <View style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: holding.profitLossPercent >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          paddingHorizontal: 6,
+                          paddingVertical: 3,
+                          borderRadius: 6,
+                          alignSelf: 'flex-start',
+                          borderWidth: 1,
+                          borderColor: holding.profitLossPercent >= 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+                        }}>
+                          <Ionicons 
+                            name={holding.profitLossPercent >= 0 ? "trending-up" : "trending-down"} 
+                            size={10} 
+                            color={holding.profitLossPercent >= 0 ? '#22c55e' : '#ef4444'} 
+                          />
+                          <Text style={{ 
+                            color: holding.profitLossPercent >= 0 ? '#22c55e' : '#ef4444', 
+                            fontSize: 11,
+                            fontWeight: '700',
+                            marginLeft: 3,
+                          }}>
+                            {holding.profitLossPercent >= 0 ? '+' : ''}
+                            {holding.profitLossPercent.toFixed(2)}% P&L
+                          </Text>
+                        </View>
                         {holding.annualDividendIncome && holding.annualDividendIncome > 0 && (
-                          <Text style={{ color: '#5EEAD4', fontSize: 10, marginTop: 2 }}>
+                          <Text style={{ color: '#5EEAD4', fontSize: 10, marginTop: 4, fontWeight: '600' }}>
                             {holding.dividendYield ? `${holding.dividendYield.toFixed(2)}% yield` : ''} • {formatLargeCurrency(holding.annualDividendIncome)}/yr
                           </Text>
                         )}
                       </View>
-                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
-                        {holding.weight.toFixed(1)}%
-                      </Text>
+                      <View style={{
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: 'rgba(59, 130, 246, 0.4)',
+                      }}>
+                        <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '800' }}>
+                          {holding.weight.toFixed(1)}%
+                        </Text>
+                      </View>
                     </View>
                   ))}
               </View>
@@ -448,132 +603,363 @@ export const InvestingScreen: React.FC = () => {
         </View>
       )}
 
-      <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginBottom: 16 }}>
-        Holdings
-      </Text>
+      {/* Holdings Title - Enhanced */}
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        marginBottom: 12,
+      }}>
+        <Text style={{ 
+          color: '#FFFFFF', 
+          fontSize: 20, 
+          fontWeight: '800',
+          letterSpacing: -0.3,
+        }}>
+          Holdings
+        </Text>
+        <View style={{
+          flexDirection: 'row',
+          gap: 6,
+        }}>
+          <TouchableOpacity
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              backgroundColor: filterType === 'all' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: filterType === 'all' ? 'rgba(59, 130, 246, 0.4)' : 'rgba(148, 163, 184, 0.2)',
+            }}
+            onPress={() => setFilterType('all')}
+          >
+            <Text style={{
+              fontSize: 11,
+              fontWeight: '700',
+              color: filterType === 'all' ? '#3B82F6' : '#94A3B8',
+            }}>
+              All
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 
   const renderHolding = ({ item, index }: { item: InvestmentHolding; index: number }) => {
     const isPositive = item.changePercent >= 0;
+    const profitLoss = item.marketValue - (item.quantity * item.averagePrice);
+    const profitLossPercent = item.quantity * item.averagePrice > 0 
+      ? ((profitLoss / (item.quantity * item.averagePrice)) * 100) 
+      : 0;
+    
     return (
       <Animated.View
         entering={FadeInUp.delay(350 + index * 40)}
-        style={{ marginBottom: 12 }}
+        style={{ marginBottom: 10 }}
       >
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => handleSelectHolding(item)}
           style={{
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
-            borderRadius: 18,
+            backgroundColor: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: 16,
             borderWidth: 1,
-            borderColor: 'rgba(30, 41, 59, 0.55)',
-            padding: 18,
+            borderColor: 'rgba(148, 163, 184, 0.1)',
+            padding: 14,
           }}
         >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               {item.icon ? (
                 <Image
                   source={{ uri: item.icon }}
-                  style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }}
+                  style={{ 
+                    width: 44, 
+                    height: 44, 
+                    borderRadius: 12, 
+                    marginRight: 12,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(148, 163, 184, 0.2)',
+                  }}
                   resizeMode="cover"
                 />
               ) : (
                 <View
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                     borderRadius: 12,
                     marginRight: 12,
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(148, 163, 184, 0.2)',
                   }}
                 >
-                  <Text style={{ color: '#94A3B8', fontWeight: '600' }}>{item.symbol.slice(0, 3).toUpperCase()}</Text>
+                  <Text style={{ color: '#94A3B8', fontWeight: '700', fontSize: 12 }}>
+                    {item.symbol.slice(0, 3).toUpperCase()}
+                  </Text>
                 </View>
               )}
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>{item.name}</Text>
-                <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 2 }}>
-                  {item.symbol} • {item.type.toUpperCase()} • {item.market}
+                <Text style={{ 
+                  color: '#FFFFFF', 
+                  fontSize: 16, 
+                  fontWeight: '700',
+                  marginBottom: 3,
+                  letterSpacing: -0.2,
+                }}>
+                  {item.symbol}
+                </Text>
+                <Text style={{ 
+                  color: '#94A3B8', 
+                  fontSize: 12, 
+                  marginTop: 2,
+                  fontWeight: '500',
+                }}>
+                  {item.type.toUpperCase()} • {item.market}
                 </Text>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 12 }}>
+          {/* Market Value and 24H Change - Enhanced */}
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-end',
+            marginBottom: 12,
+          }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 12 }}>Market Value</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500', marginTop: 4 }}>
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 11,
+                marginBottom: 4,
+                fontWeight: '600',
+              }}>
+                Market Value
+              </Text>
+              <Text style={{ 
+                color: '#FFFFFF', 
+                fontSize: 18, 
+                fontWeight: '800',
+                letterSpacing: -0.3,
+              }}>
                 {formatLargeCurrency(item.marketValue)}
               </Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 12 }}>Quantity</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500', marginTop: 4 }}>
-                {item.quantity.toLocaleString()}
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 11,
+                marginBottom: 4,
+                fontWeight: '600',
+                textAlign: 'right',
+              }}>
+                24H Change
               </Text>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: isPositive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+              }}>
+                <Ionicons 
+                  name={isPositive ? "trending-up" : "trending-down"} 
+                  size={12} 
+                  color={isPositive ? '#22c55e' : '#ef4444'} 
+                />
+                <Text
+                  style={{
+                    color: isPositive ? '#22c55e' : '#ef4444',
+                    fontSize: 13,
+                    fontWeight: '700',
+                    marginLeft: 4,
+                  }}
+                >
+                  {isPositive ? '+' : ''}
+                  {item.changePercent.toFixed(2)}%
+                </Text>
+              </View>
             </View>
-            <View style={{ flex: 1, alignItems: 'flex-end' }}>
-              <Text style={{ color: '#94A3B8', fontSize: 12, textAlign: 'right' }}>24H Change</Text>
-              <Text
-                style={{
-                  color: isPositive ? '#34D399' : '#F87171',
-                  fontSize: 15,
-                  fontWeight: '600',
-                  marginTop: 4,
-                }}
-              >
-                {isPositive ? '+' : ''}
-                {item.changePercent.toFixed(2)}%
-              </Text>
+          </View>
+          
+          {/* P&L Display */}
+          <View style={{
+            backgroundColor: profitLoss >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            borderRadius: 10,
+            padding: 10,
+            marginBottom: 12,
+            borderWidth: 1,
+            borderColor: profitLoss >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '600' }}>Total P&L</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons 
+                  name={profitLoss >= 0 ? "trending-up" : "trending-down"} 
+                  size={14} 
+                  color={profitLoss >= 0 ? '#22c55e' : '#ef4444'} 
+                />
+                <Text style={{
+                  color: profitLoss >= 0 ? '#22c55e' : '#ef4444',
+                  fontSize: 14,
+                  fontWeight: '800',
+                  marginLeft: 4,
+                }}>
+                  {profitLoss >= 0 ? '+' : ''}{formatLargeCurrency(profitLoss)}
+                </Text>
+                <Text style={{
+                  color: profitLossPercent >= 0 ? '#22c55e' : '#ef4444',
+                  fontSize: 12,
+                  fontWeight: '700',
+                  marginLeft: 8,
+                }}>
+                  ({profitLossPercent >= 0 ? '+' : ''}{profitLossPercent.toFixed(2)}%)
+                </Text>
+              </View>
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', marginTop: 12 }}>
+          {/* Entry, Last, Quantity - Enhanced */}
+          <View style={{ 
+            flexDirection: 'row', 
+            marginTop: 8,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: 'rgba(148, 163, 184, 0.1)',
+            gap: 8,
+          }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 12 }}>Entry</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500', marginTop: 4 }}>
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 10,
+                marginBottom: 4,
+                fontWeight: '600',
+              }}>
+                Entry Price
+              </Text>
+              <Text style={{ 
+                color: '#FFFFFF', 
+                fontSize: 13, 
+                fontWeight: '700',
+              }}>
                 {formatLargeCurrency(item.averagePrice)}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 12 }}>Last</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500', marginTop: 4 }}>
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 10,
+                marginBottom: 4,
+                fontWeight: '600',
+              }}>
+                Current Price
+              </Text>
+              <Text style={{ 
+                color: '#FFFFFF', 
+                fontSize: 13, 
+                fontWeight: '700',
+              }}>
                 {formatLargeCurrency(item.currentPrice)}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#94A3B8', fontSize: 12 }}>Currency</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500', marginTop: 4 }}>
-                {item.currency}
+              <Text style={{ 
+                color: '#94A3B8', 
+                fontSize: 10,
+                marginBottom: 4,
+                fontWeight: '600',
+              }}>
+                Quantity
+              </Text>
+              <Text style={{ 
+                color: '#FFFFFF', 
+                fontSize: 13, 
+                fontWeight: '700',
+              }}>
+                {item.quantity.toLocaleString()}
               </Text>
             </View>
           </View>
 
+          {/* Dividend Information - Enhanced */}
           {item.annualDividendIncome && item.annualDividendIncome > 0 && (
-            <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(30, 41, 59, 0.5)' }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ 
+              marginTop: 12, 
+              paddingTop: 12, 
+              borderTopWidth: 1, 
+              borderTopColor: 'rgba(94, 234, 212, 0.2)',
+              backgroundColor: 'rgba(94, 234, 212, 0.08)',
+              borderRadius: 10,
+              padding: 10,
+            }}>
+              <Text style={{
+                color: '#5EEAD4',
+                fontSize: 11,
+                fontWeight: '700',
+                marginBottom: 8,
+                letterSpacing: 0.5,
+              }}>
+                DIVIDEND INFORMATION
+              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#94A3B8', fontSize: 12 }}>Dividend Yield</Text>
-                  <Text style={{ color: '#5EEAD4', fontSize: 15, fontWeight: '600', marginTop: 4 }}>
+                  <Text style={{ 
+                    color: '#94A3B8', 
+                    fontSize: 10,
+                    marginBottom: 4,
+                    fontWeight: '600',
+                  }}>
+                    Yield
+                  </Text>
+                  <Text style={{ 
+                    color: '#5EEAD4', 
+                    fontSize: 14, 
+                    fontWeight: '800',
+                  }}>
                     {item.dividendYield ? `${item.dividendYield.toFixed(2)}%` : 'N/A'}
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#94A3B8', fontSize: 12 }}>Annual Income</Text>
-                  <Text style={{ color: '#5EEAD4', fontSize: 15, fontWeight: '600', marginTop: 4 }}>
+                  <Text style={{ 
+                    color: '#94A3B8', 
+                    fontSize: 10,
+                    marginBottom: 4,
+                    fontWeight: '600',
+                  }}>
+                    Annual Income
+                  </Text>
+                  <Text style={{ 
+                    color: '#5EEAD4', 
+                    fontSize: 14, 
+                    fontWeight: '800',
+                  }}>
                     {formatLargeCurrency(item.annualDividendIncome)}
                   </Text>
                 </View>
                 {item.annualDividend && (
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#94A3B8', fontSize: 12 }}>Per Share</Text>
-                    <Text style={{ color: '#5EEAD4', fontSize: 15, fontWeight: '600', marginTop: 4 }}>
+                    <Text style={{ 
+                      color: '#94A3B8', 
+                      fontSize: 10,
+                      marginBottom: 4,
+                      fontWeight: '600',
+                    }}>
+                      Per Share
+                    </Text>
+                    <Text style={{ 
+                      color: '#5EEAD4', 
+                      fontSize: 14, 
+                      fontWeight: '800',
+                    }}>
                       {formatLargeCurrency(item.annualDividend)}
                     </Text>
                   </View>
@@ -586,6 +972,46 @@ export const InvestingScreen: React.FC = () => {
     );
   };
 
+  const renderEmptyState = () => (
+    <View style={{
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 48,
+      paddingHorizontal: 24,
+    }}>
+      <View style={{
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(30, 41, 59, 0.5)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(148, 163, 184, 0.2)',
+      }}>
+        <Ionicons name="trending-up-outline" size={32} color="#94A3B8" />
+      </View>
+      <Text style={{
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 8,
+        textAlign: 'center',
+      }}>
+        No Holdings Found
+      </Text>
+      <Text style={{
+        fontSize: 14,
+        color: '#94A3B8',
+        textAlign: 'center',
+        lineHeight: 20,
+      }}>
+        Your investment portfolio will appear here once you add holdings.
+      </Text>
+    </View>
+  );
+
   return (
     <UniversalBackground>
       <SafeAreaView style={{ flex: 1 }}>
@@ -594,7 +1020,12 @@ export const InvestingScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderHolding}
           ListHeaderComponent={renderHeader}
-          contentContainerStyle={{ padding: 24, paddingBottom: 48 }}
+          ListEmptyComponent={renderEmptyState}
+          contentContainerStyle={{ 
+            padding: 16, 
+            paddingBottom: 32,
+            flexGrow: holdings.length === 0 ? 1 : 0,
+          }}
           showsVerticalScrollIndicator={false}
           refreshing={isRefreshing}
           onRefresh={handleRefresh}

@@ -18,7 +18,7 @@ import { usePrices } from '../hooks/token/usePrices';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { Token } from '../types';
 import { formatCurrency, formatLargeCurrency } from '../utils/formatters';
-import { UniversalBackground } from '../components';
+import { UniversalBackground, CustomLoadingAnimation } from '../components';
 import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import topCoinsMock from '../../mockData/api/top-coins.json';
@@ -246,12 +246,12 @@ export const AllocationScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Donut Chart Component
-  const DonutChart = ({ data, size = 220 }: { data: AllocationData[], size?: number }) => {
-    const radius = (size - 50) / 2;
+  // Donut Chart Component - Enhanced
+  const DonutChart = ({ data, size = 180 }: { data: AllocationData[], size?: number }) => {
+    const radius = (size - 40) / 2;
     const centerX = size / 2;
     const centerY = size / 2;
-    const strokeWidth = 24;
+    const strokeWidth = 20;
     const circumference = 2 * Math.PI * radius;
     
     let cumulativePercentage = 0;
@@ -286,22 +286,23 @@ export const AllocationScreen: React.FC = () => {
           </G>
         </Svg>
         
-        {/* Center content */}
+        {/* Center content - Enhanced */}
         <View style={{
           position: 'absolute',
           alignItems: 'center',
           justifyContent: 'center',
         }}>
           <Text style={{
-            fontSize: 24,
-            fontWeight: 'bold',
+            fontSize: 20,
+            fontWeight: '800',
             color: '#FFFFFF',
+            letterSpacing: -0.5,
           }}>
             {data.length}
           </Text>
           <Text style={{
-            fontSize: 14,
-            fontWeight: '500',
+            fontSize: 12,
+            fontWeight: '600',
             color: '#94A3B8',
             marginTop: 2,
           }}>
@@ -312,7 +313,7 @@ export const AllocationScreen: React.FC = () => {
     );
   };
 
-  // Asset List Item Component
+  // Asset List Item Component - Enhanced
   const AssetListItem = ({ item, index }: { item: AllocationData, index: number }) => {
     const balance = parseFloat(item.token.balance || '0');
     const formattedBalance = balance < 1 
@@ -320,105 +321,138 @@ export const AllocationScreen: React.FC = () => {
       : balance < 1000 
         ? balance.toFixed(4) 
         : balance.toFixed(2);
+    
+    const priceChange = item.token.priceChange24h || 0;
+    const isPositive = priceChange >= 0;
 
     return (
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        backgroundColor: '#111827',
-        marginBottom: 8,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        paddingVertical: 14,
+        paddingHorizontal: 12,
+        backgroundColor: 'rgba(30, 41, 59, 0.5)',
+        marginBottom: 10,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(148, 163, 184, 0.1)',
       }}>
-        {/* Token Icon */}
+        {/* Token Icon - Enhanced */}
         <View style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: item.color,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 16,
+          marginRight: 12,
+          borderWidth: 2,
+          borderColor: item.color,
         }}>
           {item.token.logoURI ? (
             <Image
               source={{ uri: item.token.logoURI }}
-              style={{ width: 32, height: 32, borderRadius: 16 }}
+              style={{ width: 30, height: 30, borderRadius: 15 }}
               resizeMode="cover"
             />
           ) : (
             <Text style={{
               color: '#ffffff',
-              fontSize: 16,
-              fontWeight: 'bold',
+              fontSize: 14,
+              fontWeight: '700',
             }}>
               {item.token.symbol.charAt(0)}
             </Text>
           )}
         </View>
 
-        {/* Token Info */}
+        {/* Token Info - Enhanced */}
         <View style={{ flex: 1 }}>
           <Text style={{
             fontSize: 16,
-            fontWeight: '600',
+            fontWeight: '700',
             color: '#FFFFFF',
-            marginBottom: 2,
+            marginBottom: 3,
+            letterSpacing: -0.2,
           }}>
-            {item.token.name}
+            {item.token.symbol}
           </Text>
           <Text style={{
-            fontSize: 14,
+            fontSize: 13,
             color: '#94A3B8',
+            fontWeight: '500',
           }}>
             {formattedBalance} {item.token.symbol}
           </Text>
         </View>
 
-        {/* Percentage and Value */}
+        {/* Percentage and Value - Enhanced */}
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={{
             fontSize: 16,
-            fontWeight: '600',
+            fontWeight: '700',
             color: '#FFFFFF',
-            marginBottom: 2,
+            marginBottom: 3,
+            letterSpacing: -0.2,
           }}>
-            {item.percentage.toFixed(2)}%
+            {item.percentage.toFixed(1)}%
           </Text>
           <Text style={{
-            fontSize: 14,
+            fontSize: 13,
             color: '#94A3B8',
+            fontWeight: '600',
+            marginBottom: 2,
           }}>
             {item.usdValue >= 1000000 
               ? formatLargeCurrency(item.usdValue)
               : formatCurrency(item.usdValue)
             }
           </Text>
+          {priceChange !== 0 && (
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: isPositive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+            }}>
+              <Ionicons 
+                name={isPositive ? "trending-up" : "trending-down"} 
+                size={10} 
+                color={isPositive ? '#22c55e' : '#ef4444'} 
+              />
+              <Text style={{
+                fontSize: 11,
+                fontWeight: '700',
+                color: isPositive ? '#22c55e' : '#ef4444',
+                marginLeft: 2,
+              }}>
+                {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Progress Bar */}
+        {/* Progress Bar - Enhanced */}
         <View style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          height: 3,
-          backgroundColor: '#0b1120',
-          borderBottomLeftRadius: 12,
-          borderBottomRightRadius: 12,
+          height: 2.5,
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          borderBottomLeftRadius: 16,
+          borderBottomRightRadius: 16,
         }}>
           <View style={{
             height: '100%',
             width: `${item.percentage}%`,
             backgroundColor: item.color,
-            borderBottomLeftRadius: 12,
-            borderBottomRightRadius: item.percentage === 100 ? 12 : 0,
+            borderBottomLeftRadius: 16,
+            borderBottomRightRadius: item.percentage === 100 ? 16 : 0,
           }} />
         </View>
       </View>
@@ -428,25 +462,38 @@ export const AllocationScreen: React.FC = () => {
 const EmptyAllocationsState = () => (
   <View style={{
     alignItems: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#111827',
-    borderRadius: 12,
+    paddingVertical: 32,
+    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    borderRadius: 16,
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.2)',
   }}>
-    <Ionicons name="wallet-outline" size={48} color="#94A3B8" />
-    <Text style={{
-      marginTop: 16,
-      fontSize: 16,
-      color: '#94A3B8',
-      fontWeight: '500',
+    <View style={{
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: 'rgba(148, 163, 184, 0.1)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
     }}>
-      No assets found
+      <Ionicons name="wallet-outline" size={36} color="#94A3B8" />
+    </View>
+    <Text style={{
+      marginTop: 4,
+      fontSize: 16,
+      color: '#FFFFFF',
+      fontWeight: '700',
+      marginBottom: 6,
+    }}>
+      No crypto assets found
     </Text>
     <Text style={{
-      marginTop: 8,
-      fontSize: 14,
-      color: '#94a3b8',
+      fontSize: 13,
+      color: '#94A3B8',
       textAlign: 'center',
+      fontWeight: '500',
     }}>
       Connect your wallet to view asset allocation
     </Text>
@@ -457,28 +504,11 @@ const EmptyAllocationsState = () => (
     return (
       <UniversalBackground>
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <View style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              borderWidth: 3,
-              borderColor: '#3b82f6',
-              borderTopColor: 'transparent',
-            }} />
-            <Text style={{
-              marginTop: 16,
-              fontSize: 16,
-              color: '#94A3B8',
-              fontWeight: '500',
-            }}>
-              {isConnectingWallet ? 'Connecting wallet...' : 'Loading allocation data...'}
-            </Text>
-          </View>
+          <CustomLoadingAnimation
+            message={isConnectingWallet ? 'Connecting wallet...' : 'Loading crypto portfolio...'}
+            size="large"
+            variant="fullscreen"
+          />
         </SafeAreaView>
       </UniversalBackground>
     );
@@ -487,35 +517,47 @@ const EmptyAllocationsState = () => (
   return (
     <UniversalBackground>
       <SafeAreaView style={{ flex: 1 }}>
-        {/* Header */}
+        {/* Header - Enhanced */}
         <Animated.View style={[{ 
           flexDirection: 'row', 
           alignItems: 'center', 
-          paddingHorizontal: 20, 
-          paddingVertical: 16,
+          paddingHorizontal: 16, 
+          paddingTop: 12,
+          paddingBottom: 8,
         }, headerAnimatedStyle]}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               alignItems: 'center',
               justifyContent: 'center',
-              marginRight: 16,
+              marginRight: 12,
+              backgroundColor: 'rgba(148, 163, 184, 0.1)',
             }}
           >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           
-          <Text style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            flex: 1,
-          }}>
-            Allocation
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: '800',
+              color: '#FFFFFF',
+              letterSpacing: -0.3,
+            }}>
+              Crypto Portfolio
+            </Text>
+            <Text style={{
+              fontSize: 13,
+              color: '#94A3B8',
+              marginTop: 2,
+              fontWeight: '500',
+            }}>
+              Asset allocation breakdown
+            </Text>
+          </View>
         </Animated.View>
 
         <Animated.View style={[{ flex: 1 }, listAnimatedStyle]}>
@@ -532,18 +574,54 @@ const EmptyAllocationsState = () => (
             ListHeaderComponent={
               <Animated.View style={[{
                 alignItems: 'center',
-                paddingTop: 30,
-                paddingBottom: 40,
-                marginBottom: 12,
+                paddingTop: 20,
+                paddingBottom: 24,
+                marginBottom: 16,
               }, chartAnimatedStyle]}>
-                <DonutChart data={allocationData} size={220} />
+                {/* Total Portfolio Value */}
+                <View style={{
+                  backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                  borderRadius: 20,
+                  padding: 20,
+                  marginBottom: 20,
+                  width: '100%',
+                  borderWidth: 1,
+                  borderColor: 'rgba(59, 130, 246, 0.2)',
+                  shadowColor: '#3B82F6',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  elevation: 6,
+                }}>
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: '#94A3B8',
+                    marginBottom: 8,
+                    textAlign: 'center',
+                  }}>
+                    TOTAL PORTFOLIO VALUE
+                  </Text>
+                  <Text style={{
+                    fontSize: 36,
+                    fontWeight: '800',
+                    color: '#FFFFFF',
+                    textAlign: 'center',
+                    letterSpacing: -1,
+                  }}>
+                    {formatLargeCurrency(totalValue)}
+                  </Text>
+                </View>
+                
+                {/* Donut Chart */}
+                <DonutChart data={allocationData} size={180} />
               </Animated.View>
             }
             ListEmptyComponent={<EmptyAllocationsState />}
             contentContainerStyle={{
-              paddingHorizontal: 20,
+              paddingHorizontal: 16,
               paddingTop: 8,
-              paddingBottom: 40 + insets.bottom,
+              paddingBottom: 32 + insets.bottom,
               minHeight: Math.max(screenHeight - (insets.top + insets.bottom), 0),
             }}
             showsVerticalScrollIndicator={false}

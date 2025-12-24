@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { UniversalBackground, LiquidGlass, LoadingSpinner } from '../components';
+import { UniversalBackground, LiquidGlass, CustomLoadingAnimation } from '../components';
 import { priceService } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { Token, RootStackParamList } from '../types';
@@ -140,10 +140,11 @@ export const TrendingTokensScreen: React.FC = () => {
           </View>
 
           {isLoading && trendingTokens.length === 0 ? (
-            <View style={styles.loadingContainer}>
-              <LoadingSpinner size={32} color="#3B82F6" />
-              <Text style={styles.loadingLabel}>Pulling latest movers...</Text>
-            </View>
+            <CustomLoadingAnimation
+              message="Pulling latest movers..."
+              size="medium"
+              variant="inline"
+            />
           ) : (
             <FlatList
               data={trendingTokens}

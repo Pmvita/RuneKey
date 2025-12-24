@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { UniversalBackground, CustomLoadingAnimation } from '../../components';
 
 interface InitializingScreenProps {
   onComplete: () => void;
@@ -62,11 +63,12 @@ export const InitializingScreen: React.FC<InitializingScreenProps> = ({ onComple
         <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#7dd3fc', marginBottom: 8 }}>
           Initializing Wallet
         </Text>
-        <Text style={{ fontSize: 18, color: '#94a3b8', textAlign: 'center', marginBottom: 32 }}>
-          Setting up your secure environment...
-        </Text>
-        
-        <ActivityIndicator size="large" color="#38bdf8" />
+        <CustomLoadingAnimation
+          message="Setting up your secure environment..."
+          size="large"
+          variant="inline"
+          spinnerColor="#38bdf8"
+        />
         
         <View style={{ marginTop: 32, gap: 8 }}>
           <Text style={{ fontSize: 14, color: '#94A3B8', textAlign: 'center' }}>

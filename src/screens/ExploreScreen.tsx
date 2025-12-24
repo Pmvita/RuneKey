@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, RefreshControl, Linking, ActivityIndicator, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, RefreshControl, Linking, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { UniversalBackground } from '../components';
+import { UniversalBackground, CustomLoadingAnimation } from '../components';
 import { logger } from '../utils/logger';
 import { stocksService, StockNewsItem, TrendingStock } from '../services/api/stocksService';
 import { formatLargeCurrency } from '../utils/formatters';
@@ -171,9 +171,11 @@ export const ExploreScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
                 {isLoadingTrending && trendingStocks.length === 0 ? (
-                  <View style={styles.trendingLoadingContainer}>
-                    <ActivityIndicator size="small" color="#3B82F6" />
-                  </View>
+                  <CustomLoadingAnimation
+                    message="Loading trending stocks..."
+                    size="small"
+                    variant="inline"
+                  />
                 ) : trendingStocks.length > 0 ? (
                   <ScrollView
                     horizontal={true}
@@ -267,10 +269,11 @@ export const ExploreScreen: React.FC = () => {
                 }
               ListEmptyComponent={
                 isLoadingNews ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#3B82F6" />
-                    <Text style={styles.loadingText}>Loading news...</Text>
-                  </View>
+                  <CustomLoadingAnimation
+                    message="Loading news..."
+                    size="large"
+                    variant="inline"
+                  />
                 ) : (
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No news available</Text>
@@ -280,7 +283,11 @@ export const ExploreScreen: React.FC = () => {
               ListFooterComponent={
                 loadingMore ? (
                   <View style={styles.loadingMoreContainer}>
-                    <ActivityIndicator size="small" color="#3B82F6" />
+                    <CustomLoadingAnimation
+                      message="Loading more..."
+                      size="small"
+                      variant="inline"
+                    />
                   </View>
                 ) : null
               }

@@ -7,7 +7,6 @@ import {
   RefreshControl,
   Image,
   Dimensions,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +16,7 @@ import { priceService, CoinInfo, ChartData } from '../services/api/priceService'
 import { priceCacheService } from '../services/priceCacheService';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { logger } from '../utils/logger';
-import { SparklineChart, UniversalBackground } from '../components';
+import { SparklineChart, UniversalBackground, CustomLoadingAnimation } from '../components';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 
@@ -704,27 +703,21 @@ export const TokenDetailsScreen: React.FC = () => {
                 javaScriptEnabled
                 startInLoadingState
                 renderLoading={() => (
-                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator color="#3b82f6" />
-                  </View>
+                  <CustomLoadingAnimation
+                    message="Loading chart..."
+                    size="large"
+                    variant="fullscreen"
+                  />
                 )}
               />
             ) : (
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
                 {isLoadingChart ? (
-                  <>
-                    <ActivityIndicator color="#3b82f6" />
-                    <Text
-                      style={{
-                        marginTop: 12,
-                        fontSize: 14,
-                        color: '#94A3B8',
-                        fontWeight: '500',
-                      }}
-                    >
-                      Loading chart data...
-                    </Text>
-                  </>
+                  <CustomLoadingAnimation
+                    message="Loading chart data..."
+                    size="medium"
+                    variant="inline"
+                  />
                 ) : chartDataPoints.length > 0 ? (
                   <SparklineChart
                     data={chartDataPoints}

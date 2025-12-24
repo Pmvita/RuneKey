@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Linking,
@@ -18,7 +17,7 @@ import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
-import investingData from '../../mockData/investing.json';
+import investingData from '../mockData/api/investing.json';
 import { Investment, InvestmentHolding, TechnicalIndicators, TechnicalSignals } from '../types';
 import { investingService, InvestmentChartPoint } from '../services/api/investingService';
 import { technicalAnalysisService } from '../services/api/technicalAnalysisService';
@@ -29,6 +28,7 @@ import {
   TabSelector,
   UniversalBackground,
   useSelectionHighlight,
+  CustomLoadingAnimation,
 } from '../components';
 import {
   stocksService,
@@ -668,7 +668,11 @@ export const StocksScreen: React.FC = () => {
                 }}
               >
                 {isChartLoading ? (
-                  <ActivityIndicator color="#3B82F6" />
+                  <CustomLoadingAnimation
+                    message="Loading chart..."
+                    size="small"
+                    variant="inline"
+                  />
                 ) : chartError ? (
                   <Text style={{ color: '#F87171', fontSize: 12 }}>{chartError}</Text>
                 ) : featuredChart.length > 1 ? (
@@ -819,7 +823,11 @@ export const StocksScreen: React.FC = () => {
                     borderColor: 'rgba(30, 41, 59, 0.6)',
                   }}
                 >
-                  <ActivityIndicator color="#3B82F6" />
+                  <CustomLoadingAnimation
+                    message="Loading trending stocks..."
+                    size="medium"
+                    variant="inline"
+                  />
                 </View>
               ) : (
                 trendingStocks.map((stock) => {
@@ -1081,9 +1089,11 @@ export const StocksScreen: React.FC = () => {
                 javaScriptEnabled
                 startInLoadingState
                 renderLoading={() => (
-                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator color="#3B82F6" />
-                  </View>
+                  <CustomLoadingAnimation
+                    message="Loading chart..."
+                    size="large"
+                    variant="fullscreen"
+                  />
                 )}
               />
             </View>
@@ -1109,7 +1119,11 @@ export const StocksScreen: React.FC = () => {
               />
               {isSearchingSymbols && (
                 <View style={{ paddingVertical: 8 }}>
-                  <ActivityIndicator color="#3B82F6" size="small" />
+                  <CustomLoadingAnimation
+                    message="Searching..."
+                    size="small"
+                    variant="inline"
+                  />
                 </View>
               )}
               {chartSearchResults.length > 0 && (
@@ -1168,9 +1182,11 @@ export const StocksScreen: React.FC = () => {
               </View>
 
               {isLoadingTopMovers ? (
-                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                  <ActivityIndicator color="#3B82F6" />
-                </View>
+                <CustomLoadingAnimation
+                  message="Loading top movers..."
+                  size="medium"
+                  variant="inline"
+                />
               ) : (
                 <>
                   <View style={{ marginBottom: 16 }}>
@@ -1498,7 +1514,13 @@ export const StocksScreen: React.FC = () => {
                 }}
               >
                 {isSubmittingTrade ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <CustomLoadingAnimation
+                    message="Processing..."
+                    size="small"
+                    variant="inline"
+                    spinnerColor="#FFFFFF"
+                    backgroundColor="transparent"
+                  />
                 ) : (
                   <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700' }}>
                     {tradeType === 'buy' ? 'Confirm Purchase' : 'Confirm Sale'}

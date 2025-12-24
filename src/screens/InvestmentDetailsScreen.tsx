@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
-  ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
@@ -17,7 +16,7 @@ import { RootStackParamList, InvestmentHolding, TechnicalIndicators, TechnicalSi
 import { formatLargeCurrency } from '../utils/formatters';
 import { investingService, InvestmentChartPoint } from '../services/api/investingService';
 import { technicalAnalysisService } from '../services/api/technicalAnalysisService';
-import { SparklineChart, UniversalBackground } from '../components';
+import { SparklineChart, UniversalBackground, CustomLoadingAnimation } from '../components';
 
  type InvestmentDetailsRouteProp = RouteProp<RootStackParamList, 'InvestmentDetails'>;
  type InvestmentDetailsNavigationProp = StackNavigationProp<RootStackParamList, 'InvestmentDetails'>;
@@ -381,7 +380,11 @@ const CHART_CONFIG: Record<ChartRange, { range: ChartRange; interval: '5m' | '30
               }}
             >
               {isChartLoading ? (
-                <ActivityIndicator size="small" color="#3B82F6" />
+                <CustomLoadingAnimation
+                  message="Loading chart..."
+                  size="small"
+                  variant="inline"
+                />
               ) : chartError ? (
                 <Text style={{ color: '#F87171', fontSize: 12 }}>{chartError}</Text>
               ) : chartPrices.length > 1 ? (

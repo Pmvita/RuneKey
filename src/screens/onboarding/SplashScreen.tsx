@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, Image } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../../stores/app/useAppStore';
 import { useWalletStore } from '../../stores/wallet/useWalletStore';
+import { UniversalBackground, CustomLoadingAnimation } from '../../components';
 
 interface SplashScreenProps {
   onComplete: (destination: 'onboarding' | 'auth' | 'main') => void;
@@ -112,10 +113,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
 
         {/* Loading Indicator */}
         <View style={{ alignItems: 'center', zIndex: 10 }}>
-          <ActivityIndicator size="large" color="#38bdf8" />
-          <Text style={{ color: '#bae6fd', marginTop: 16, fontSize: 16 }}>
-            Initializing your wallet...
-          </Text>
+          <CustomLoadingAnimation
+            message="Initializing your wallet..."
+            size="large"
+            variant="inline"
+            spinnerColor="#38bdf8"
+          />
         </View>
 
         {/* Version */}

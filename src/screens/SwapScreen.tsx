@@ -20,7 +20,7 @@ import { Token, SwapParams, SwapQuote } from '../types';
 import { logger } from '../utils/logger';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { COMMON_TOKENS } from '../constants';
-import { LiquidGlass, LoadingSpinner, UniversalBackground } from '../components';
+import { LiquidGlass, UniversalBackground } from '../components';
 import { useNavigation } from '@react-navigation/native';
 
 const { width: screenWidth } = Dimensions.get('window');
