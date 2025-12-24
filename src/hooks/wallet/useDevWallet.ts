@@ -79,11 +79,6 @@ export const useDevWallet = () => {
         // Calculate total portfolio value
         const totalValue = tokensWithPrices.reduce((sum, token) => sum + (token.usdValue || 0), 0);
 
-        console.log('💰 Dev Wallet Portfolio:', {
-          totalValue: `$${totalValue.toLocaleString()}`,
-          tokens: tokensWithPrices.map(t => `${t.symbol}: $${t.usdValue?.toLocaleString()}`)
-        });
-
         // Connect the wallet using the store with live data
         connectDeveloperWallet({
           tokens: tokensWithPrices,

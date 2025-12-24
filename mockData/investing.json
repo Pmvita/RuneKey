@@ -8,7 +8,7 @@
       "type": "stock",
       "market": "NYSE",
       "currency": "USD",
-      "quantity": 5,
+      "quantity": 7,
       "averagePrice": 700000.0,
       "icon": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2022%2F05%2FBerkshire-Hathaway-Logo.png&f=1&nofb=1&ipt=bae7d1beee456941e736514bd39aa1d3eff6136143c0e2f54b076d964b838b17"
     },
@@ -19,7 +19,7 @@
       "type": "index",
       "market": "INDEX",
       "currency": "USD",
-      "quantity": 500,
+      "quantity": 1000,
       "averagePrice": 6000.00,
       "icon": "https://logo.clearbit.com/spglobal.com"
     },
@@ -30,7 +30,7 @@
       "type": "etf",
       "market": "NYSEARCA",
       "currency": "USD",
-      "quantity": 1000,
+      "quantity": 3000,
       "averagePrice": 600.03,
       "icon": "https://logo.clearbit.com/ssga.com"
     },
@@ -41,7 +41,7 @@
       "type": "etf",
       "market": "NYSEARCA",
       "currency": "USD",
-      "quantity": 1000,
+      "quantity": 2000,
       "averagePrice": 600.00,
       "icon": "https://logo.clearbit.com/vanguard.com"
     },
@@ -52,7 +52,7 @@
       "type": "etf",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 900,
+      "quantity": 1000,
       "averagePrice": 445.00,
       "icon": "https://logo.clearbit.com/invesco.com"
     },
@@ -63,20 +63,20 @@
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 900,
+      "quantity": 1000,
       "averagePrice": 230.00,
       "icon": "https://logo.clearbit.com/apple.com"
     },
     {
-      "id": "GOOG",
-      "symbol": "GOOG",
-      "name": "Alphabet Inc.",
+      "id": "GOOGL",
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc. Class A",
       "type": "stock",
       "market": "NASDAQ",
       "currency": "USD",
-      "quantity": 800,
+      "quantity": 2000,
       "averagePrice": 180.00,
-      "icon": "https://logo.clearbit.com/google.com"
+      "icon": "https://logo.clearbit.com/abc.xyz"
     },
     {
       "id": "MSFT",

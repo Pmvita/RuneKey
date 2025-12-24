@@ -22,7 +22,6 @@ class PriceCacheService {
       };
       
       await AsyncStorage.setItem(this.cacheKey, JSON.stringify(this.priceCache));
-      console.log(`💾 PriceCache: Saved last live price for ${symbol}: $${price.toLocaleString()}`);
     } catch (error) {
       console.error('❌ PriceCache: Failed to save last live price:', error);
     }
@@ -45,10 +44,8 @@ class PriceCacheService {
         const isExpired = Date.now() - cachedPrice.timestamp > 60 * 60 * 1000;
         
         if (!isExpired) {
-          console.log(`💾 PriceCache: Using last live price for ${symbol}: $${cachedPrice.price.toLocaleString()}`);
           return cachedPrice.price;
         } else {
-          console.log(`💾 PriceCache: Last live price for ${symbol} expired, removing from cache`);
           delete this.priceCache[symbol];
           await AsyncStorage.setItem(this.cacheKey, JSON.stringify(this.priceCache));
         }

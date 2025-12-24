@@ -17,9 +17,18 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Ionicons as IoniconSet } from '@expo/vector-icons';
-import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle, StyleSheet } from 'react-native';
+import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from './src/utils/logger';
+
+// Optional haptic feedback
+let Haptics: any = null;
+try {
+  Haptics = require('expo-haptics');
+} catch (e) {
+  // Haptics not available, will skip haptic feedback
+}
 
 // Screens
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -81,18 +90,23 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 // Main Tab Navigator
 const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof IoniconSet.glyphMap;
+          let label = '';
 
           if (route.name === 'Wallet') {
             iconName = focused ? 'wallet' : 'wallet-outline';
+            label = 'Wallet';
           } else if (route.name === 'Stocks') {
             iconName = focused ? 'trending-up' : 'trending-up-outline';
+            label = 'Stocks';
           } else if (route.name === 'Runekey') {
-            const scaledSize = 54;
+            const scaledSize = 56;
             return (
               <View style={styles.centerTabWrapper}>
                 <View style={[styles.centerTabGlow, focused && styles.centerTabGlowFocused]} />
@@ -104,7 +118,7 @@ const TabNavigator = () => {
                       {
                         width: scaledSize,
                         height: scaledSize,
-                        opacity: focused ? 1 : 0.82,
+                        opacity: focused ? 1 : 0.85,
                       },
                     ]}
                   />
@@ -113,32 +127,60 @@ const TabNavigator = () => {
             );
           } else if (route.name === 'Search') {
             iconName = focused ? 'search' : 'search-outline';
+            label = 'Search';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
+            label = 'Settings';
           } else {
             iconName = 'ellipse-outline';
           }
 
+          if (route.name === 'Runekey') {
+            return null;
+          }
+
           return (
-            <View style={[styles.tabIconWrapper, focused && styles.tabIconFocused]}>
-              <IoniconSet name={iconName} size={22} color={focused ? '#ffffff' : color} />
+            <View style={styles.tabIconContainer}>
+              <View style={[styles.tabIconWrapper, focused && styles.tabIconFocused]}>
+                <IoniconSet 
+                  name={iconName} 
+                  size={focused ? 24 : 22} 
+                  color={focused ? '#FFFFFF' : '#94A3B8'} 
+                />
+              </View>
+              {focused && (
+                <Text 
+                  style={styles.tabLabel}
+                  numberOfLines={1}
+                  accessibilityLabel={label}
+                >
+                  {label}
+                </Text>
+              )}
             </View>
           );
         },
         tabBarBackground: () => (
           <View style={styles.tabBarBackgroundWrapper}>
             <LinearGradient
-              colors={['rgba(15, 23, 42, 0.45)', 'rgba(2, 6, 23, 0.94)', 'rgba(0, 0, 0, 0.99)']}
+              colors={['rgba(15, 23, 42, 0.85)', 'rgba(2, 6, 23, 0.95)', 'rgba(0, 0, 0, 0.98)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.tabBarGradient}
             />
+            <View style={styles.tabBarBlurOverlay} />
           </View>
         ),
         tabBarShowLabel: false,
         tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#94a3b8',
-        tabBarStyle: styles.tabBar,
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            bottom: Math.max(insets.bottom, Platform.select({ ios: 20, android: 16, default: 20 })),
+            paddingBottom: Math.max(insets.bottom, Platform.select({ ios: 8, android: 8, default: 8 })),
+          },
+        ],
         tabBarItemStyle: styles.tabBarItem,
         tabBarLabelStyle: styles.tabLabel,
         headerStyle: {
@@ -149,17 +191,57 @@ const TabNavigator = () => {
           fontWeight: 'bold',
         },
         tabBarButton: (props) => {
-          const { onPress, style, ...rest } = props;
+          const { onPress, style, accessibilityLabel, accessibilityRole, ...rest } = props;
+          const scaleAnim = React.useRef(new Animated.Value(1)).current;
+          
+          const handlePress = (e: any) => {
+            // Haptic feedback for better UX (if available)
+            if (Platform.OS !== 'web' && Haptics) {
+              try {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              } catch (e) {
+                // Haptics not available, continue without feedback
+              }
+            }
+            
+            // Scale animation
+            Animated.sequence([
+              Animated.spring(scaleAnim, {
+                toValue: 0.9,
+                useNativeDriver: true,
+                tension: 300,
+                friction: 10,
+              }),
+              Animated.spring(scaleAnim, {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 300,
+                friction: 10,
+              }),
+            ]).start();
+            
+            logger.logTabNavigation(route.name);
+            onPress?.(e);
+          };
+          
           return (
-            <TouchableOpacity
-              {...rest}
-              onPress={(e) => {
-                logger.logTabNavigation(route.name);
-                onPress?.(e);
-              }}
-              activeOpacity={0.85}
-              style={[style, styles.tabButton]}
-            />
+            <Animated.View
+              style={[
+                style,
+                styles.tabButton,
+                { transform: [{ scale: scaleAnim }] },
+              ]}
+            >
+              <TouchableOpacity
+                {...rest}
+                onPress={handlePress}
+                activeOpacity={0.7}
+                accessibilityLabel={accessibilityLabel || route.name}
+                accessibilityRole={accessibilityRole || 'button'}
+                accessibilityState={{ selected: props.accessibilityState?.selected }}
+                style={styles.tabButtonInner}
+              />
+            </Animated.View>
           );
         },
       })}
@@ -404,102 +486,181 @@ export default App;
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: Platform.select({ ios: 30, android: 20, default: 28 }),
-    height: 72,
-    paddingHorizontal: 16,
+    left: 16,
+    right: 16,
+    height: Platform.select({ ios: 80, android: 76, default: 78 }),
+    paddingHorizontal: 12,
     paddingTop: 12,
-    paddingBottom: Platform.select({ ios: 18, android: 14, default: 16 }),
-    borderRadius: 36,
+    borderRadius: 32,
     backgroundColor: 'transparent',
     borderTopWidth: 0,
     elevation: 0,
     shadowOpacity: 0,
+    // Enhanced shadow for depth
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: -8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 16,
+      },
+      default: {},
+    }),
   },
   tabBarBackgroundWrapper: {
     flex: 1,
-    borderRadius: 36,
+    borderRadius: 32,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(12, 20, 38, 0.55)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+    // Glassmorphism effect
+    ...Platform.select({
+      web: {
+        // @ts-ignore web-only style
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      },
+      default: {},
+    }),
   },
   tabBarGradient: {
     flex: 1,
   },
+  tabBarBlurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 32,
+  },
   tabBarItem: {
-    borderRadius: 24,
-    paddingTop: 4,
+    borderRadius: 20,
+    paddingTop: 6,
+    paddingBottom: 4,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tabButtonInner: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
   tabIconWrapper: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    minWidth: 48,
+    minHeight: 48,
   },
   tabIconFocused: {
-    backgroundColor: 'rgba(96, 165, 250, 0.18)',
-    shadowColor: '#60A5FA',
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+    shadowColor: '#3B82F6',
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    ...Platform.select({
+      ios: {
+        shadowColor: '#3B82F6',
+        shadowOpacity: 0.6,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+      default: {},
+    }),
   },
   centerTabWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ translateY: Platform.select({ ios: -22, android: -18, default: -20 }) }],
+    transform: [{ translateY: Platform.select({ ios: -24, android: -20, default: -22 }) }],
   },
   centerTabGlow: {
     position: 'absolute',
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: 'rgba(59, 130, 246, 0.25)',
-    opacity: 0.65,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(59, 130, 246, 0.3)',
+    opacity: 0.7,
     ...Platform.select({
       web: { 
         // @ts-ignore web-only style
-        filter: 'blur(24px)',
+        filter: 'blur(28px)',
       },
       default: {},
     }),
   },
   centerTabGlowFocused: {
-    backgroundColor: 'rgba(96, 165, 250, 0.35)',
-    opacity: 0.85,
+    backgroundColor: 'rgba(96, 165, 250, 0.4)',
+    opacity: 0.9,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
   },
   centerTabButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(2, 6, 23, 0.95)',
-    borderWidth: 2,
-    borderColor: 'rgba(148, 163, 184, 0.35)',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(2, 6, 23, 0.98)',
+    borderWidth: 2.5,
+    borderColor: 'rgba(148, 163, 184, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#60A5FA',
-    shadowOpacity: 0.3,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
+    shadowColor: '#3B82F6',
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    ...Platform.select({
+      ios: {
+        shadowColor: '#3B82F6',
+        shadowOpacity: 0.5,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 12,
+      },
+      default: {},
+    }),
   },
   centerTabButtonFocused: {
     borderColor: '#3B82F6',
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-    shadowOpacity: 0.5,
-    shadowRadius: 22,
+    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+    shadowOpacity: 0.6,
+    shadowRadius: 28,
+    borderWidth: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#60A5FA',
+        shadowOpacity: 0.7,
+        shadowRadius: 32,
+      },
+      android: {
+        elevation: 16,
+      },
+      default: {},
+    }),
   },
   runekeyIconLarge: {
-    borderRadius: 18,
+    borderRadius: 20,
   },
   tabLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
 });

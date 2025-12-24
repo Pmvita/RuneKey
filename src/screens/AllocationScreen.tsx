@@ -147,7 +147,6 @@ export const AllocationScreen: React.FC = () => {
   // Calculate allocation data
   const calculateAllocations = useCallback(async () => {
     if (!currentWallet?.tokens) {
-      console.log('🔍 AllocationScreen: No currentWallet or tokens');
       setIsLoading(false);
       return;
     }
@@ -157,7 +156,6 @@ export const AllocationScreen: React.FC = () => {
       
       // Get filtered market data
       const filteredTokens = getFilteredMarketData();
-      console.log('🔍 AllocationScreen: Filtered tokens:', filteredTokens.length);
       
       // Calculate USD values for all tokens
       const tokensWithValues = filteredTokens.map((token) => {
@@ -168,8 +166,6 @@ export const AllocationScreen: React.FC = () => {
         const usdValue = token.usdValue && token.usdValue > 0
           ? token.usdValue
           : balance * price;
-
-        console.log(`🔍 AllocationScreen: ${token.symbol} - Balance: ${token.balance}, Price: ${price}, USD Value: ${usdValue}`);
 
         return {
           token: {
@@ -189,12 +185,9 @@ export const AllocationScreen: React.FC = () => {
         .filter(item => item.usdValue > 0)
         .sort((a, b) => b.usdValue - a.usdValue);
 
-      console.log('🔍 AllocationScreen: Valid tokens with value > 0:', validTokens.length);
-
       // Calculate total portfolio value
       const total = validTokens.reduce((sum, item) => sum + item.usdValue, 0);
       setTotalValue(total);
-      console.log('🔍 AllocationScreen: Total portfolio value:', total);
 
       // Calculate percentages and create allocation data
       const allocations: AllocationData[] = validTokens.map((item, index) => ({
@@ -204,7 +197,6 @@ export const AllocationScreen: React.FC = () => {
         color: colors[index % colors.length],
       }));
 
-      console.log('🔍 AllocationScreen: Final allocations:', allocations);
       setAllocationData(allocations);
     } catch (error) {
       console.error('Error calculating allocations:', error);
@@ -215,11 +207,8 @@ export const AllocationScreen: React.FC = () => {
 
   // Auto-connect dev wallet if not connected
   useEffect(() => {
-    console.log('🔍 AllocationScreen: isConnected =', isConnected, 'currentWallet =', currentWallet ? 'exists' : 'null');
-    
     // Only connect if we don't have a wallet and we're not already connecting
     if (!currentWallet && !isConnectingWallet) {
-      console.log('🔄 Connecting Dev Wallet for AllocationScreen...');
       setIsConnectingWallet(true);
       connectDevWallet().finally(() => {
         setIsConnectingWallet(false);
@@ -532,7 +521,11 @@ const EmptyAllocationsState = () => (
         <Animated.View style={[{ flex: 1 }, listAnimatedStyle]}>
           <FlatList
             data={allocationData}
-            keyExtractor={(item, index) => `${item.token.symbol}-${index}`}
+            keyExtractor={(item, index) => 
+              item.token.address 
+                ? `${item.token.address}-${index}` 
+                : `${item.token.symbol}-${index}`
+            }
             renderItem={({ item, index }) => (
               <AssetListItem item={item} index={index} />
             )}

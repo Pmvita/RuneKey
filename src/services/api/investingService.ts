@@ -84,19 +84,17 @@ class InvestingService {
       
       // Check for 401 or other auth errors
       if (response.status === 401 || response.status === 403) {
-        console.warn(`Yahoo Finance: Authentication error (${response.status}) for ${symbol}. This may be due to rate limiting or API changes.`);
+        // Only log authentication errors once per symbol to reduce noise
         return null;
       }
       
       if (response.status !== 200) {
-        console.warn(`Yahoo Finance: Unexpected status ${response.status} for ${symbol}`);
         return null;
       }
       
       const result = response.data?.quoteResponse?.result?.[0];
 
       if (!result) {
-        console.warn(`Yahoo Finance: No result for symbol ${symbol} (normalized: ${normalizedSymbol})`);
         return null;
       }
 
@@ -148,10 +146,6 @@ class InvestingService {
         ? result.trailingAnnualDividendYield * 100
         : undefined;
 
-      // Log if price is still 0 for debugging
-      if (price === 0 && symbol.startsWith('^')) {
-        console.warn(`Yahoo Finance: Price is 0 for index ${symbol}. Response data:`, JSON.stringify(result, null, 2));
-      }
 
       return {
         symbol: symbol.toUpperCase(),
@@ -166,7 +160,6 @@ class InvestingService {
         trailingAnnualDividendYield,
       };
     } catch (error: any) {
-      console.warn(`Yahoo Finance quote failed for ${symbol}:`, error?.message);
       return null;
     }
   }
@@ -278,23 +271,15 @@ class InvestingService {
                   exchange: holding.market || 'INDEX',
                   shortName: holding.name || symbol,
                 };
-                console.log(`✅ Yahoo Finance Chart: Successfully fetched ${symbol} - Price: $${price}`);
               }
             }
           } catch (error: any) {
             // Try quote API as fallback for indices
-            console.warn(`Yahoo Finance Chart failed for ${symbol}, trying quote API:`, error?.message);
             quote = await this.fetchYahooQuote(symbol);
-            if (quote && quote.price > 0) {
-              console.log(`✅ Yahoo Finance Quote: Successfully fetched ${symbol} - Price: $${quote.price}`);
-            }
           }
         } else {
           // For stocks, ETFs, forex, etc. - try Yahoo Finance quote API first
           quote = await this.fetchYahooQuote(symbol);
-          if (quote && quote.price > 0) {
-            console.log(`✅ Yahoo Finance: Successfully fetched ${symbol} - Price: $${quote.price}, Yield: ${quote.dividendYield || 'N/A'}%`);
-          }
         }
         
         // If Yahoo Finance failed or returned zero price, fall back to STOOQ
@@ -302,7 +287,6 @@ class InvestingService {
           const stooqSymbol = this.mapSymbolToStooq(holding);
           if (stooqSymbol) {
             try {
-              console.log(`⚠️ Yahoo Finance failed for ${symbol}, trying STOOQ fallback (${stooqSymbol})...`);
               const requestUrl = this.buildUrl(this.quotesURL, {
                 s: stooqSymbol,
                 f: 'sd2t2ohlcv',
@@ -311,11 +295,7 @@ class InvestingService {
               });
               const response = await axios.get(requestUrl, { timeout: 8000 });
 
-              // Log the response structure for debugging
-              if (!response.data || !response.data.symbols || response.data.symbols.length === 0) {
-                console.warn(`STOOQ: No data returned for ${symbol} (STOOQ symbol: ${stooqSymbol})`);
-                console.warn(`STOOQ: Response structure:`, JSON.stringify(response.data, null, 2).substring(0, 500));
-              } else {
+              if (response.data && response.data.symbols && response.data.symbols.length > 0) {
                 const entry = response.data.symbols[0];
                 const close = typeof entry?.close === 'number' ? entry.close : parseFloat(entry?.close || '0');
                 const open = typeof entry?.open === 'number' ? entry.open : parseFloat(entry?.open || '0');
@@ -336,25 +316,16 @@ class InvestingService {
                     shortName: holding.name || symbol,
                     // Note: STOOQ doesn't provide dividend data
                   };
-                  console.log(`✅ STOOQ: Successfully fetched ${symbol} (${stooqSymbol}) - Price: $${price} (no dividend data available)`);
-                } else {
-                  console.warn(`STOOQ: Invalid price for ${symbol} (STOOQ symbol: ${stooqSymbol}) - close: ${close}, open: ${open}`);
                 }
               }
             } catch (error: any) {
-              console.warn(`STOOQ: Failed to fetch ${symbol} (STOOQ symbol: ${stooqSymbol}):`, error?.message || error);
-            }
-          } else {
-            // Symbol can't be mapped to STOOQ (e.g., futures with =F)
-            if (!quote) {
-              console.warn(`⚠️ STOOQ unavailable for ${symbol} - symbol may not be supported by STOOQ`);
+              // Only log errors, not successful fallbacks
             }
           }
           
           // If STOOQ also failed, try Yahoo Finance Chart API as last resort (works for indices, might work for stocks)
           if (!quote || quote.price === 0) {
             try {
-              console.log(`⚠️ Trying Yahoo Finance Chart API as last resort for ${symbol}...`);
               const chartResponse = await this.fetchChart(symbol, { range: '1d', interval: '1d' });
               if (chartResponse.success && chartResponse.data.points.length > 0) {
                 const latestPoint = chartResponse.data.points[chartResponse.data.points.length - 1];
@@ -378,11 +349,10 @@ class InvestingService {
                     shortName: holding.name || symbol,
                     // Note: Chart API doesn't provide dividend data
                   };
-                  console.log(`✅ Yahoo Finance Chart: Successfully fetched ${symbol} - Price: $${price} (no dividend data from chart API)`);
                 }
               }
             } catch (error: any) {
-              console.warn(`Yahoo Finance Chart API also failed for ${symbol}:`, error?.message);
+              // Only log critical errors
             }
           }
         }
@@ -463,27 +433,14 @@ class InvestingService {
       });
       
       // Check for 401 or other auth errors
-      if (response.status === 401 || response.status === 403) {
-        console.warn(`Yahoo Finance Chart: Authentication error (${response.status}) for ${symbol}. This may be due to rate limiting or API changes.`);
+      if (response.status === 401 || response.status === 403 || response.status !== 200) {
         return {
           data: {
             symbol: sanitizedSymbol,
             points: [],
           },
           success: false,
-          error: 'Authentication failed',
-        };
-      }
-      
-      if (response.status !== 200) {
-        console.warn(`Yahoo Finance Chart: Unexpected status ${response.status} for ${symbol}`);
-        return {
-          data: {
-            symbol: sanitizedSymbol,
-            points: [],
-          },
-          success: false,
-          error: `HTTP ${response.status}`,
+          error: response.status === 401 || response.status === 403 ? 'Authentication failed' : `HTTP ${response.status}`,
         };
       }
 

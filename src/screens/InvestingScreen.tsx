@@ -1,18 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, TouchableOpacity, useWindowDimensions, Image, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, useWindowDimensions, Image, FlatList, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import investingData from '../../mockData/investing.json';
 import { Investment, InvestmentHolding, RootStackParamList, PortfolioMetrics, HoldingPerformance, DiversificationMetrics } from '../types';
-import { formatLargeCurrency } from '../utils/formatters';
+import { formatLargeCurrency, formatPercentage } from '../utils/formatters';
 import { investingService } from '../services/api/investingService';
 import { portfolioAnalyticsService } from '../services/api/portfolioAnalyticsService';
 import { usePrices } from '../hooks/token/usePrices';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
-import { UniversalBackground } from '../components';
+import { UniversalBackground, SparklineChart } from '../components';
 
 const investments: Investment[] = Array.isArray((investingData as any)?.investments)
   ? ((investingData as any).investments as Investment[])
@@ -42,6 +42,9 @@ export const InvestingScreen: React.FC = () => {
       .sort((a, b) => b.marketValue - a.marketValue)
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'>('1M');
+  const [sortBy, setSortBy] = useState<'value' | 'change' | 'name'>('value');
+  const [filterType, setFilterType] = useState<'all' | 'stock' | 'etf' | 'forex' | 'commodity'>('all');
 
   const activeCapitalValue = useMemo(() => {
     if (!currentWallet?.tokens) {
@@ -167,17 +170,6 @@ export const InvestingScreen: React.FC = () => {
           // Extract dividend data
           const dividendYield = quote?.dividendYield ?? previous?.dividendYield;
           const annualDividend = quote?.annualDividend ?? quote?.trailingAnnualDividendRate ?? previous?.annualDividend;
-          
-          // Debug logging for dividend data
-          if (quote && (quote.dividendYield || quote.annualDividend)) {
-            console.log(`✅ Dividend data found for ${symbol}:`, {
-              dividendYield: quote.dividendYield,
-              annualDividend: quote.annualDividend,
-              trailingAnnualDividendRate: quote.trailingAnnualDividendRate,
-            });
-          } else if (quote && quote.price > 0) {
-            console.log(`⚠️ No dividend data in quote for ${symbol} (price: $${quote.price})`);
-          }
           
           // Calculate annual dividend income (annual dividend per share * quantity)
           const annualDividendIncome = annualDividend && Number.isFinite(annualDividend) && annualDividend > 0

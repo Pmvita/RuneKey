@@ -77,9 +77,30 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# Local Env files
-.env*.local
+# Environment Variables & Secrets
 .env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+.env.test
+*.env
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# API Keys & Credentials
+**/api-keys.json
+**/credentials.json
+**/secrets.json
+**/config.local.*
+**/*.credentials
+**/*.private
 
 # Vercel
 .vercel

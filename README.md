@@ -239,18 +239,30 @@ RuneKey/
 ## 🔧 Configuration
 
 ### Environment Variables
-Create a `.env` file in the root directory:
 
-```env
-# API Keys (optional - app works without them)
-EXPO_PUBLIC_COINGECKO_API_KEY=your_coingecko_api_key
-EXPO_PUBLIC_0X_API_KEY=your_0x_api_key
+1. **Copy the example file:**
+   ```bash
+   cp .env.example .env
+   ```
 
-# Network RPC URLs (optional - defaults provided)
-EXPO_PUBLIC_ETHEREUM_RPC_URL=https://ethereum.rpc.thirdweb.com
-EXPO_PUBLIC_POLYGON_RPC_URL=https://polygon.rpc.thirdweb.com
-EXPO_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-```
+2. **Edit `.env` with your actual values:**
+   ```env
+   # API Keys (optional - app works without them)
+   EXPO_PUBLIC_COINGECKO_API_KEY=your_coingecko_api_key
+   EXPO_PUBLIC_0X_API_KEY=your_0x_api_key
+
+   # Network RPC URLs (optional - defaults provided)
+   EXPO_PUBLIC_ETHEREUM_RPC_URL=https://ethereum.rpc.thirdweb.com
+   EXPO_PUBLIC_POLYGON_RPC_URL=https://polygon.rpc.thirdweb.com
+   EXPO_PUBLIC_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+   ```
+
+> **⚠️ Security Warning:** 
+> - **NEVER** commit `.env` files to version control
+> - The `.env` file is already in `.gitignore` for your protection
+> - Use different API keys for development and production
+> - Rotate API keys regularly
+> - Keep your `.env` file secure and never share it publicly
 
 > **Heads-up:** Web builds default to the public [AllOrigins](https://allorigins.win/) proxy for CORS-safe requests to Stooq and Yahoo Finance. For production deployments you should supply your own proxy or relay service to guarantee uptime and rate-limit control.
 
@@ -273,11 +285,31 @@ export const APP_CONFIG = {
 
 ## 🔒 Security
 
-- Private keys are encrypted and stored locally using Expo SecureStore
-- No private keys are ever transmitted to external servers
-- All API communications use HTTPS
-- Input validation on all user inputs
-- Secure random number generation for wallet creation
+### Data Protection
+- **Private Keys**: Encrypted and stored locally using Expo SecureStore
+- **No Network Transmission**: Private keys are never sent to external servers
+- **Secure Storage**: All sensitive data uses encrypted local storage
+- **HTTPS Only**: All API communications use HTTPS
+
+### Code Security
+- **No Hardcoded Secrets**: All API keys and credentials use environment variables
+- **Input Validation**: Comprehensive validation on all user inputs
+- **Secure Random Generation**: Cryptographically secure random number generation for wallet creation
+- **Error Handling**: Secure error handling that doesn't expose sensitive information
+
+### Best Practices
+- **Environment Variables**: Use `.env` files for configuration (see `.env.example`)
+- **Git Security**: `.gitignore` is configured to exclude all sensitive files
+- **Key Rotation**: Regularly rotate API keys and credentials
+- **Development vs Production**: Use different keys for development and production environments
+
+### Security Checklist
+- ✅ `.env` files are in `.gitignore`
+- ✅ No hardcoded API keys or secrets in code
+- ✅ Private keys stored in encrypted SecureStore
+- ✅ All API calls use HTTPS
+- ✅ Input validation on all user inputs
+- ✅ Secure random generation for wallet creation
 
 ## 🧪 Testing
 

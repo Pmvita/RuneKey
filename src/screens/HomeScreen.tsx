@@ -323,8 +323,6 @@ export const HomeScreen: React.FC = () => {
 
   // Auto-connect dev wallet if not connected
   useEffect(() => {
-    console.log('🔍 HomeScreen: isConnected =', isConnected, 'currentWallet =', currentWallet ? 'exists' : 'null');
-    
     // Only connect if we don't have a wallet and we're not already connecting
     if (!currentWallet && !isConnectingWallet) {
       console.log('🔄 Connecting Dev Wallet for fresh data...');
@@ -511,8 +509,6 @@ export const HomeScreen: React.FC = () => {
       const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
       const tokenValue = tokenBalance * livePrice;
       
-      console.log(`💰 ${token.symbol}: ${tokenBalance} × $${livePrice} = $${tokenValue.toLocaleString()}`);
-      
       return total + tokenValue;
     }, 0);
   };
@@ -604,8 +600,16 @@ export const HomeScreen: React.FC = () => {
       }
     })();
     
+    // Remove duplicates by address (keep first occurrence)
+    const uniqueTokens = filtered.filter((token: any, index: number, self: any[]) => 
+      index === self.findIndex((t: any) => 
+        t.address?.toLowerCase() === token.address?.toLowerCase() ||
+        (t.symbol === token.symbol && t.address === token.address)
+      )
+    );
+    
     // Sort tokens by USD value from largest to smallest
-    const sortedTokens = filtered.sort((a: any, b: any) => {
+    const sortedTokens = uniqueTokens.sort((a: any, b: any) => {
       const aPrice = a.currentPrice || getTokenPrice(a.address) || 0;
       const bPrice = b.currentPrice || getTokenPrice(b.address) || 0;
       const aBalance = typeof a.balance === 'string' ? parseFloat(a.balance) : a.balance || 0;
@@ -615,24 +619,6 @@ export const HomeScreen: React.FC = () => {
       
       return bValue - aValue; // Sort descending (largest first)
     });
-    
-    // Log sorted order for debugging
-    console.log('📊 Assets sorted by value:', sortedTokens.map((token: any) => {
-      const price = token.currentPrice || getTokenPrice(token.address) || 0;
-      const balance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
-      const value = balance * price;
-      return `${token.symbol}: ${formatLargeCurrency(value)}`;
-    }));
-    
-    // Debug logging for gainer filter
-    if (selectedFilter === 'gainer') {
-      console.log('🔍 Gainer filter - Total tokens:', currentWallet.tokens.length);
-      console.log('🔍 Gainer filter - Positive changes:', currentWallet.tokens.filter((token: any) => {
-        const priceChange = token.priceChange24h || getTokenPriceChange(token.address) || 0;
-        return priceChange > 0;
-      }).length);
-      console.log('🔍 Gainer filter - Filtered result:', filtered.length);
-    }
     
     return sortedTokens;
   };
@@ -773,110 +759,124 @@ export const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Enhanced Header */}
-        <Animated.View style={[{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }, headerAnimatedStyle]}>
+        <Animated.View style={[{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }, headerAnimatedStyle]}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: 16,
+            marginBottom: 12,
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{
-                fontSize: 28,
-                fontWeight: 'bold',
+                fontSize: 24,
+                fontWeight: '800',
                 color: '#FFFFFF',
-                marginRight: 12,
+                letterSpacing: -0.3,
+                marginRight: 8,
               }}>
                 Wallet
               </Text>
               <TouchableOpacity
                 style={{
-                  padding: 8,
+                  padding: 6,
+                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  borderRadius: 8,
                 }}
                 onPress={() => {
-                  // Toggle balance visibility
                   logger.logButtonPress('Balance Visibility', 'toggle visibility');
                 }}
               >
-                <Ionicons name="eye" size={20} color="#94A3B8" />
+                <Ionicons name="eye" size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
             
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <TouchableOpacity
                 style={{
-                  padding: 8,
-                  marginRight: 8,
+                  padding: 6,
+                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Calendar', 'open calendar');
                 }}
               >
-                <Ionicons name="calendar-outline" size={20} color="#94A3B8" />
+                <Ionicons name="calendar-outline" size={18} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={{
-                  padding: 8,
-                  marginRight: 8,
+                  padding: 6,
+                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Chart', 'open chart');
                 }}
               >
-                <Ionicons name="trending-up-outline" size={20} color="#94A3B8" />
+                <Ionicons name="trending-up-outline" size={18} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={{
-                  padding: 8,
-                  marginRight: 8,
+                  padding: 6,
+                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Notifications', 'open notifications');
                 }}
               >
-                <Ionicons name="notifications-outline" size={20} color="#94A3B8" />
+                <Ionicons name="notifications-outline" size={18} color="#94A3B8" />
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={{
-                  padding: 8,
+                  padding: 6,
+                  backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                  borderRadius: 8,
                 }}
                 onPress={() => {
                   logger.logButtonPress('Settings', 'open settings');
                   navigation.navigate('Settings' as never);
                 }}
               >
-                <Ionicons name="settings-outline" size={20} color="#94A3B8" />
+                <Ionicons name="settings-outline" size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
           </View>
         </Animated.View>
 
-        {/* Crypto/Market Tabs */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, headerAnimatedStyle]}>
+        {/* Crypto/Market Tabs - Enhanced */}
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 12 }, headerAnimatedStyle]}>
           <View style={{
             flexDirection: 'row',
-            backgroundColor: '#111827',
-            borderRadius: 8,
-            padding: 2,
+            backgroundColor: 'rgba(30, 41, 59, 0.6)',
+            borderRadius: 12,
+            padding: 3,
+            borderWidth: 1,
+            borderColor: 'rgba(148, 163, 184, 0.15)',
           }}>
             <TouchableOpacity
               style={{
                 flex: 1,
-                backgroundColor: '#1e293b',
-                borderRadius: 6,
+                backgroundColor: '#3B82F6',
+                borderRadius: 10,
                 paddingVertical: 8,
                 alignItems: 'center',
+                shadowColor: '#3B82F6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 4,
               }}
               onPress={() => {
                 logger.logButtonPress('Crypto Tab', 'switch to crypto view');
               }}
             >
               <Text style={{
-                fontSize: 14,
-                fontWeight: '600',
+                fontSize: 13,
+                fontWeight: '700',
                 color: '#ffffff',
               }}>
                 Crypto
@@ -886,8 +886,8 @@ export const HomeScreen: React.FC = () => {
             <TouchableOpacity
               style={{
                 flex: 1,
-                backgroundColor: '#111827',
-                borderRadius: 6,
+                backgroundColor: 'transparent',
+                borderRadius: 10,
                 paddingVertical: 8,
                 alignItems: 'center',
               }}
@@ -897,8 +897,8 @@ export const HomeScreen: React.FC = () => {
               }}
             >
               <Text style={{
-                fontSize: 14,
-                fontWeight: '600',
+                fontSize: 13,
+                fontWeight: '700',
                 color: '#94A3B8',
               }}>
                 Market
@@ -907,87 +907,121 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
           
-        {/* Main Balance Display */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, portfolioAnimatedStyle]}>
+        {/* Main Balance Display - Enhanced */}
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 16 }, portfolioAnimatedStyle]}>
           {currentWallet ? (
             <View style={{
-              alignItems: 'center',
+              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              borderRadius: 20,
+              padding: 20,
+              borderWidth: 1,
+              borderColor: 'rgba(59, 130, 246, 0.2)',
+              shadowColor: '#3B82F6',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+              elevation: 6,
             }}>
-              {/* Main Balance */}
-              <View style={{ marginBottom: 8 }}>
-                <AnimatedNumber
-                  value={calculateTotalValue()}
-                  format="currency"
-                  style={{
-                    fontSize: 44,
-                    fontWeight: 'bold',
-                    color: '#FFFFFF',
-                    letterSpacing: -1,
-                    textAlign: 'center',
-                  }}
-                  duration={1500}
-                />
-              </View>
-              
-              {/* Percentage Change */}
-              <View style={{ 
-                flexDirection: 'row', 
-                alignItems: 'center', 
-                marginBottom: 16 
-              }}>
-                {(() => {
-                  const change = calculatePortfolioChange();
-                  const isPositive = change.percentage >= 0;
-                  return (
-                    <>
-                      <Ionicons 
-                        name={isPositive ? "trending-up" : "trending-down"} 
-                        size={16} 
-                        color={isPositive ? "#22c55e" : "#ef4444"} 
+              <View style={{ alignItems: 'center' }}>
+                {/* Main Balance - Scaled Down */}
+                <View style={{ marginBottom: 8 }}>
+                  <AnimatedNumber
+                    value={calculateTotalValue()}
+                    format="currency"
+                    style={{
+                      fontSize: 42,
+                      fontWeight: '800',
+                      color: '#FFFFFF',
+                      letterSpacing: -1.5,
+                      textAlign: 'center',
+                      textShadowColor: 'rgba(59, 130, 246, 0.3)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 4,
+                    }}
+                    duration={1500}
+                  />
+                </View>
+                
+                {/* Percentage Change - Scaled Down */}
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  marginBottom: 12,
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 10,
+                }}>
+                  {(() => {
+                    const change = calculatePortfolioChange();
+                    const isPositive = change.percentage >= 0;
+                    return (
+                      <>
+                        <Ionicons 
+                          name={isPositive ? "trending-up" : "trending-down"} 
+                          size={16} 
+                          color={isPositive ? "#22c55e" : "#ef4444"} 
+                        />
+                        <Text style={{
+                          fontSize: 15,
+                          fontWeight: '700',
+                          color: isPositive ? "#22c55e" : "#ef4444",
+                          marginLeft: 4,
+                        }}>
+                          {change.percentage.toFixed(2)}%
+                        </Text>
+                        <Text style={{
+                          fontSize: 13,
+                          fontWeight: '600',
+                          color: '#94A3B8',
+                          marginLeft: 6,
+                        }}>
+                          ({isPositive ? '+' : ''}{formatLargeCurrency(change.absolute)})
+                        </Text>
+                      </>
+                    );
+                  })()}
+                </View>
+                
+                {/* Sparkline Chart - Scaled Down */}
+                <View style={{ 
+                  width: '100%', 
+                  height: 50, 
+                  marginBottom: 4,
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 10,
+                  padding: 6,
+                }}>
+                  {(() => {
+                    const change = calculatePortfolioChange();
+                    const isPositive = change.percentage >= 0;
+                    return (
+                      <SparklineChart
+                        data={generateSparklineData(change.percentage)}
+                        width={screenWidth - 72}
+                        height={38}
+                        color={isPositive ? "#22c55e" : "#ef4444"}
+                        strokeWidth={2.5}
                       />
-                      <Text style={{
-                        fontSize: 16,
-                        fontWeight: '600',
-                        color: isPositive ? "#22c55e" : "#ef4444",
-                        marginLeft: 4,
-                      }}>
-                        {change.percentage.toFixed(1)}% ({isPositive ? '+' : ''}{formatLargeCurrency(change.absolute)})
-                      </Text>
-                    </>
-                  );
-                })()}
-              </View>
-              
-              {/* Sparkline Chart */}
-              <View style={{ 
-                width: '100%', 
-                height: 60, 
-                marginBottom: 16 
-              }}>
-                {(() => {
-                  const change = calculatePortfolioChange();
-                  const isPositive = change.percentage >= 0;
-                  return (
-                    <SparklineChart
-                      data={generateSparklineData(change.percentage)}
-                      width={screenWidth - 48}
-                      height={60}
-                      color={isPositive ? "#22c55e" : "#ef4444"}
-                      strokeWidth={3}
-                    />
-                  );
-                })()}
+                    );
+                  })()}
+                </View>
               </View>
             </View>
           ) : (
             <View style={{
               alignItems: 'center',
+              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              borderRadius: 20,
+              padding: 24,
+              borderWidth: 1,
+              borderColor: 'rgba(148, 163, 184, 0.2)',
             }}>
               <Text style={{
-                fontSize: 48,
-                fontWeight: 'bold',
+                fontSize: 42,
+                fontWeight: '800',
                 color: '#FFFFFF',
-                letterSpacing: -1,
+                letterSpacing: -1.5,
                 textAlign: 'center',
                 marginBottom: 8,
               }}>
@@ -996,8 +1030,8 @@ export const HomeScreen: React.FC = () => {
               <Text style={{
                 fontSize: 14,
                 color: '#94A3B8',
-                fontWeight: '500',
-                marginBottom: 16,
+                fontWeight: '600',
+                marginBottom: 4,
               }}>
                 {isConnectingWallet ? "Connecting Wallet..." : "Loading Portfolio..."}
               </Text>
@@ -1005,20 +1039,27 @@ export const HomeScreen: React.FC = () => {
           )}
         </Animated.View>
 
-        {/* Timeframe Selectors */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, portfolioAnimatedStyle]}>
+        {/* Timeframe Selectors - Enhanced */}
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 16 }, portfolioAnimatedStyle]}>
           <View style={{
             flexDirection: 'row',
-            justifyContent: 'space-around',
+            justifyContent: 'space-between',
+            backgroundColor: 'rgba(30, 41, 59, 0.6)',
+            borderRadius: 12,
+            padding: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(148, 163, 184, 0.15)',
           }}>
             {['1D', '1W', '1M', '1Y', 'ALL'].map((timeframe) => (
               <TouchableOpacity
                 key={timeframe}
                 style={{
+                  flex: 1,
                   paddingVertical: 8,
-                  paddingHorizontal: 16,
-                  borderRadius: 8,
-                  backgroundColor: selectedTimeframe === timeframe ? '#f1f5f9' : 'transparent',
+                  paddingHorizontal: 4,
+                  borderRadius: 10,
+                  backgroundColor: selectedTimeframe === timeframe ? '#3B82F6' : 'transparent',
+                  alignItems: 'center',
                 }}
                 onPress={() => {
                   logger.logButtonPress('Timeframe', `select ${timeframe}`);
@@ -1026,9 +1067,9 @@ export const HomeScreen: React.FC = () => {
                 }}
               >
                 <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: selectedTimeframe === timeframe ? '#1e293b' : '#64748b',
+                  fontSize: 13,
+                  fontWeight: '700',
+                  color: selectedTimeframe === timeframe ? '#FFFFFF' : '#94A3B8',
                 }}>
                   {timeframe}
                 </Text>
@@ -1037,15 +1078,23 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* Action Buttons */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, actionsAnimatedStyle]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+        {/* Action Buttons - Enhanced */}
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 16 }, actionsAnimatedStyle]}>
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between',
+            gap: 8,
+          }}>
             {/* Buy Button */}
             <TouchableOpacity
               style={{
+                flex: 1,
                 alignItems: 'center',
-                paddingVertical: 16,
-                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                borderRadius: 16,
+                borderWidth: 1.5,
+                borderColor: 'rgba(59, 130, 246, 0.4)',
               }}
               onPress={() => {
                 logger.logButtonPress('Buy', 'navigate to buy screen');
@@ -1053,24 +1102,27 @@ export const HomeScreen: React.FC = () => {
                 setTimeout(() => setShowParticles(false), 2000);
                 navigation.navigate('Buy' as never);
               }}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <View style={{
-                width: 56,
-                height: 56,
-                backgroundColor: '#000000',
+                width: 48,
+                height: 48,
+                backgroundColor: '#3B82F6',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 8,
-                borderWidth: 1,
-                borderColor: '#1f2937',
+                marginBottom: 6,
+                shadowColor: '#3B82F6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
               }}>
-                <Ionicons name="add" size={24} color="#94A3B8" />
+                <Ionicons name="add" size={22} color="#FFFFFF" />
               </View>
               <Text style={{
-                fontSize: 12,
-                fontWeight: '600',
+                fontSize: 11,
+                fontWeight: '700',
                 color: '#FFFFFF',
               }}>
                 Buy
@@ -1080,9 +1132,13 @@ export const HomeScreen: React.FC = () => {
             {/* Swap Button */}
             <TouchableOpacity
               style={{
+                flex: 1,
                 alignItems: 'center',
-                paddingVertical: 16,
-                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                borderRadius: 16,
+                borderWidth: 1.5,
+                borderColor: 'rgba(34, 197, 94, 0.4)',
               }}
               onPress={() => {
                 logger.logButtonPress('Swap Shortcut', 'navigate to swap screen');
@@ -1090,24 +1146,27 @@ export const HomeScreen: React.FC = () => {
                 setTimeout(() => setShowParticles(false), 2000);
                 navigation.navigate('Swap' as never);
               }}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <View style={{
-                width: 56,
-                height: 56,
-                backgroundColor: '#000000',
+                width: 48,
+                height: 48,
+                backgroundColor: '#22c55e',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 8,
-                borderWidth: 1,
-                borderColor: '#1f2937',
+                marginBottom: 6,
+                shadowColor: '#22c55e',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
               }}>
-                <Ionicons name="swap-horizontal" size={24} color="#94A3B8" />
+                <Ionicons name="swap-horizontal" size={22} color="#FFFFFF" />
               </View>
               <Text style={{
-                fontSize: 12,
-                fontWeight: '600',
+                fontSize: 11,
+                fontWeight: '700',
                 color: '#FFFFFF',
               }}>
                 Swap
@@ -1117,9 +1176,13 @@ export const HomeScreen: React.FC = () => {
             {/* Send Button */}
             <TouchableOpacity
               style={{
+                flex: 1,
                 alignItems: 'center',
-                paddingVertical: 16,
-                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                borderRadius: 16,
+                borderWidth: 1.5,
+                borderColor: 'rgba(239, 68, 68, 0.4)',
               }}
               onPress={() => {
                 logger.logButtonPress('Send', 'navigate to send screen');
@@ -1127,24 +1190,27 @@ export const HomeScreen: React.FC = () => {
                 setTimeout(() => setShowParticles(false), 2000);
                 navigation.navigate('Send' as never);
               }}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <View style={{
-                width: 56,
-                height: 56,
-                backgroundColor: '#000000',
+                width: 48,
+                height: 48,
+                backgroundColor: '#ef4444',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 8,
-                borderWidth: 1,
-                borderColor: '#1f2937',
+                marginBottom: 6,
+                shadowColor: '#ef4444',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
               }}>
-                <Ionicons name="arrow-up" size={24} color="#94A3B8" />
+                <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
               </View>
               <Text style={{
-                fontSize: 12,
-                fontWeight: '600',
+                fontSize: 11,
+                fontWeight: '700',
                 color: '#FFFFFF',
               }}>
                 Send
@@ -1154,9 +1220,13 @@ export const HomeScreen: React.FC = () => {
             {/* Receive Button */}
             <TouchableOpacity
               style={{
+                flex: 1,
                 alignItems: 'center',
-                paddingVertical: 16,
-                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                borderRadius: 16,
+                borderWidth: 1.5,
+                borderColor: 'rgba(245, 158, 11, 0.4)',
               }}
               onPress={() => {
                 logger.logButtonPress('Receive', 'navigate to receive screen');
@@ -1164,24 +1234,27 @@ export const HomeScreen: React.FC = () => {
                 setTimeout(() => setShowParticles(false), 2000);
                 navigation.navigate('Receive' as never);
               }}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <View style={{
-                width: 56,
-                height: 56,
-                backgroundColor: '#000000',
+                width: 48,
+                height: 48,
+                backgroundColor: '#f59e0b',
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 8,
-                borderWidth: 1,
-                borderColor: '#1f2937',
+                marginBottom: 6,
+                shadowColor: '#f59e0b',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
               }}>
-                <Ionicons name="arrow-down" size={24} color="#94A3B8" />
+                <Ionicons name="arrow-down" size={22} color="#FFFFFF" />
               </View>
               <Text style={{
-                fontSize: 12,
-                fontWeight: '600',
+                fontSize: 11,
+                fontWeight: '700',
                 color: '#FFFFFF',
               }}>
                 Receive
@@ -1190,9 +1263,9 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* Allocation Section */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 24 }, assetsAnimatedStyle]}>
-          <View style={{ flexDirection: 'row' }}>
+        {/* Allocation Section - Enhanced */}
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 16 }, assetsAnimatedStyle]}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => {
@@ -1201,19 +1274,24 @@ export const HomeScreen: React.FC = () => {
               }}
               style={{
               flex: 1,
-              backgroundColor: '#0b1120',
+              backgroundColor: 'rgba(30, 41, 59, 0.7)',
               borderRadius: 16,
-              borderWidth: 1,
-              borderColor: '#1f2937',
-              padding: 20,
-              marginRight: 16,
+              borderWidth: 1.5,
+              borderColor: 'rgba(59, 130, 246, 0.3)',
+              padding: 16,
+              shadowColor: '#3B82F6',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
             >
               <Text style={{
-                fontSize: 18,
-                fontWeight: 'bold',
+                fontSize: 16,
+                fontWeight: '800',
                 color: '#FFFFFF',
-                marginBottom: 16,
+                marginBottom: 12,
+                letterSpacing: 0.5,
               }}>
                 ALLOCATION
               </Text>
@@ -1222,25 +1300,25 @@ export const HomeScreen: React.FC = () => {
                 alignItems: 'center',
               }}>
                 <View style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
+                  width: 70,
+                  height: 70,
+                  borderRadius: 35,
                   backgroundColor: '#111827',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderWidth: 6,
+                  borderWidth: 4,
                   borderColor: '#3b82f6',
                 }}>
                   <View style={{
-                    width: 70,
-                    height: 70,
-                    borderRadius: 35,
+                    width: 50,
+                    height: 50,
+                    borderRadius: 25,
                     backgroundColor: '#111827',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <Text style={{
-                      fontSize: 11,
+                      fontSize: 9,
                       fontWeight: '600',
                       color: '#94A3B8',
                     }}>
@@ -1251,7 +1329,7 @@ export const HomeScreen: React.FC = () => {
 
                 <View style={{
                   width: '100%',
-                  marginTop: 16,
+                  marginTop: 12,
                   alignItems: 'center',
                 }}>
                   {[
@@ -1268,27 +1346,27 @@ export const HomeScreen: React.FC = () => {
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            marginBottom: columnIndex === 0 ? 8 : 0,
+                            marginBottom: columnIndex === 0 ? 6 : 0,
                         }}
                       >
                         {group.map((token: any, index: number) => {
                           const color = colorPalette[index] || '#64748b';
 
                           return (
-                            <View key={`${token.symbol}-${columnIndex}`} style={{
+                            <View key={`${token.address || token.symbol}-${columnIndex}-${index}`} style={{
                               flexDirection: 'row',
                               alignItems: 'center',
-                                marginRight: index < group.length - 1 ? 16 : 0,
+                                marginRight: index < group.length - 1 ? 10 : 0,
                             }}>
                               <View style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: 5,
+                                width: 8,
+                                height: 8,
+                                borderRadius: 4,
                                 backgroundColor: color,
-                                marginRight: 6,
+                                marginRight: 4,
                               }} />
                                 <Text style={{
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: '500',
                                   color: '#FFFFFF',
                                 }}>
@@ -1302,8 +1380,8 @@ export const HomeScreen: React.FC = () => {
                   })}
                 </View>
 
-                <View style={{ alignSelf: 'flex-end', marginTop: 12 }}>
-                  <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+                <View style={{ alignSelf: 'flex-end', marginTop: 8 }}>
+                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
                 </View>
               </View>
             </TouchableOpacity>
@@ -1313,23 +1391,28 @@ export const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('Investing')}
               style={{
                 flex: 1,
-                backgroundColor: '#0b1120',
+                backgroundColor: 'rgba(30, 41, 59, 0.7)',
                 borderRadius: 16,
-                borderWidth: 1,
-                borderColor: '#1f2937',
-                padding: 20,
+                borderWidth: 1.5,
+                borderColor: 'rgba(34, 197, 94, 0.3)',
+                padding: 16,
+                shadowColor: '#22c55e',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 4,
               }}
             >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <Text style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
+                  fontSize: 16,
+                  fontWeight: '800',
                   color: '#FFFFFF',
-                  marginBottom: 16,
+                  letterSpacing: 0.5,
                 }}>
                   INVESTING
                 </Text>
-                <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
               </View>
 
               <View style={{
@@ -1338,16 +1421,18 @@ export const HomeScreen: React.FC = () => {
               }}>
                 <View>
                   <Text style={{
-                    fontSize: 32,
-                    fontWeight: '700',
+                    fontSize: 28,
+                    fontWeight: '800',
                     color: '#FFFFFF',
+                    letterSpacing: -0.8,
+                    marginBottom: 4,
                   }}>
                     {formatLargeCurrency(activeCapitalValue)}
                   </Text>
                   <Text style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     color: '#94A3B8',
-                    marginTop: 4,
+                    fontWeight: '600',
                   }}>
                     Active capital
                   </Text>
@@ -1356,12 +1441,19 @@ export const HomeScreen: React.FC = () => {
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  marginTop: 16,
+                  marginTop: 12,
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: 'rgba(34, 197, 94, 0.3)',
+                  alignSelf: 'flex-start',
                 }}>
-                  <Ionicons name="trending-up" size={16} color="#22c55e" style={{ marginRight: 6 }} />
+                  <Ionicons name="trending-up" size={14} color="#22c55e" style={{ marginRight: 4 }} />
                   <Text style={{
-                    fontSize: 14,
-                    fontWeight: '600',
+                    fontSize: 13,
+                    fontWeight: '700',
                     color: '#22c55e',
                   }}>
                     +4.2% today
@@ -1385,20 +1477,22 @@ export const HomeScreen: React.FC = () => {
                     key={item.label}
                     style={{
                       paddingVertical: 6,
+                      borderBottomWidth: 1,
+                      borderBottomColor: 'rgba(148, 163, 184, 0.1)',
                     }}
                   >
                     <Text style={{
-                      fontSize: 12,
-                      color: '#FFFFFF',
-                      fontWeight: '500',
+                      fontSize: 11,
+                      color: '#94A3B8',
+                      fontWeight: '600',
+                      marginBottom: 2,
                     }}>
                       {item.label}
                     </Text>
                     <Text style={{
-                      fontSize: 12,
-                      color: '#94A3B8',
-                      fontWeight: '500',
-                      marginTop: 4,
+                      fontSize: 14,
+                      color: '#FFFFFF',
+                      fontWeight: '700',
                     }}>
                       {item.value}
                     </Text>
@@ -1410,47 +1504,75 @@ export const HomeScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* Assets Title */}
-        <Animated.View style={[{ paddingHorizontal: 24, marginBottom: 16 }, actionsAnimatedStyle]}>
-          <Text style={{
-            fontSize: 18,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-          }}>
-            Assets
-          </Text>
+        {/* Assets Title - Enhanced */}
+        <Animated.View style={[{ paddingHorizontal: 16, marginBottom: 12 }, actionsAnimatedStyle]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{
+              fontSize: 20,
+              fontWeight: '800',
+              color: '#FFFFFF',
+              letterSpacing: -0.3,
+            }}>
+              Assets
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                logger.logButtonPress('View All Assets', 'navigate to assets');
+              }}
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+              }}
+            >
+              <Text style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: '#3B82F6',
+              }}>
+                View All
+              </Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
         {/* Enhanced Assets Section */}
-        <Animated.View style={[{ paddingHorizontal: 24, paddingBottom: 32 }, assetsAnimatedStyle]}>
+        <Animated.View style={[{ paddingHorizontal: 16, paddingBottom: 32 }, assetsAnimatedStyle]}>
           
-          {/* Loading Indicator */}
+          {/* Loading Indicator - Enhanced */}
           {loadingMarketData && (
             <View style={{ 
               marginBottom: 16, 
               alignItems: 'center',
-              paddingVertical: 20,
+              paddingVertical: 24,
+              backgroundColor: 'rgba(30, 41, 59, 0.4)',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: 'rgba(59, 130, 246, 0.2)',
             }}>
               <LoadingSpinner size={40} color="#3B82F6" />
               <Text style={{
                 marginTop: 12,
                 fontSize: 14,
-                color: '#94A3B8',
-                fontWeight: '500',
+                color: '#FFFFFF',
+                fontWeight: '600',
               }}>
                 Loading market data...
               </Text>
             </View>
           )}
 
-          {/* Live Price Indicator */}
+          {/* Live Price Indicator - Enhanced */}
           {isLoadingPrices && !loadingMarketData && (
             <View style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.15)',
-              borderWidth: 1,
-              borderColor: 'rgba(34, 197, 94, 0.35)',
+              backgroundColor: 'rgba(34, 197, 94, 0.2)',
+              borderWidth: 1.5,
+              borderColor: 'rgba(34, 197, 94, 0.5)',
               borderRadius: 12,
-              padding: 16,
+              padding: 12,
               marginBottom: 16,
               flexDirection: 'row',
               alignItems: 'center',
@@ -1462,42 +1584,46 @@ export const HomeScreen: React.FC = () => {
                 backgroundColor: '#22c55e',
                 borderRadius: 4,
                 marginRight: 8,
+                shadowColor: '#22c55e',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.8,
+                shadowRadius: 3,
               }} />
               <Text style={{
                 color: '#22c55e',
-                fontWeight: '600',
-                fontSize: 14,
+                fontWeight: '700',
+                fontSize: 13,
               }}>
                 Updating live prices...
               </Text>
             </View>
           )}
 
-          {/* Fallback Data Indicator */}
+          {/* Fallback Data Indicator - Enhanced */}
           {!isLoadingPrices && !loadingMarketData && marketData.length === 0 && (
             <View style={{
-              backgroundColor: 'rgba(250, 204, 21, 0.18)',
-              borderWidth: 1,
+              backgroundColor: 'rgba(250, 204, 21, 0.2)',
+              borderWidth: 1.5,
               borderColor: 'rgba(250, 204, 21, 0.5)',
               borderRadius: 12,
-              padding: 16,
+              padding: 12,
               marginBottom: 16,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Ionicons name="warning" size={16} color="#d97706" style={{ marginRight: 8 }} />
+              <Ionicons name="warning" size={16} color="#facc15" style={{ marginRight: 8 }} />
               <Text style={{
-                fontSize: 14,
+                fontSize: 13,
                 color: '#facc15',
-                fontWeight: '500',
+                fontWeight: '600',
               }}>
                 Using fallback data - API rate limited
               </Text>
             </View>
           )}
           
-          {/* Asset List */}
+          {/* Asset List - Enhanced */}
           {getFilteredMarketData().map((token: any, index: number) => {
             // Use live prices from dev wallet if available, otherwise fallback to mock prices
             const currentPrice = token.currentPrice || getTokenPrice(token.address) || 0;
@@ -1508,15 +1634,24 @@ export const HomeScreen: React.FC = () => {
             const tokenBalance = typeof token.balance === 'string' ? parseFloat(token.balance) : token.balance || 0;
             const usdValue = tokenBalance * currentPrice;
             
+            // Create unique key combining address and index to prevent duplicates
+            const uniqueKey = token.address 
+              ? `${token.address}-${index}` 
+              : `${token.symbol}-${index}`;
+            
             return (
               <TouchableOpacity
-                key={token.address}
+                key={uniqueKey}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  paddingVertical: 16,
-                  paddingHorizontal: 0,
-                  marginBottom: 8,
+                  paddingVertical: 14,
+                  paddingHorizontal: 12,
+                  marginBottom: 10,
+                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: 'rgba(148, 163, 184, 0.1)',
                 }}
                 onPress={() => {
                   logger.logButtonPress(`${token.symbol} Token`, 'view token details');
@@ -1533,63 +1668,77 @@ export const HomeScreen: React.FC = () => {
                 }}
                 activeOpacity={0.7}
               >
-                {/* Token Icon */}
+                {/* Token Icon - Scaled Down */}
                 <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: '#111827',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(148, 163, 184, 0.2)',
                 }}>
                   <Image 
                     source={{ uri: token.logoURI }} 
-                    style={{ width: 28, height: 28, borderRadius: 14 }}
+                    style={{ width: 30, height: 30, borderRadius: 15 }}
                   />
                 </View>
 
-                {/* Token Info */}
+                {/* Token Info - Scaled Down */}
                 <View style={{ flex: 1 }}>
                   <Text style={{
                     fontSize: 16,
-                    fontWeight: '600',
+                    fontWeight: '700',
                     color: '#FFFFFF',
-                    marginBottom: 2,
+                    marginBottom: 3,
+                    letterSpacing: -0.2,
                   }}>
                     {token.symbol}
                   </Text>
                   <Text style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     color: '#94A3B8',
+                    fontWeight: '500',
                   }}>
                     {formatTokenBalance(token.balance, token.decimals || 18)} {token.symbol}
                   </Text>
                 </View>
 
-                {/* Price and Change */}
+                {/* Price and Change - Scaled Down */}
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{
                     fontSize: 16,
-                    fontWeight: '600',
+                    fontWeight: '700',
                     color: '#FFFFFF',
-                    marginBottom: 2,
+                    marginBottom: 3,
+                    letterSpacing: -0.2,
                   }}>
                     {formatLargeCurrency(usdValue)}
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center',
+                    backgroundColor: isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: isPositive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+                  }}>
                     <Ionicons 
                       name={isPositive ? "trending-up" : "trending-down"} 
                       size={12} 
                       color={isPositive ? '#22c55e' : '#ef4444'} 
                     />
                     <Text style={{
-                      fontSize: 14,
-                      fontWeight: '500',
+                      fontSize: 12,
+                      fontWeight: '700',
                       color: isPositive ? '#22c55e' : '#ef4444',
-                      marginLeft: 2,
+                      marginLeft: 3,
                     }}>
-                      {isPositive ? '+' : ''}{priceChange.toFixed(1)}%
+                      {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
                     </Text>
                   </View>
                 </View>
@@ -1597,20 +1746,44 @@ export const HomeScreen: React.FC = () => {
             );
           })}
           
-          {/* Fallback for no data */}
+          {/* Fallback for no data - Enhanced */}
           {getFilteredMarketData().length === 0 && !loadingMarketData && (
             <View style={{
               padding: 32,
               alignItems: 'center',
+              backgroundColor: 'rgba(30, 41, 59, 0.4)',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: 'rgba(148, 163, 184, 0.2)',
             }}>
-              <Ionicons name="wallet-outline" size={48} color="#94a3b8" />
+              <View style={{
+                width: 60,
+                height: 60,
+                borderRadius: 30,
+                backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 16,
+              }}>
+                <Ionicons name="wallet-outline" size={36} color="#94a3b8" />
+              </View>
+              <Text style={{
+                color: '#FFFFFF',
+                textAlign: 'center',
+                marginTop: 4,
+                fontSize: 16,
+                fontWeight: '700',
+                marginBottom: 6,
+              }}>
+                No assets found
+              </Text>
               <Text style={{
                 color: '#94A3B8',
                 textAlign: 'center',
-                marginTop: 16,
-                fontSize: 16,
+                fontSize: 13,
+                fontWeight: '500',
               }}>
-                No assets found
+                Connect a wallet to see your assets
               </Text>
             </View>
           )}
