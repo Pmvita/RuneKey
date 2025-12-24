@@ -201,11 +201,22 @@ RuneKey/
 │   │   └── qr/             # QR code components
 │   ├── screens/            # Main app screens
 │   │   ├── HomeScreen.tsx              # Crypto portfolio overview
+│   │   ├── MarketScreen.tsx            # Traditional markets & investing
+│   │   ├── ExploreScreen.tsx           # Main explore/discover hub
+│   │   ├── SearchScreen.tsx            # Token & dApp discovery
 │   │   ├── SwapScreen.tsx              # Token swapping interface
-│   │   ├── SearchScreen.tsx            # Discovery experience
 │   │   ├── InvestingScreen.tsx         # Traditional markets dashboard
 │   │   ├── InvestmentDetailsScreen.tsx # Live market detail view
-│   │   └── SettingsScreen.tsx          # App preferences
+│   │   ├── TokenDetailsScreen.tsx      # Token information & charts
+│   │   ├── CoinDetailsScreen.tsx       # Coin market details
+│   │   ├── TrendingTokensScreen.tsx    # Trending tokens list
+│   │   ├── AllocationScreen.tsx        # Portfolio allocation view
+│   │   ├── SendScreen.tsx              # Send cryptocurrency
+│   │   ├── ReceiveScreen.tsx           # Receive cryptocurrency
+│   │   ├── BuyScreen.tsx               # Buy cryptocurrency
+│   │   ├── SettingsScreen.tsx          # App preferences
+│   │   ├── onboarding/                 # Onboarding flow screens
+│   │   └── auth/                       # Authentication screens
 │   ├── hooks/              # Custom React hooks
 │   │   ├── wallet/         # Wallet management hooks
 │   │   ├── token/          # Token and price hooks

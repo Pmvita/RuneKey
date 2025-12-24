@@ -152,15 +152,19 @@ The `LiquidGlass` component has been integrated into your `HomeScreen`:
 
 ### Navigation
 
-Add the test screen to your navigation:
+The LiquidGlass component is used throughout the app in various screens. You can import and use it directly in any component:
 
 ```tsx
-// In your navigation configuration
-<Stack.Screen 
-  name="LiquidGlassTest" 
-  component={LiquidGlassTestScreen} 
-  options={{ title: 'Liquid Glass Demo' }}
-/>
+import { LiquidGlass } from '../components';
+
+// Use in any screen or component
+<LiquidGlass
+  className="p-6"
+  cornerRadius={20}
+  onPress={() => console.log('Pressed!')}
+>
+  <Text>Your content here</Text>
+</LiquidGlass>
 ```
 
 ## Performance Best Practices

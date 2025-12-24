@@ -33,7 +33,6 @@ try {
 // Screens
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SwapScreen } from './src/screens/SwapScreen';
-import { StocksScreen } from './src/screens/StocksScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
