@@ -88,6 +88,7 @@ export interface WalletState {
   transactions: Transaction[];
   isLoading: boolean;
   error: string | null;
+  watchlist: Record<string, { targetPrice?: number; direction?: 'above' | 'below' }>;
 }
 
 export interface AppState {

@@ -52,6 +52,10 @@ interface WalletActions {
   
   // Utilities
   reset: () => void;
+  // Watchlist actions
+  addToWatchlist: (symbol: string) => void;
+  removeFromWatchlist: (symbol: string) => void;
+  checkPriceAlerts: () => void;
 }
 
 const initialState: WalletState = {
@@ -62,6 +66,7 @@ const initialState: WalletState = {
   transactions: [],
   isLoading: false,
   error: null,
+  watchlist: {},  // Store price alert watchlist
 };
 
 export const useWalletStore = create<WalletState & WalletActions>()(
@@ -238,6 +243,46 @@ export const useWalletStore = create<WalletState & WalletActions>()(
 
       reset: () => {
         set(initialState);
+      },
+
+      addToWatchlist: (symbol: string) => {
+        set((state) => ({
+          watchlist: {
+            ...state.watchlist,
+            [symbol]: { ...(state.watchlist[symbol] || {}) },
+          },
+        }));
+      },
+
+      removeFromWatchlist: (symbol: string) => {
+        set((state) => {
+          const next = { ...state.watchlist };
+          delete next[symbol];
+          return { watchlist: next };
+        });
+      },
+
+      checkPriceAlerts: () => {
+        const { currentWallet, watchlist } = get();
+        if (!currentWallet?.tokens) return;
+
+        const alerts: Array<{ symbol: string; message: string }> = [];
+        currentWallet.tokens.forEach((token) => {
+          const rule = watchlist[token.symbol];
+          if (!rule || rule.targetPrice == null || token.currentPrice == null) return;
+
+          const price = token.currentPrice;
+          if (rule.direction === 'above' && price > rule.targetPrice!) {
+            alerts.push({ symbol: token.symbol, message: `Price above $${rule.targetPrice}` });
+          }
+          if (rule.direction === 'below' && price < rule.targetPrice!) {
+            alerts.push({ symbol: token.symbol, message: `Price below $${rule.targetPrice}` });
+          }
+        });
+
+        if (alerts.length > 0) {
+          console.log('Price alerts:', alerts);
+        }
       },
     }),
     {

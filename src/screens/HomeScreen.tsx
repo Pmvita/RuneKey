@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert, Dimensions, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,7 +53,7 @@ type AssetFilter = 'all' | 'gainer' | 'loser';
 
 export const HomeScreen: React.FC = () => {
   const colors = useThemeColors();
-  const { isConnected, currentWallet, activeNetwork } = useWalletStore();
+  const { isConnected, currentWallet, activeNetwork, watchlist, addToWatchlist, removeFromWatchlist } = useWalletStore();
   const { connectDevWallet, refreshDevWallet } = useDevWallet();
   const { 
     fetchPrices, 
@@ -74,6 +74,11 @@ export const HomeScreen: React.FC = () => {
   const [animationsTriggered, setAnimationsTriggered] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
+  // Price alerts state
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [selectedTokenForAlert, setSelectedTokenForAlert] = useState<any>(null);
+  const [alertTargetPrice, setAlertTargetPrice] = useState('');
+  const [alertDirection, setAlertDirection] = useState<'above' | 'below'>('above');
   const [investmentHoldings, setInvestmentHoldings] = useState<any[]>([]);
   const [loadingInvestments, setLoadingInvestments] = useState(false);
   const navigation = useNavigation<any>();
@@ -577,10 +582,12 @@ export const HomeScreen: React.FC = () => {
 
   // Memoized portfolio change calculation - only recalculates when total value or timeframe changes
   const portfolioChange = useMemo(() => {
-    if (!currentWallet || !currentWallet.tokens) return { percentage: 0, absolute: 0 };
+    if (!currentWallet || !currentWallet.tokens) return { percentage: 0, absolute: 0, historicalData: [] };
     
     // Generate mock historical data based on timeframe
     let historicalMultiplier = 1;
+    const historicalPoints = 7; // 7 data points for the chart
+    
     switch (selectedTimeframe) {
       case '1D':
         historicalMultiplier = 0.99; // -1% for 1 day
@@ -605,9 +612,21 @@ export const HomeScreen: React.FC = () => {
     const absoluteChange = totalValue - historicalValue;
     const percentageChange = historicalValue > 0 ? (absoluteChange / historicalValue) * 100 : 0;
     
+    // Generate historical data points
+    const historicalData = [];
+    for (let i = 0; i < historicalPoints; i++) {
+      const pointMultiplier = 1 - ((1 - historicalMultiplier) * (i / historicalPoints));
+      const pointValue = totalValue * pointMultiplier;
+      historicalData.push({
+        x: i,
+        y: pointValue,
+      });
+    }
+    
     return {
       percentage: percentageChange,
-      absolute: absoluteChange
+      absolute: absoluteChange,
+      historicalData,
     };
   }, [totalValue, selectedTimeframe, currentWallet?.tokens]);
 
@@ -1022,7 +1041,7 @@ export const HomeScreen: React.FC = () => {
                     const isPositive = change.percentage >= 0;
                     return (
                       <SparklineChart
-                        data={generateSparklineData(change.percentage)}
+                        data={change.historicalData.map((point: any) => point.y)}
                         width={screenWidth - 72}
                         height={38}
                         color={isPositive ? colors.success : colors.error}
@@ -1876,6 +1895,147 @@ export const HomeScreen: React.FC = () => {
               </Text>
             </View>
           )}
+
+          {/* Price Alerts Section */}
+          {currentWallet?.tokens && currentWallet.tokens.length > 0 && (
+            <View style={{ marginTop: 24, marginBottom: 100 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.3 }}>
+                  Price Alerts
+                </Text>
+                <TouchableOpacity 
+                  style={{ backgroundColor: colors.primary + '20', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                  onPress={() => {
+                    setSelectedTokenForAlert(null);
+                    setAlertTargetPrice('');
+                    setAlertDirection('above');
+                    setShowAlertModal(true);
+                  }}
+                >
+                  <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '700' }}>+ Add Alert</Text>
+                </TouchableOpacity>
+              </View>
+
+              {Object.keys(watchlist).length === 0 ? (
+                <View style={{ backgroundColor: colors.backgroundCard, borderRadius: 16, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+                  <Ionicons name="notifications-outline" size={32} color="#94a3b8" />
+                  <Text style={{ color: colors.textTertiary, fontSize: 14, marginTop: 8, textAlign: 'center' }}>
+                    No price alerts set. Tap "+ Add Alert" to create one.
+                  </Text>
+                </View>
+              ) : (
+                <View>
+                  {Object.entries(watchlist).map(([symbol, rule]) => {
+                    const token = currentWallet?.tokens?.find((t: any) => t.symbol === symbol);
+                    if (!token) return null;
+                    
+                    return (
+                      <View key={symbol} style={{ backgroundColor: colors.backgroundCard, borderRadius: 12, padding: 14, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colors.border }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.backgroundSecondary, alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>{symbol[0]}</Text>
+                          </View>
+                          <View>
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>{symbol}</Text>
+                            <Text style={{ fontSize: 12, color: colors.textTertiary, marginTop: 2 }}>
+                              {rule.direction === 'above' ? 'Above' : 'Below'} ${rule.targetPrice?.toFixed(4)}
+                            </Text>
+                          </View>
+                        </View>
+                        <TouchableOpacity 
+                          style={{ padding: 8 }}
+                          onPress={() => removeFromWatchlist(symbol)}
+                        >
+                          <Ionicons name="close-circle" size={22} color={colors.error} />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Price Alert Modal */}
+          <Modal visible={showAlertModal} animationType="slide" transparent onRequestClose={() => setShowAlertModal(false)}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }}>
+              <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary }}>Set Price Alert</Text>
+                  <TouchableOpacity onPress={() => setShowAlertModal(false)}>
+                    <Ionicons name="close" size={24} color={colors.textTertiary} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Token Selection */}
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 }}>Token</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+                  {currentWallet?.tokens?.map((token: any) => (
+                    <TouchableOpacity
+                      key={token.symbol}
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: 20,
+                        marginRight: 8,
+                        backgroundColor: selectedTokenForAlert?.symbol === token.symbol ? colors.primary : colors.backgroundSecondary,
+                        borderWidth: 1,
+                        borderColor: selectedTokenForAlert?.symbol === token.symbol ? colors.primary : colors.border,
+                      }}
+                      onPress={() => setSelectedTokenForAlert(token)}
+                    >
+                      <Text style={{ color: selectedTokenForAlert?.symbol === token.symbol ? '#fff' : colors.textPrimary, fontSize: 13, fontWeight: '600' }}>
+                        {token.symbol}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {/* Target Price */}
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 }}>Target Price (USD)</Text>
+                <TextInput
+                  style={{ backgroundColor: colors.backgroundSecondary, borderRadius: 12, padding: 14, color: colors.textPrimary, fontSize: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.border }}
+                  placeholder="0.00"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="decimal-pad"
+                  value={alertTargetPrice}
+                  onChangeText={setAlertTargetPrice}
+                />
+
+                {/* Direction */}
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 }}>Alert When Price Is</Text>
+                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: alertDirection === 'above' ? colors.success + '26' : colors.backgroundSecondary, borderWidth: 1.5, borderColor: alertDirection === 'above' ? colors.success : colors.border, alignItems: 'center' }}
+                    onPress={() => setAlertDirection('above')}
+                  >
+                    <Text style={{ color: alertDirection === 'above' ? colors.success : colors.textTertiary, fontSize: 15, fontWeight: '700' }}>Above Target</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: alertDirection === 'below' ? colors.error + '26' : colors.backgroundSecondary, borderWidth: 1.5, borderColor: alertDirection === 'below' ? colors.error : colors.border, alignItems: 'center' }}
+                    onPress={() => setAlertDirection('below')}
+                  >
+                    <Text style={{ color: alertDirection === 'below' ? colors.error : colors.textTertiary, fontSize: 15, fontWeight: '700' }}>Below Target</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  style={{ backgroundColor: colors.primary, padding: 16, borderRadius: 14, alignItems: 'center' }}
+                  onPress={() => {
+                    if (!selectedTokenForAlert || !alertTargetPrice) return;
+                    const price = parseFloat(alertTargetPrice);
+                    if (isNaN(price) || price <= 0) return;
+                    addToWatchlist(selectedTokenForAlert.symbol);
+                    setShowAlertModal(false);
+                    setAlertTargetPrice('');
+                    setSelectedTokenForAlert(null);
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>Save Alert</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </Animated.View>
 
       </ScrollView>
