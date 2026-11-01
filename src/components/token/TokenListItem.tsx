@@ -73,7 +73,7 @@ export const TokenListItem: React.FC<TokenListItemProps> = ({
       <View className="mr-3">
         {(token.logoURI || getFallbackImageUrl(token.symbol)) && !imageError ? (
           <Image
-            source={{ uri: token.logoURI || getFallbackImageUrl(token.symbol) }}
+            source={{ uri: (token.logoURI || getFallbackImageUrl(token.symbol)) as string }}
             className="w-10 h-10 rounded-full"
             onError={() => {
               console.log(`Failed to load image for ${token.symbol}: ${token.logoURI}`);

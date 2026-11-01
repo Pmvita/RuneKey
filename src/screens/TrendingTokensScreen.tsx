@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { UniversalBackground, LiquidGlass, CustomLoadingAnimation } from '../components';
+import { UniversalBackground, LiquidGlass, CustomLoadingAnimation, LoadingSpinner } from '../components';
 import { priceService } from '../services/api/priceService';
 import { logger } from '../utils/logger';
 import { Token, RootStackParamList } from '../types';

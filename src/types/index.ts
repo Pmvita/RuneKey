@@ -17,6 +17,7 @@ export interface Token {
 
 export interface Wallet {
   id?: string;
+  name?: string;
   address: string;
   publicKey: string;
   network: SupportedNetwork;
@@ -109,6 +110,8 @@ export interface PriceData {
     usd: number;
     usd_24h_change: number;
     last_updated_at: number;
+    usd_24h_vol?: number;
+    usd_market_cap?: number;
   };
 }
 

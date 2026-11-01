@@ -51,15 +51,11 @@ export const usePrices = () => {
    */
   const fetchTokenPrice = useCallback(async (tokenAddress: string) => {
     try {
-      const result = await priceService.fetchTokenPrice(tokenAddress);
+      const result = await priceService.getTokenPrice(tokenAddress);
       
-      if (result.success) {
-        updateTokenPrice(tokenAddress, result.data, 0);
-        return result.data;
-      } else {
-        console.error('Failed to fetch token price:', result.error);
-        return null;
-      }
+      const price = result;
+      updateTokenPrice(tokenAddress, price, 0);
+      return price;
     } catch (err) {
       console.error('Failed to fetch token price:', err);
       return null;

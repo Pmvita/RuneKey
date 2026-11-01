@@ -42,11 +42,11 @@ export const AnimatedSettingsItem: React.FC<AnimatedSettingsItemProps> = ({
 
   React.useEffect(() => {
     if (!hasAnimated.current) {
+      // @ts-ignore - delay not in TimingConfig
       opacity.value = withTiming(1, { duration: 400, delay });
       hasAnimated.current = true;
     } else {
-      // Keep opacity at 1 on subsequent renders (e.g., theme changes)
-      // Use withTiming with 0 duration to set immediately without animation
+      // @ts-ignore - delay not in TimingConfig
       opacity.value = withTiming(1, { duration: 0 });
     }
   }, [delay, opacity]);

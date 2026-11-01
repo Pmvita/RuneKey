@@ -26,6 +26,8 @@ export interface HoldingPerformance {
   profitLoss: number;
   profitLossPercent: number;
   weight: number; // Portfolio weight percentage
+  annualDividendIncome?: number;
+  dividendYield?: number;
 }
 
 class PortfolioAnalyticsService {

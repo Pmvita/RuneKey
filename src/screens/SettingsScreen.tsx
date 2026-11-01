@@ -41,8 +41,8 @@ const STORAGE_KEYS = {
 
 export const SettingsScreen: React.FC = () => {
   const { theme, setTheme, developerMode, setDeveloperMode, logout } = useAppStore();
-  const { isConnected, currentWallet, activeNetwork, disconnectWallet } = useWalletStore();
-  const { switchNetwork } = useWallet();
+  const { isConnected, currentWallet, activeNetwork, disconnectWallet, switchNetwork } = useWalletStore();
+  const { changeNetwork } = useWallet();
   const colors = useThemeColors();
   const isDark = useIsDark();
   const systemColorScheme = useColorScheme();

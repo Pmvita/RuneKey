@@ -30,7 +30,7 @@ export class BiometricService {
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       return enrolled;
     } catch (error) {
-      logger.error('Failed to check biometric availability', error);
+      logger.logError('Failed to check biometric availability', error);
       return false;
     }
   }
@@ -77,7 +77,7 @@ export class BiometricService {
         name,
       };
     } catch (error) {
-      logger.error('Failed to get biometric type', error);
+      logger.logError('Failed to get biometric type', error);
       return {
         available: false,
         type: 'none',
@@ -90,7 +90,7 @@ export class BiometricService {
     try {
       const available = await this.isAvailable();
       if (!available) {
-        logger.warn('Biometric authentication not available');
+        console.warn('Biometric authentication not available');
         return false;
       }
 
@@ -102,16 +102,16 @@ export class BiometricService {
       });
 
       if (result.success) {
-        logger.info('Biometric authentication successful');
+        console.info('Biometric authentication successful');
         return true;
       } else {
-        logger.info('Biometric authentication cancelled or failed', {
+        console.info('Biometric authentication cancelled or failed', {
           error: result.error,
         });
         return false;
       }
     } catch (error) {
-      logger.error('Biometric authentication error', error);
+      logger.logError('Biometric authentication error', error);
       return false;
     }
   }
@@ -120,7 +120,7 @@ export class BiometricService {
     try {
       const available = await this.isAvailable();
       if (!available) {
-        logger.warn('Biometric authentication not available');
+        console.warn('Biometric authentication not available');
         return false;
       }
 
@@ -132,7 +132,7 @@ export class BiometricService {
 
       return result.success;
     } catch (error) {
-      logger.error('Biometric authentication error', error);
+      logger.logError('Biometric authentication error', error);
       return false;
     }
   }

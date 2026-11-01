@@ -32,6 +32,7 @@ const secureStorage = {
 interface WalletActions {
   // Connection
   connectWallet: (wallet: Wallet) => void;
+  connectDeveloperWallet: (liveData?: { tokens: Array<{ symbol: string; currentPrice: number; priceChange24h: number; marketCap: number; usdValue: number }>; totalValue: number }) => void;
   disconnectWallet: () => void;
   
   // Network management
@@ -48,9 +49,6 @@ interface WalletActions {
   // Wallet updates
   updateWalletBalance: (balance: string) => void;
   updateTokenBalances: (tokens: any[]) => void;
-  
-  // Developer mode
-  connectDeveloperWallet: () => void;
   
   // Utilities
   reset: () => void;
@@ -201,8 +199,8 @@ export const useWalletStore = create<WalletState & WalletActions>()(
               coinId: devWalletData.wallet.tokens.find((t: any) => t.symbol === tx.token.symbol)?.coinId || '',
             },
             timestamp: tx.timestamp,
-            status: tx.status as const,
-            type: tx.type as const,
+            status: tx.status,
+            type: tx.type,
             gasPrice: tx.gasPrice,
             gasUsed: tx.gasUsed
           }));

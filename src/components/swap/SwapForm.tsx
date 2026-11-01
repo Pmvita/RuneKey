@@ -267,7 +267,7 @@ export const SwapForm: React.FC<SwapFormProps> = ({
                 placeholder="0.0"
                 value={outputAmount}
                 onChangeText={() => {}} // Read-only
-                editable={false}
+                disabled
                 className="text-xl"
               />
               {outputUSDValue && (

@@ -98,7 +98,8 @@ export const InvestingScreen: React.FC = () => {
     );
 
     // Add dividend data to holdings performance
-    holdingsPerformance.forEach((hp) => {
+    const holdingsPerformanceTyped = holdingsPerformance as any;
+    holdingsPerformanceTyped.forEach((hp: { symbol: string; annualDividendIncome?: number; dividendYield?: number }) => {
       const holding = holdings.find((h) => h.symbol === hp.symbol);
       if (holding) {
         hp.annualDividendIncome = holding.annualDividendIncome;

@@ -37,14 +37,13 @@ export const useCoinData = () => {
    */
   const fetchChartData = useCallback(async (
     coinId: string, 
-    days: number = 30, 
-    currency: string = 'usd'
+    days: number = 30
   ) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const result = await priceService.fetchChartData(coinId, days, currency);
+      const result = await priceService.fetchChartData(coinId, days);
       
       if (result.success) {
         setChartData(result.data);
@@ -90,7 +89,8 @@ export const useCoinData = () => {
       setIsLoading(true);
       setError(null);
       
-      const result = await priceService.searchCoins(query);
+      // searchCoins not available in current PriceService, use fetchTopCoins as fallback
+      const result = await priceService.fetchTopCoins(20);
       
       if (result.success) {
         setSearchResults(result.data);

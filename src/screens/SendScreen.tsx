@@ -171,7 +171,7 @@ export const SendScreen: React.FC = () => {
         <LoadingOverlay 
           visible={isLoading}
           message="Sending Transaction..."
-          spinnerSize={60}
+          spinnerSize="large"
           spinnerColor="#3B82F6"
         />
         

@@ -53,7 +53,7 @@ export const TokenDetailsScreen: React.FC = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoadingChart, setIsLoadingChart] = useState(true);
-  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [current_price, setCurrentPrice] = useState<number>(0);
   const [priceSource, setPriceSource] = useState<string>('none');
   const [priceChangePercentage, setPriceChangePercentage] = useState<number>(0);
   const tradingViewSymbol = useMemo(() => {
@@ -233,11 +233,11 @@ export const TokenDetailsScreen: React.FC = () => {
     if (isNaN(balance)) return 0;
     
     // Use current price from state (which includes fallback logic)
-    const usdValue = balance * currentPrice;
+    const usdValue = balance * current_price;
     
     console.log('🔍 TokenDetails: USD Value Calculation:', {
       balance,
-      currentPrice,
+      current_price,
       usdValue,
       symbol: token.symbol
     });
@@ -268,8 +268,8 @@ export const TokenDetailsScreen: React.FC = () => {
     if (coinInfo?.current_price && coinInfo.current_price > 0) {
       price = coinInfo.current_price;
       priceSource = 'api_live';
-    } else if (token.current_price && token.current_price > 0) {
-      price = token.current_price;
+    } else if (token.currentPrice && token.currentPrice > 0) {
+      price = token.currentPrice;
       priceSource = 'token_param';
     }
     
@@ -304,7 +304,7 @@ export const TokenDetailsScreen: React.FC = () => {
       price,
       priceSource,
       coinInfoPrice: coinInfo?.current_price,
-      tokenPrice: token.current_price,
+      tokenPrice: token.currentPrice,
       symbol: token.symbol
     });
     
@@ -334,8 +334,8 @@ export const TokenDetailsScreen: React.FC = () => {
     if (coinInfo?.price_change_percentage_24h !== undefined) {
       priceChange = coinInfo.price_change_percentage_24h;
       changeSource = 'api_live';
-    } else if (token.price_change_percentage_24h !== undefined) {
-      priceChange = token.price_change_percentage_24h;
+    } else if (token.priceChange24h !== undefined) {
+      priceChange = token.priceChange24h;
       changeSource = 'token_param';
     }
     
@@ -360,7 +360,7 @@ export const TokenDetailsScreen: React.FC = () => {
       priceChange,
       changeSource,
       coinInfoChange: coinInfo?.price_change_percentage_24h,
-      tokenChange: token.price_change_percentage_24h,
+      tokenChange: token.priceChange24h,
       symbol: token.symbol
     });
     
@@ -369,7 +369,7 @@ export const TokenDetailsScreen: React.FC = () => {
 
   // Get price change value
   const getPriceChangeValue = () => {
-    return (currentPrice * priceChangePercentage) / 100;
+    return (current_price * priceChangePercentage) / 100;
   };
 
   // Format currency
@@ -420,7 +420,7 @@ export const TokenDetailsScreen: React.FC = () => {
   const generateFallbackChartData = () => {
     const dataPoints = 50;
     const data = [];
-    const basePrice = currentPrice || 1000; // Use current price from state or fallback
+    const basePrice = current_price || 1000; // Use current price from state or fallback
     const volatility = 0.02; // 2% volatility
     
     // Generate realistic price movement based on the current price
@@ -569,7 +569,7 @@ export const TokenDetailsScreen: React.FC = () => {
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               {getTokenLogoURI() ? (
                 <Image 
-                  source={{ uri: getTokenLogoURI() }} 
+                  source={{ uri: getTokenLogoURI() as string }} 
                   style={{
                     width: 40,
                     height: 40,
@@ -654,7 +654,7 @@ export const TokenDetailsScreen: React.FC = () => {
             color: '#FFFFFF',
             marginBottom: 8,
           }}>
-            {formatCurrency(currentPrice)}
+            {formatCurrency(current_price)}
           </Text>
           
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -761,7 +761,7 @@ export const TokenDetailsScreen: React.FC = () => {
           }}>
             {getTokenLogoURI() ? (
               <Image 
-                source={{ uri: getTokenLogoURI() }} 
+                source={{ uri: getTokenLogoURI() as string }} 
                 style={{
                   width: 48,
                   height: 48,

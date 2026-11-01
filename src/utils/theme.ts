@@ -168,7 +168,7 @@ export const getThemeColors = (theme: ThemeMode, systemColorScheme: 'light' | 'd
 
 export const useThemeColors = (): ThemeColors => {
   const theme = useAppStore((state) => state.theme);
-  const systemColorScheme = useColorScheme();
+  const systemColorScheme = useColorScheme() as 'light' | 'dark' | null;
   return getThemeColors(theme, systemColorScheme);
 };
 

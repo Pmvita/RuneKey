@@ -132,7 +132,7 @@ export const AllocationScreen: React.FC = () => {
       );
 
       // Use market price, fallback price, or 0
-      const currentPrice = marketToken?.current_price || fallbackPrices[token.symbol] || 0;
+      const currentPrice = marketToken?.current_price || (fallbackPrices as any)[token.symbol] || 0;
 
       return {
         ...token,

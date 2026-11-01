@@ -48,7 +48,7 @@ export class NotificationService {
       }
 
       if (finalStatus !== 'granted') {
-        logger.warn('Notification permissions not granted');
+        console.warn('Notification permissions not granted');
         return;
       }
 
@@ -57,17 +57,17 @@ export class NotificationService {
         try {
           const tokenData = await Notifications.getExpoPushTokenAsync();
           this.pushToken = tokenData.data;
-          logger.info('Push token obtained', { token: this.pushToken });
+          console.info('Push token obtained', { token: this.pushToken });
         } catch (error) {
-          logger.warn('Failed to get push token', error);
+          console.warn('Failed to get push token', error);
           // Push token is optional, continue without it
         }
       }
 
       this.isInitialized = true;
-      logger.info('Notification service initialized');
+      console.info('Notification service initialized');
     } catch (error) {
-      logger.error('Failed to initialize notification service', error);
+      logger.logError('Failed to initialize notification service', error);
     }
   }
 
@@ -85,11 +85,10 @@ export class NotificationService {
         },
         trigger: trigger || null, // null means show immediately
       });
-
-      logger.info('Local notification scheduled', { id: notificationId, title: config.title });
+      logger.logError('Local notification scheduled', { id: notificationId, title: config.title });
       return notificationId;
     } catch (error) {
-      logger.error('Failed to schedule notification', error);
+      logger.logError('Failed to schedule notification', error);
       throw error;
     }
   }
@@ -181,18 +180,18 @@ export class NotificationService {
   async cancelNotification(notificationId: string): Promise<void> {
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
-      logger.info('Notification cancelled', { id: notificationId });
+      console.info('Notification cancelled', { id: notificationId });
     } catch (error) {
-      logger.error('Failed to cancel notification', error);
+      logger.logError('Failed to cancel notification', error);
     }
   }
 
   async cancelAllNotifications(): Promise<void> {
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
-      logger.info('All notifications cancelled');
+      console.info('All notifications cancelled');
     } catch (error) {
-      logger.error('Failed to cancel all notifications', error);
+      logger.logError('Failed to cancel all notifications', error);
     }
   }
 

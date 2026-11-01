@@ -14,6 +14,7 @@ import Animated, {
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { UniversalBackground } from '../../components';
 import { useWalletStore } from '../../stores/wallet/useWalletStore';
 import { logger } from '../../utils/logger';
 

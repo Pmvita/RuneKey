@@ -195,7 +195,7 @@ export const CoinDetailsScreen: React.FC = () => {
     <UniversalBackground>
       <SafeAreaView style={{ flex: 1 }}>
         <LoadingOverlay visible={isLoading} />
-        {showParticles && <ParticleEffect />}
+        {showParticles && <ParticleEffect active={showParticles} />}
         
         <ScrollView
           style={{ flex: 1 }}

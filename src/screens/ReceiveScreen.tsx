@@ -137,7 +137,7 @@ export const ReceiveScreen: React.FC = () => {
         <LoadingOverlay 
           visible={isLoading}
           message="Copying Address..."
-          spinnerSize={60}
+          spinnerSize="large"
           spinnerColor="#3B82F6"
         />
         

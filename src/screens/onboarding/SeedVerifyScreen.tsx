@@ -22,7 +22,7 @@ export const SeedVerifyScreen: React.FC<SeedVerifyScreenProps> = ({
 
   useEffect(() => {
     // Pick 4 random positions to verify
-    const positions = [];
+    const positions: number[] = [];
     while (positions.length < 4) {
       const pos = Math.floor(Math.random() * 12);
       if (!positions.includes(pos)) {

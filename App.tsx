@@ -168,7 +168,7 @@ const TabNavigator = () => {
             colors.backgroundSecondary + 'D9',
             colors.backgroundTertiary + 'F2',
             colors.background + 'FA',
-          ];
+          ] as const;
           
           return (
             <View style={styles.tabBarBackgroundWrapper}>

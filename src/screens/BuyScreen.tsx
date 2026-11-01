@@ -143,7 +143,7 @@ export const BuyScreen: React.FC = () => {
         <LoadingOverlay 
           visible={isLoading}
           message="Processing Purchase..."
-          spinnerSize={80}
+          spinnerSize="large"
           spinnerColor="#3B82F6"
         />
         
@@ -175,7 +175,7 @@ export const BuyScreen: React.FC = () => {
         >
           {/* Amount Input Card */}
           <Animated.View style={[{ paddingHorizontal: 24, marginTop: 24 }, cardAnimatedStyle]}>
-            <Card style={styles.inputCard}>
+            <Card>
               <Text style={styles.cardTitle}>Amount</Text>
               <View style={styles.amountInputContainer}>
                 <Text style={styles.currencySymbol}>$</Text>
@@ -197,7 +197,7 @@ export const BuyScreen: React.FC = () => {
 
           {/* Token Selection Card */}
           <Animated.View style={[{ paddingHorizontal: 24, marginTop: 16 }, cardAnimatedStyle]}>
-            <Card style={styles.inputCard}>
+            <Card>
               <Text style={styles.cardTitle}>Buy</Text>
               <TouchableOpacity
                 style={styles.tokenSelector}
@@ -226,7 +226,7 @@ export const BuyScreen: React.FC = () => {
 
           {/* Payment Method Card */}
           <Animated.View style={[{ paddingHorizontal: 24, marginTop: 16 }, cardAnimatedStyle]}>
-            <Card style={styles.inputCard}>
+            <Card>
               <Text style={styles.cardTitle}>Payment Method</Text>
               <View style={styles.paymentMethod}>
                 <View style={styles.paymentIcon}>
@@ -243,8 +243,8 @@ export const BuyScreen: React.FC = () => {
 
           {/* Summary Card */}
           <Animated.View style={[{ paddingHorizontal: 24, marginTop: 16 }, cardAnimatedStyle]}>
-            <Card style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Purchase Summary</Text>
+            <Card>
+              <Text style={styles.cardTitle}>Purchase Summary</Text>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Amount</Text>
                 <Text style={styles.summaryValue}>${amount || '0.00'}</Text>

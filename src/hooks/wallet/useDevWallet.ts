@@ -14,12 +14,27 @@ export const useDevWallet = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Dev wallet configuration loaded from JSON file
-  const devWalletConfig = {
+  const devWalletConfig: {
+    id: string;
+    name: string;
+    address: string;
+    publicKey: string;
+    network: string;
+    tokens: Array<{
+      coinId: string;
+      address: string;
+      symbol: string;
+      name: string;
+      decimals: number;
+      balance: string;
+      logoURI: string;
+    }>;
+  } = {
     id: mockDevWallet.wallet.id,
     name: mockDevWallet.wallet.name,
     address: mockDevWallet.wallet.address,
     publicKey: mockDevWallet.wallet.publicKey,
-    network: mockDevWallet.wallet.network as const,
+    network: mockDevWallet.wallet.network,
     tokens: mockDevWallet.wallet.tokens.map(token => ({
       coinId: token.coinId,
       address: token.address,

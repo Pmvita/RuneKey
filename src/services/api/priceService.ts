@@ -18,6 +18,8 @@ export interface CoinInfo {
   price_change_percentage_24h: number;
   market_cap_change_24h: number;
   market_cap_change_percentage_24h: number;
+  usd_24h_vol?: number;
+  usd_market_cap?: number;
   circulating_supply: number;
   total_supply: number;
   max_supply: number;
@@ -123,6 +125,7 @@ class PriceService {
             usd_24h_change: coinData.usd_24h_change,
             usd_24h_vol: coinData.usd_24h_vol,
             usd_market_cap: coinData.usd_market_cap,
+            last_updated_at: Date.now(),
           };
         });
 

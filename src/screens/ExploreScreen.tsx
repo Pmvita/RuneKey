@@ -26,17 +26,17 @@ const NewsCard: React.FC<{ news: StockNewsItem }> = ({ news }) => {
   const sentiment = news.sentiment || 'neutral';
   
   // Helper function to get gradient colors based on sentiment and theme
-  const getGradientColors = (sentiment: 'positive' | 'negative' | 'neutral'): string[] => {
+  const getGradientColors = (sentiment: 'positive' | 'negative' | 'neutral'): readonly [string, string, string] => {
     const baseBg = isDark ? colors.backgroundSecondary : colors.background;
     const secondaryBg = isDark ? colors.backgroundTertiary : colors.backgroundSecondary;
     
     switch (sentiment) {
       case 'positive':
-        return [colors.success + '26', baseBg, secondaryBg];
+        return [colors.success + '26', baseBg, secondaryBg] as const;
       case 'negative':
-        return [colors.error + '26', baseBg, secondaryBg];
+        return [colors.error + '26', baseBg, secondaryBg] as const;
       default:
-        return [colors.primary + '26', baseBg, secondaryBg];
+        return [colors.primary + '26', baseBg, secondaryBg] as const;
     }
   };
 

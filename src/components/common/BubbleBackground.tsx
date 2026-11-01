@@ -169,11 +169,7 @@ const BubbleBackground: React.FC = () => {
   };
 
   // Theme-aware gradient colors
-  const gradientColors = [
-    colors.background,
-    colors.backgroundSecondary,
-    colors.backgroundTertiary,
-  ];
+  const gradientColors = [colors.background, colors.backgroundSecondary, colors.backgroundTertiary] as const;
 
   return (
     <View style={styles.container} pointerEvents="none">

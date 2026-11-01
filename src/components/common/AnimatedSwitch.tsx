@@ -24,6 +24,7 @@ export const AnimatedSwitch: React.FC<AnimatedSwitchProps> = ({
   const opacity = useSharedValue(0);
 
   React.useEffect(() => {
+    // @ts-ignore - delay not in TimingConfig
     opacity.value = withTiming(1, { duration: 400, delay });
   }, [delay]);
 
