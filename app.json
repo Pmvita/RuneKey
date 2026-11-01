@@ -3,7 +3,7 @@
     "name": "RuneKey",
     "slug": "runekey",
     "version": "1.0.0",
-    "sdkVersion": "54.0.0",
+    "sdkVersion": "58.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
