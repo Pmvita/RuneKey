@@ -1,5 +1,5 @@
 // Import polyfills first
-import './src/utils/polyfills';
+import './src/utils/polyfills-pre';
 
 // Import react-native-reanimated
 import 'react-native-reanimated';
