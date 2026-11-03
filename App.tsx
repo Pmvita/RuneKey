@@ -301,6 +301,157 @@ const TabNavigator = () => {
   );
 };
 
+// Main Tab Navigator
+const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  const { theme } = useAppStore();
+  const systemColorScheme = useColorScheme();
+  const { getThemeColors } = require('./src/utils/theme');
+  const colors = getThemeColors(theme, systemColorScheme);
+  
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.textPrimary,
+        tabBarStyle: {
+          backgroundColor: colors.backgroundSecondary,
+          borderTopColor: colors.border,
+          paddingTop: insets.top + 10,
+          height: 85,
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: colors.background }}>
+            <LinearGradient
+              colors={colors.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1 }}
+            />
+          </View>
+        ),
+      }}
+    >
+      <Tab.Screen 
+        name="Wallet" 
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons 
+                name="wallet" 
+                size={size} 
+                color={focused ? colors.primary : colors.textTertiary} 
+              />
+            </View>
+          ),
+          title: 'Wallet',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen 
+        name="Exchange" 
+        component={SwapScreen}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons 
+                name="swap-horizontal" 
+                size={size} 
+                color={focused ? colors.primary : colors.textTertiary} 
+              />
+            </View>
+          ),
+          title: 'Exchange',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen 
+        name="Markets" 
+        component={MarketScreen}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons 
+                name="chart-line" 
+                size={size} 
+                color={focused ? colors.primary : colors.textTertiary} 
+              />
+            </View>
+          ),
+          title: 'Markets',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen 
+        name="Explore" 
+        component={ExploreScreen}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons 
+                name="compass" 
+                size={size} 
+                color={focused ? colors.primary : colors.textTertiary} 
+              />
+            </View>
+          ),
+          title: 'Explore',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons 
+                name="cog" 
+                size={size} 
+                color={focused ? colors.primary : colors.textTertiary} 
+              />
+            </View>
+          ),
+          title: 'Settings',
+          headerShown: false,
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// Main Stack Navigator
+const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
+  const { theme } = useAppStore();
+  const systemColorScheme = useColorScheme();
+  const { getThemeColors } = require('./src/utils/theme');
+  const colors = getThemeColors(theme, systemColorScheme);
+
+  return (
+    <NavigationContainer
+      theme={{
+        dark: actualTheme === 'dark',
+        colors: {
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.backgroundCard,
+          text: colors.textPrimary,
+          border: colors.border,
+          notification: colors.error,
+        },
+      }}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar barStyle={colors.textPrimary === '#F8FAFC' ? 'light-content' : 'dark-content'} />
+        <TabNavigator />
+      </GestureHandlerRootView>
+    </NavigationContainer>
+  );
+};
+
 // Main Stack Navigator
 const AppNavigator = ({ actualTheme }: { actualTheme: 'light' | 'dark' }) => {
   const { theme } = useAppStore();
