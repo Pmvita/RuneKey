@@ -3,6 +3,8 @@ export * from './networks';
 // API Configuration
 export const API_ENDPOINTS = {
   COINGECKO: 'https://api.coingecko.com/api/v3',
+  /** Free public API used as secondary market-data fallback (no key required for basic reads). */
+  COINCAP: 'https://api.coincap.io/v2',
   JUPITER: 'https://quote-api.jup.ag/v6',
   ZEROX: 'https://api.0x.org',
   YAHOO_FINANCE: 'https://query1.finance.yahoo.com/v7/finance/quote',

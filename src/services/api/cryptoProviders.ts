@@ -1,56 +1,37 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { API_ENDPOINTS } from '../../constants';
 import { PriceData } from '../../types';
-import { CoinInfo, ChartData, SparklineData } from './priceService';
+import { CoinInfo, ChartData, SparklineData } from './marketTypes';
 import { MarketRateLimiter, marketRateLimiter } from './marketRateLimiter';
 
 export const REQUEST_TIMEOUT_MS = 8000;
 
-/** Common CoinGecko id → Coinpaprika id for symbols we care about. */
-const COINGECKO_TO_COINPAPPAPRIKA: Record<string, string> = {
-  bitcoin: 'btc-bitcoin',
-  ethereum: 'eth-ethereum',
-  'wrapped-bitcoin': 'wbtc-wrapped-bitcoin',
-  'usd-coin': 'usdc-usd-coin',
-  tether: 'usdt-tether',
-  binancecoin: 'bnb-binance-coin',
-  solana: 'sol-solana',
-  cardano: 'ada-cardano',
-  ripple: 'xrp-xrp',
-  dogecoin: 'doge-dogecoin',
-  polkadot: 'dot-polkadot',
-  'matic-network': 'matic-polygon',
-  'avalanche-2': 'avax-avalanche',
-  chainlink: 'link-chainlink',
-  uniswap: 'uni-uniswap',
-  'shiba-inu': 'shib-shiba-inu',
-  litecoin: 'ltc-litecoin',
-  'cosmos': 'atom-cosmos',
-  near: 'near-near-protocol',
-  tron: 'trx-tron',
-  'bitcoin-cash': 'bch-bitcoin-cash',
-  stellar: 'xlm-stellar',
-  aptos: 'apt-aptos',
-  sui: 'sui-sui',
-  optimism: 'op-optimism',
-  arbitrum: 'arb-arbitrum',
-  'band-protocol': 'band-band-protocol',
+/** CoinGecko ids that differ from CoinCap asset ids. */
+const COINGECKO_TO_COINCAP: Record<string, string> = {
+  'wrapped-bitcoin': 'bitcoin', // approximate; CoinCap has no separate WBTC asset in free list
+  'usd-coin': 'usd-coin',
+  binancecoin: 'binance-coin',
+  'matic-network': 'polygon',
+  'avalanche-2': 'avalanche',
+  'shiba-inu': 'shiba-inu',
+  'bitcoin-cash': 'bitcoin-cash',
+  'band-protocol': 'band-protocol',
 };
 
-const COINPAPBOBRICA_IMAGE: Record<string, string> = {
+const COIN_IMAGE_BY_ID: Record<string, string> = {
   bitcoin: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
   ethereum: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
   solana: 'https://assets.coingecko.com/coins/images/4128/large/solana.png',
   cardano: 'https://assets.coingecko.com/coins/images/975/large/cardano.png',
+  'binance-coin': 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
   binancecoin: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
   tether: 'https://assets.coingecko.com/coins/images/325/large/Tether.png',
   'usd-coin': 'https://assets.coingecko.com/coins/images/6319/large/usdc.png',
-  'wrapped-bitcoin': 'https://assets.coingecko.com/coins/images/7598/large/wrapped_bitcoin_wbtc.png',
   ripple: 'https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png',
   dogecoin: 'https://assets.coingecko.com/coins/images/5/large/dogecoin.png',
 };
 
-export type ProviderName = 'coingecko' | 'coinpaprika';
+export type ProviderName = 'coingecko' | 'coincap';
 
 export class ProviderError extends Error {
   status?: number;
@@ -81,14 +62,15 @@ export function shouldFailover(error: unknown): boolean {
     if (error.isTimeout) return true;
     if (error.status === 429) return true;
     if (error.status != null && error.status >= 500) return true;
+    if (error.status == null) return true;
     return false;
   }
-  // Network / abort / generic axios failures
   const anyErr = error as { code?: string; message?: string; response?: { status?: number } };
   if (anyErr?.code === 'ECONNABORTED' || /timeout/i.test(anyErr?.message || '')) return true;
   const status = anyErr?.response?.status;
   if (status === 429 || (status != null && status >= 500)) return true;
-  return true; // treat unknown primary failures as failover-eligible for seamless UX
+  if (status == null) return true;
+  return false;
 }
 
 function toProviderError(error: unknown, provider: ProviderName): ProviderError {
@@ -162,60 +144,42 @@ function emptyCoinInfo(): CoinInfo {
   };
 }
 
-function normalizeCoinpaprikaTicker(ticker: any, geckoIdHint?: string): CoinInfo {
-  const usd = ticker?.quotes?.USD || {};
-  const geckoId =
-    geckoIdHint ||
-    Object.entries(COINGECKO_TO_COINOBBOBRICA).find(([, paprika]) => paprika === ticker?.id)?.[0] ||
-    String(ticker?.id || '').split('-').slice(1).join('-') ||
-    String(ticker?.id || '');
+function toCoinCapId(coinGeckoId: string): string {
+  return COINGECKO_TO_COINCAP[coinGeckoId] || coinGeckoId;
+}
 
-  const price = Number(usd.price) || 0;
-  const changePct = Number(usd.percent_change_24h) || 0;
-  const priceChange24h = price * (changePct / 100);
+/** Map CoinCap asset id back to the CoinGecko-style id the app already uses. */
+function toAppCoinId(coinCapId: string, geckoHint?: string): string {
+  if (geckoHint) return geckoHint;
+  const reverse = Object.entries(COINGECKO_TO_COINCAP).find(([, v]) => v === coinCapId);
+  if (reverse) return reverse[0];
+  if (coinCapId === 'binance-coin') return 'binancecoin';
+  return coinCapId;
+}
+
+function normalizeCoinCapAsset(asset: any, geckoIdHint?: string): CoinInfo {
+  const price = Number(asset?.priceUsd) || 0;
+  const changePct = Number(asset?.changePercent24Hr) || 0;
+  const appId = toAppCoinId(String(asset?.id || ''), geckoIdHint);
 
   return {
     ...emptyCoinInfo(),
-    id: geckoId,
-    symbol: String(ticker?.symbol || '').toLowerCase(),
-    name: String(ticker?.name || geckoId),
-    image: COINOBBOBRICA_IMAGE[geckoId] || '',
+    id: appId,
+    symbol: String(asset?.symbol || '').toLowerCase(),
+    name: String(asset?.name || appId),
+    image: COIN_IMAGE_BY_ID[appId] || COIN_IMAGE_BY_ID[String(asset?.id || '')] || '',
     current_price: price,
-    market_cap: Number(usd.market_cap) || 0,
-    market_cap_rank: Number(ticker?.rank) || 0,
-    total_volume: Number(usd.volume_24h) || 0,
-    high_24h: 0,
-    low_24h: 0,
-    price_change_24h: priceChange24h,
+    market_cap: Number(asset?.marketCapUsd) || 0,
+    market_cap_rank: Number(asset?.rank) || 0,
+    total_volume: Number(asset?.volumeUsd24Hr) || 0,
+    price_change_24h: price * (changePct / 100),
     price_change_percentage_24h: changePct,
-    market_cap_change_24h: 0,
     market_cap_change_percentage_24h: changePct,
-    circulating_supply: Number(ticker?.circulating_supply) || 0,
-    total_supply: Number(ticker?.total_supply) || 0,
-    max_supply: Number(ticker?.max_supply) || 0,
-    ath: Number(usd.ath_price) || 0,
-    ath_change_percentage: Number(usd.percent_from_price_ath) || 0,
-    ath_date: usd.ath_date || '',
-    last_updated: ticker?.last_updated || new Date().toISOString(),
+    circulating_supply: Number(asset?.supply) || 0,
+    total_supply: Number(asset?.supply) || 0,
+    max_supply: Number(asset?.maxSupply) || 0,
+    last_updated: new Date().toISOString(),
   };
-}
-
-function toCoinpaprikaId(coinGeckoId: string): string | null {
-  if (COINGECKO_TO_COINOBBOBRICA[coinGeckoId]) {
-    return COINGECKO_TO_COINOBBOBRICA[coinGeckoId];
-  }
-  // Heuristic: "bitcoin" → try leaving as-is won't work; skip unknown
-  return null;
-}
-
-function daysToCoinpaprikaInterval(days: number): { start: string; interval: string } {
-  const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-  if (days <= 1) return { start, interval: '1h' };
-  if (days <= 7) return { start, interval: '1h' };
-  if (days <= 30) return { start, interval: '6h' };
-  return { start, interval: '1d' };
 }
 
 // ─── CoinGecko (primary) ─────────────────────────────────────────────────────
@@ -289,16 +253,11 @@ export async function coingeckoFetchTrending(): Promise<any[]> {
 }
 
 export async function coingeckoFetchCoinInfo(coinId: string): Promise<CoinInfo> {
-  return httpGet<CoinInfo>(`${API_ENDPOINTS.COINGECKO}/coins/${coinId}`, 'coingecko', {
-    params: {
-      localization: false,
-      tickers: false,
-      market_data: true,
-      community_data: false,
-      developer_data: false,
-      sparkline: false,
-    },
-  });
+  const markets = await coingeckoFetchMarketsByIds([coinId]);
+  if (markets?.[0]) {
+    return markets[0];
+  }
+  throw new ProviderError(`Coin not found: ${coinId}`, { status: 404, provider: 'coingecko' });
 }
 
 export async function coingeckoFetchMarketChart(
@@ -317,27 +276,26 @@ export async function coingeckoFetchMarketChart(
   );
 }
 
-// ─── Coinpaprika (secondary free fallback) ───────────────────────────────────
+// ─── CoinCap (secondary free fallback) ───────────────────────────────────────
 
-export async function coinpaprikaFetchSimplePrices(ids: string[]): Promise<PriceData> {
+export async function coincapFetchSimplePrices(ids: string[]): Promise<PriceData> {
   const priceData: PriceData = {};
 
   await Promise.all(
     ids.map(async (geckoId) => {
-      const paprikaId = toCoinpaprikaId(geckoId);
-      if (!paprikaId) return;
+      const capId = toCoinCapId(geckoId);
       try {
-        const ticker = await httpGet<any>(
-          `${API_ENDPOINTS.COINPAPPAPRIKA}/tickers/${paprikaId}`,
-          'coinpaprika',
-          { params: { quotes: 'USD' } }
+        const body = await httpGet<{ data: any }>(
+          `${API_ENDPOINTS.COINCAP}/assets/${capId}`,
+          'coincap'
         );
-        const usd = ticker?.quotes?.USD || {};
+        const asset = body?.data;
+        if (!asset) return;
         priceData[geckoId] = {
-          usd: Number(usd.price) || 0,
-          usd_24h_change: Number(usd.percent_change_24h) || 0,
-          usd_24h_vol: Number(usd.volume_24h) || 0,
-          usd_market_cap: Number(usd.market_cap) || 0,
+          usd: Number(asset.priceUsd) || 0,
+          usd_24h_change: Number(asset.changePercent24Hr) || 0,
+          usd_24h_vol: Number(asset.volumeUsd24Hr) || 0,
+          usd_market_cap: Number(asset.marketCapUsd) || 0,
           last_updated_at: Date.now(),
         };
       } catch {
@@ -349,35 +307,33 @@ export async function coinpaprikaFetchSimplePrices(ids: string[]): Promise<Price
   return priceData;
 }
 
-export async function coinpaprikaFetchMarkets(
+export async function coincapFetchMarkets(
   limit: number,
   page: number
 ): Promise<CoinInfo[]> {
-  const tickers = await httpGet<any[]>(
-    `${API_ENDPOINTS.COINPAPPAPRIKA}/tickers`,
-    'coinpaprika',
-    { params: { quotes: 'USD' } }
-  );
-
   const offset = Math.max(0, (page - 1) * limit);
-  return (tickers || [])
-    .slice(offset, offset + limit)
-    .map((t) => normalizeCoinpaprikaTicker(t));
+  const body = await httpGet<{ data: any[] }>(`${API_ENDPOINTS.COINCAP}/assets`, 'coincap', {
+    params: {
+      limit,
+      offset,
+    },
+  });
+  return (body?.data || []).map((asset) => normalizeCoinCapAsset(asset));
 }
 
-export async function coinpaprikaFetchMarketsByIds(ids: string[]): Promise<CoinInfo[]> {
+export async function coincapFetchMarketsByIds(ids: string[]): Promise<CoinInfo[]> {
   const results: CoinInfo[] = [];
   await Promise.all(
     ids.map(async (geckoId) => {
-      const paprikaId = toCoinpaprikaId(geckoId);
-      if (!paprikaId) return;
+      const capId = toCoinCapId(geckoId);
       try {
-        const ticker = await httpGet<any>(
-          `${API_ENDPOINTS.COINPAPPAPRIKA}/tickers/${paprikaId}`,
-          'coinpaprika',
-          { params: { quotes: 'USD' } }
+        const body = await httpGet<{ data: any }>(
+          `${API_ENDPOINTS.COINCAP}/assets/${capId}`,
+          'coincap'
         );
-        results.push(normalizeCoinpaprikaTicker(ticker, geckoId));
+        if (body?.data) {
+          results.push(normalizeCoinCapAsset(body.data, geckoId));
+        }
       } catch {
         // skip
       }
@@ -386,73 +342,65 @@ export async function coinpaprikaFetchMarketsByIds(ids: string[]): Promise<CoinI
   return results.sort((a, b) => (a.market_cap_rank || 0) - (b.market_cap_rank || 0));
 }
 
-export async function coinpaprikaFetchTrending(): Promise<any[]> {
-  // Coinpaprika has no trending endpoint; approximate with top movers from tickers
-  const tickers = await httpGet<any[]>(
-    `${API_ENDPOINTS.COINPAPPAPRIKA}/tickers`,
-    'coinpaprika',
-    { params: { quotes: 'USD' } }
-  );
-
-  const top = (tickers || [])
-    .slice(0, 50)
-    .sort(
-      (a, b) =>
-        Math.abs(Number(b?.quotes?.USD?.percent_change_24h) || 0) -
-        Math.abs(Number(a?.quotes?.USD?.percent_change_24h) || 0)
-    )
-    .slice(0, 15);
-
-  return top.map((t) => {
-    const coin = normalizeCoinpaprikaTicker(t);
-    return {
-      item: {
-        id: coin.id,
-        coin_id: coin.market_cap_rank,
-        name: coin.name,
-        symbol: coin.symbol,
-        market_cap_rank: coin.market_cap_rank,
-        thumb: coin.image,
-        small: coin.image,
-        large: coin.image,
-        score: 0,
-      },
-    };
-  });
+export async function coincapFetchTrending(): Promise<any[]> {
+  // CoinCap has no trending endpoint — use top assets by market cap as a stand-in
+  const markets = await coincapFetchMarkets(15, 1);
+  return markets.map((coin) => ({
+    item: {
+      id: coin.id,
+      coin_id: coin.market_cap_rank,
+      name: coin.name,
+      symbol: coin.symbol,
+      market_cap_rank: coin.market_cap_rank,
+      thumb: coin.image,
+      small: coin.image,
+      large: coin.image,
+      score: 0,
+    },
+  }));
 }
 
-export async function coinpaprikaFetchCoinInfo(coinId: string): Promise<CoinInfo> {
-  const paprikaId = toCoinpaprikaId(coinId) || coinId;
-  const ticker = await httpGet<any>(
-    `${API_ENDPOINTS.COINPAPPAPRIKA}/tickers/${paprikaId}`,
-    'coinpaprika',
-    { params: { quotes: 'USD' } }
+export async function coincapFetchCoinInfo(coinId: string): Promise<CoinInfo> {
+  const capId = toCoinCapId(coinId);
+  const body = await httpGet<{ data: any }>(
+    `${API_ENDPOINTS.COINCAP}/assets/${capId}`,
+    'coincap'
   );
-  return normalizeCoinpaprikaTicker(ticker, coinId);
+  if (!body?.data) {
+    throw new ProviderError(`Coin not found: ${coinId}`, { status: 404, provider: 'coincap' });
+  }
+  return normalizeCoinCapAsset(body.data, coinId);
 }
 
-export async function coinpaprikaFetchMarketChart(
+export async function coincapFetchMarketChart(
   coinId: string,
   days: number
 ): Promise<ChartData> {
-  const paprikaId = toCoinpaprikaId(coinId) || coinId;
-  const { start, interval } = daysToCoinpaprikaInterval(days);
-  const history = await httpGet<any[]>(
-    `${API_ENDPOINTS.COINPAPPAPRIKA}/tickers/${paprikaId}/historical`,
-    'coinpaprika',
+  const capId = toCoinCapId(coinId);
+  const end = Date.now();
+  const start = end - days * 24 * 60 * 60 * 1000;
+  let interval = 'h1';
+  if (days <= 1) interval = 'm15';
+  else if (days <= 7) interval = 'h1';
+  else if (days <= 30) interval = 'h6';
+  else interval = 'd1';
+
+  const body = await httpGet<{ data: any[] }>(
+    `${API_ENDPOINTS.COINCAP}/assets/${capId}/history`,
+    'coincap',
     {
       params: {
-        start,
         interval,
+        start,
+        end,
       },
     }
   );
 
-  const prices: [number, number][] = (history || []).map((point) => {
-    const ts = Date.parse(point.timestamp || point.time_open || point.time_close) || Date.now();
-    const price = Number(point.price) || Number(point.close) || 0;
-    return [ts, price];
-  });
+  const prices: [number, number][] = (body?.data || []).map((point) => [
+    Number(point.time) || Date.now(),
+    Number(point.priceUsd) || 0,
+  ]);
 
   return {
     prices,
@@ -470,7 +418,7 @@ export function sparklineFromChart(chart: ChartData): SparklineData {
 
 /**
  * Run primary, then secondary on timeout / 429 / 5xx / network failure.
- * Quiet log when fallback succeeds.
+ * Quiet log when fallback succeeds so UI stays seamless.
  */
 export async function withProviderFailover<T>(
   label: string,
@@ -486,9 +434,9 @@ export async function withProviderFailover<T>(
     }
     try {
       const data = await secondary();
-      console.log(`[market] ${label}: primary failed, using coinpaprika fallback`);
-      return { data, provider: 'coinpaprika' };
-    } catch (secondaryError) {
+      console.log(`[market] ${label}: primary failed, using coincap fallback`);
+      return { data, provider: 'coincap' };
+    } catch {
       console.warn(`[market] ${label}: both providers failed`);
       throw primaryError;
     }
