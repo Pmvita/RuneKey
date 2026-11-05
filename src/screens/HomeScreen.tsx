@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert, Dimensions, Modal, TextInput, StatusBar } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert, Dimensions, Modal, TextInput, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useSharedValue, withSpring, withTiming, Easing } from 'react-native-reanimated';
 import { Card } from '../components/common/Card';
-import { PortfolioSkeleton, AnimatedButton, ParticleEffect, LoadingOverlay, RuneKeyLogo, UniversalBackground } from '../components';
+import { PortfolioSkeleton, AnimatedButton, ParticleEffect, LoadingOverlay, RuneKeyLogo, UniversalBackground, CustomLoadingAnimation } from '../components';
 import { useWalletStore } from '../stores/wallet/useWalletStore';
 import { useDevWallet } from '../hooks/wallet/useDevWallet';
 import { usePrices } from '../hooks/token/usePrices';
@@ -14,10 +15,25 @@ import { NETWORK_CONFIGS } from '../constants';
 import { useNavigation } from '@react-navigation/native';
 import { priceService, CoinInfo } from '../services/api/priceService';
 import { logger } from '../utils/logger';
-import { formatLargeCurrency, formatBalance } from '../utils/formatters';
+import { formatBalance as formatBalanceFromUtils } from '../utils/formatters';
+import { useThemeColors } from '../utils/theme';
 import investingData from '../mockData/api/investing.json';
 import { investingService } from '../services/api/investingService';
 import { Investment } from '../types';
+
+/** Local callable wrapper — guards Metro/web interop where named import can be non-function. */
+function formatBalance(balance: string | number | undefined, decimals: number = 18): string {
+  if (typeof formatBalanceFromUtils === 'function') {
+    return formatBalanceFromUtils(balance, decimals);
+  }
+  if (balance === undefined || balance === null || balance === '') return '0';
+  const num = typeof balance === 'string' ? parseFloat(balance) : balance;
+  if (typeof num !== 'number' || isNaN(num)) return '0';
+  if (num === 0) return '0';
+  if (num < 0.001) return '<0.001';
+  if (num < 1) return num.toFixed(6);
+  return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
+}
 
 const initialInvestingHoldings: Investment[] = Array.isArray((investingData as any)?.investments)
   ? ((investingData as any).investments as Investment[])
@@ -163,8 +179,11 @@ export const HomeScreen: React.FC = () => {
         <ParticleEffect type="confetti" active={showParticles} onComplete={() => setShowParticles(false)} />
 
         <ScrollView style={{ flex: 1 }} refreshControl={<RefreshControl refreshing={loadingMarketData} onRefresh={onRefresh} />} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
-            <RuneKeyLogo size="lg" color="primary" showDot={true} />
+          <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <RuneKeyLogo size="sm" color="primary" showText={false} showDot={false} />
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.3 }}>
+              RuneKey
+            </Text>
           </View>
 
           <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>

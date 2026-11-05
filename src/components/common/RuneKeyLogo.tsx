@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, Text, Animated, useColorScheme } from 'react-native';
+import { View, StyleSheet, Text, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '../../utils/theme';
 
@@ -33,7 +33,6 @@ export const RuneKeyLogo: React.FC<RuneKeyLogoProps> = ({
   style,
 }) => {
   const themeColors = useThemeColors();
-  const scale = useSharedValue(1);
 
   const getSize = () => sizeMap[size];
   const getColor = () => {
@@ -142,15 +141,26 @@ export const RuneKeyLogoAnimated: React.FC<RuneKeyLogoProps> = ({
   color = 'primary',
   style,
 }) => {
-  const scale = useSharedValue(1);
+  const scale = React.useRef(new Animated.Value(1)).current;
   const themeColors = useThemeColors();
 
   React.useEffect(() => {
-    scale.value = withRepeat(
-      withTiming(1.08, { duration: 2000, easing: Easing.out(Easing.quad) }),
-      -1,
-      true
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.08,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
     );
+    animation.start();
+    return () => animation.stop();
   }, [scale]);
 
   const getSize = () => sizeMap[size];
@@ -176,7 +186,7 @@ export const RuneKeyLogoAnimated: React.FC<RuneKeyLogoProps> = ({
               height: getSize() * 0.6,
             },
             {
-              transform: [{ scale: scale }],
+              transform: [{ scale }],
             },
           ]}
         >

@@ -16,9 +16,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Ionicons as IoniconSet } from '@expo/vector-icons';
+// Deep import avoids Hermes "Property 'MaterialCommunityIcons' doesn't exist"
+// from @expo/vector-icons lazy barrel getters under Metro inlineRequires.
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useColorScheme, AppRegistry, TouchableOpacity, Image, View, Text, Platform, StyleProp, TextStyle, StyleSheet, Animated } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from './src/utils/logger';
 
@@ -87,6 +88,31 @@ const queryClient = new QueryClient({
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
 
+const TAB_ICON_SIZE = 24;
+const TAB_BAR_CONTENT_HEIGHT = 56;
+
+type TabIconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+const TabBarIcon = ({
+  name,
+  color,
+}: {
+  name: TabIconName;
+  color: string;
+}) => (
+  <View
+    style={{
+      width: TAB_ICON_SIZE + 4,
+      height: TAB_ICON_SIZE + 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'visible',
+    }}
+  >
+    <MaterialCommunityIcons name={name} size={TAB_ICON_SIZE} color={color} />
+  </View>
+);
+
 // Main Tab Navigator
 const TabNavigator = () => {
   const insets = useSafeAreaInsets();
@@ -94,113 +120,111 @@ const TabNavigator = () => {
   const systemColorScheme = useColorScheme();
   const { getThemeColors } = require('./src/utils/theme');
   const colors = getThemeColors(theme, systemColorScheme);
-  
+
+  // Web often reports ~0 bottom inset; keep a usable pad so icons/labels aren't clipped.
+  // Native: React Navigation also applies safe-area — use the real inset once via paddingBottom + height.
+  const bottomInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'web' ? 12 : Platform.OS === 'android' ? 8 : 0
+  );
+  const tabBarHeight = TAB_BAR_CONTENT_HEIGHT + bottomInset;
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.textPrimary,
+        tabBarHideOnKeyboard: true,
+        tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: colors.backgroundSecondary,
-          borderTopColor: colors.border,
-          paddingTop: insets.top + 10,
-          height: 85,
+          borderTopColor: colors.borderDark,
+          borderTopWidth: 1,
+          paddingTop: 6,
+          paddingBottom: bottomInset,
+          paddingHorizontal: 8,
+          height: tabBarHeight,
+          minHeight: tabBarHeight,
+          overflow: 'visible',
+          elevation: 0,
+          shadowOpacity: 0,
         },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+          overflow: 'visible',
+        },
+        tabBarIconStyle: {
+          marginTop: 0,
+          marginBottom: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          letterSpacing: 0.1,
+          marginTop: 2,
+          marginBottom: Platform.OS === 'web' ? 2 : 0,
+        },
+        // Stronger inactive contrast than textTertiary (#94A3B8) on white.
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        // Solid surface — brand gradient behind icons washed out labels/icons on web.
         tabBarBackground: () => (
-          <View style={{ flex: 1, backgroundColor: colors.background }}>
-            <LinearGradient
-              colors={colors.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ flex: 1 }}
-            />
-          </View>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: colors.backgroundSecondary,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderDark,
+            }}
+          />
         ),
       }}
     >
-      <Tab.Screen 
-        name="Wallet" 
+      <Tab.Screen
+        name="Wallet"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ focused, size }) => (
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons 
-                name="wallet" 
-                size={size} 
-                color={focused ? colors.primary : colors.textTertiary} 
-              />
-            </View>
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="wallet" color={color} />,
           title: 'Wallet',
           headerShown: false,
         }}
       />
-      <Tab.Screen 
-        name="Exchange" 
+      <Tab.Screen
+        name="Exchange"
         component={SwapScreen}
         options={{
-          tabBarIcon: ({ focused, size }) => (
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons 
-                name="swap-horizontal" 
-                size={size} 
-                color={focused ? colors.primary : colors.textTertiary} 
-              />
-            </View>
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="swap-horizontal" color={color} />
           ),
           title: 'Exchange',
           headerShown: false,
         }}
       />
-      <Tab.Screen 
-        name="Markets" 
+      <Tab.Screen
+        name="Markets"
         component={MarketScreen}
         options={{
-          tabBarIcon: ({ focused, size }) => (
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons 
-                name="chart-line" 
-                size={size} 
-                color={focused ? colors.primary : colors.textTertiary} 
-              />
-            </View>
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="chart-line" color={color} />
           ),
           title: 'Markets',
           headerShown: false,
         }}
       />
-      <Tab.Screen 
-        name="Explore" 
+      <Tab.Screen
+        name="Explore"
         component={ExploreScreen}
         options={{
-          tabBarIcon: ({ focused, size }) => (
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons 
-                name="compass" 
-                size={size} 
-                color={focused ? colors.primary : colors.textTertiary} 
-              />
-            </View>
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
           title: 'Explore',
           headerShown: false,
         }}
       />
-      <Tab.Screen 
-        name="Settings" 
+      <Tab.Screen
+        name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarIcon: ({ focused, size }) => (
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons 
-                name="cog" 
-                size={size} 
-                color={focused ? colors.primary : colors.textTertiary} 
-              />
-            </View>
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
           title: 'Settings',
           headerShown: false,
         }}

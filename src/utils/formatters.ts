@@ -67,6 +67,30 @@ export const formatTokenAmount = (
   });
 };
 
+/**
+ * Format a human-readable token balance for display.
+ * `decimals` is accepted for call-site compatibility; balances are expected
+ * already converted out of base units.
+ *
+ * Use `export function` (not `export const`) so Metro inlineRequires / CJS
+ * interop always resolves a callable binding.
+ */
+export function formatBalance(
+  balance: string | number | undefined | null,
+  _decimals: number = 18
+): string {
+  if (balance === undefined || balance === null || balance === '') return '0';
+
+  const num = typeof balance === 'string' ? parseFloat(balance) : balance;
+
+  if (typeof num !== 'number' || isNaN(num)) return '0';
+  if (num === 0) return '0';
+  if (num < 0.001) return '<0.001';
+  if (num < 1) return num.toFixed(6);
+
+  return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
+}
+
 export const formatCurrency = (
   amount: number | string,
   currency: string = 'USD'

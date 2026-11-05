@@ -20,6 +20,7 @@ export {
 } from './common/SelectionHighlightProvider';
 export { default as BubbleBackground } from './common/BubbleBackground';
 export { UniversalBackground } from './common/UniversalBackground';
+export { RuneKeyLogo } from './common/RuneKeyLogo';
 
 // New animated components
 export { AnimatedButton } from './common/AnimatedButton';
