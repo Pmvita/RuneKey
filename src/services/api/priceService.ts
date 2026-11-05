@@ -13,12 +13,12 @@ import {
   coingeckoFetchMarketsByIds,
   coingeckoFetchSimplePrices,
   coingeckoFetchTrending,
-  coincapFetchCoinInfo,
-  coincapFetchMarketChart,
-  coincapFetchMarkets,
-  coincapFetchMarketsByIds,
-  coincapFetchSimplePrices,
-  coincapFetchTrending,
+  coinpaprikaFetchCoinInfo,
+  coinpaprikaFetchMarketChart,
+  coinpaprikaFetchMarkets,
+  coinpaprikaFetchMarketsByIds,
+  coinpaprikaFetchSimplePrices,
+  coinpaprikaFetchTrending,
   sparklineFromChart,
   withProviderFailover,
 } from './cryptoProviders';
@@ -36,7 +36,7 @@ class PriceService {
   }
 
   /**
-   * Fetch token prices (CoinGecko → CoinCap on timeout/429/5xx).
+   * Fetch token prices (CoinGecko → Coinpaprika on timeout/429/5xx).
    */
   async fetchTokenPrices(tokenAddresses: string[]): Promise<ApiResponse<PriceData>> {
     try {
@@ -58,7 +58,7 @@ class PriceService {
         withProviderFailover(
           'fetchTokenPrices',
           () => coingeckoFetchSimplePrices(uniqueIds),
-          () => coincapFetchSimplePrices(uniqueIds)
+          () => coinpaprikaFetchSimplePrices(uniqueIds)
         )
       );
 
@@ -78,7 +78,7 @@ class PriceService {
         withProviderFailover(
           'fetchTrendingTokens',
           () => coingeckoFetchTrending(),
-          () => coincapFetchTrending()
+          () => coinpaprikaFetchTrending()
         )
       );
       return { data, success: true };
@@ -97,7 +97,7 @@ class PriceService {
         withProviderFailover(
           `fetchSparklineData:${coinId}`,
           async () => sparklineFromChart(await coingeckoFetchMarketChart(coinId, days)),
-          async () => sparklineFromChart(await coincapFetchMarketChart(coinId, days))
+          async () => sparklineFromChart(await coinpaprikaFetchMarketChart(coinId, days))
         )
       );
       return { data, success: true };
@@ -120,7 +120,7 @@ class PriceService {
         withProviderFailover(
           `fetchChartData:${coinId}`,
           () => coingeckoFetchMarketChart(coinId, days),
-          () => coincapFetchMarketChart(coinId, days)
+          () => coinpaprikaFetchMarketChart(coinId, days)
         )
       );
       return { data, success: true };
@@ -143,7 +143,7 @@ class PriceService {
         withProviderFailover(
           `fetchCoinInfo:${coinId}`,
           () => coingeckoFetchCoinInfo(coinId),
-          () => coincapFetchCoinInfo(coinId)
+          () => coinpaprikaFetchCoinInfo(coinId)
         )
       );
       return { data, success: true };
@@ -166,7 +166,7 @@ class PriceService {
         withProviderFailover(
           'fetchTopCoins',
           () => coingeckoFetchMarkets(limit, page),
-          () => coincapFetchMarkets(limit, page)
+          () => coinpaprikaFetchMarkets(limit, page)
         )
       );
       return { data, success: true };
@@ -199,7 +199,7 @@ class PriceService {
         withProviderFailover(
           'fetchMarketDataByIds',
           () => coingeckoFetchMarketsByIds(uniqueIds),
-          () => coincapFetchMarketsByIds(uniqueIds)
+          () => coinpaprikaFetchMarketsByIds(uniqueIds)
         )
       );
 
