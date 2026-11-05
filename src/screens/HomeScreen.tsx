@@ -190,12 +190,12 @@ export const HomeScreen: React.FC = () => {
             <Card style={{ borderRadius: 16, padding: 16 }}>
               {isConnected ? (
                 <>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <View>
-                      <Text style={{ fontSize: 16, fontWeight: '500', color: '#0F172A' }} numberOfLines={1}>{currentWallet?.address || 'No wallet connected'}</Text>
-                      <Text style={{ fontSize: 12, color: '#6B7280' }}>{NETWORK_CONFIGS[activeNetwork]?.name || 'Ethereum'}</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, overflow: 'hidden' }}>
+                    <View style={{ flex: 1, flexShrink: 1, minWidth: 0, marginRight: 8 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '500', color: '#0F172A' }} numberOfLines={1} ellipsizeMode="middle">{currentWallet?.address || 'No wallet connected'}</Text>
+                      <Text style={{ fontSize: 12, color: '#6B7280' }} numberOfLines={1}>{NETWORK_CONFIGS[activeNetwork]?.name || 'Ethereum'}</Text>
                     </View>
-                    <TouchableOpacity style={{ padding: 8 }} onPress={() => useWalletStore.getState().disconnectWallet()}>
+                    <TouchableOpacity style={{ padding: 8, flexShrink: 0 }} onPress={() => useWalletStore.getState().disconnectWallet()} accessibilityLabel="Disconnect wallet">
                       <Ionicons name="log-out" size={20} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
