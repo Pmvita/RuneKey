@@ -167,6 +167,13 @@ export const HomeScreen: React.FC = () => {
     }).format(amount);
   };
 
+  // Portfolio USD = sum of each token's usdValue (balance × live/fallback price).
+  // Do not use native wallet.balance × tokens[0].price — that ignored all holdings
+  // and showed $0 when mock native balance was empty.
+  const portfolioTotalUsd =
+    currentWallet?.tokens?.reduce((sum: number, t: Token) => sum + (t.usdValue || 0), 0) || 0;
+  const tokenCount = currentWallet?.tokens?.length || 0;
+
   return (
     <UniversalBackground>
       <StatusBar barStyle={colors.textPrimary === '#F8FAFC' ? 'light-content' : 'dark-content'} />
@@ -206,16 +213,16 @@ export const HomeScreen: React.FC = () => {
                     </TouchableOpacity>
                   </View>
                   <View style={{ alignItems: 'center', marginBottom: 16 }}>
-                    <Text style={{ fontSize: 28, fontWeight: '700', color: '#0F172A' }}>{formatCurrency(parseFloat(currentWallet?.balance || '0') * parseFloat(currentWallet?.tokens?.[0]?.currentPrice || '1'))}</Text>
+                    <Text style={{ fontSize: 28, fontWeight: '700', color: '#0F172A' }}>{formatCurrency(portfolioTotalUsd)}</Text>
                     <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>Total Balance</Text>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 16 }}>
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>{formatCurrency(currentWallet?.tokens?.reduce((sum: any, t: any) => sum + (t.usdValue || 0), 0) || 0)}</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>{formatCurrency(portfolioTotalUsd)}</Text>
                       <Text style={{ fontSize: 12, color: '#6B7280' }}>Assets</Text>
                     </View>
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>{currentWallet?.tokens?.length || 0}</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>{tokenCount}</Text>
                       <Text style={{ fontSize: 12, color: '#6B7280' }}>Tokens</Text>
                     </View>
                   </View>
@@ -245,7 +252,7 @@ export const HomeScreen: React.FC = () => {
                 <View pointerEvents="none" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>Portfolio</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Text style={{ fontSize: 14, color: '#6B7280' }}>{formatCurrency(currentWallet.tokens.reduce((sum: any, t: any) => sum + (t.usdValue || 0), 0) || 0)} total</Text>
+                    <Text style={{ fontSize: 14, color: '#6B7280' }}>{formatCurrency(portfolioTotalUsd)} total</Text>
                     <Ionicons name="chevron-forward" size={16} color="#6B7280" />
                   </View>
                 </View>
@@ -429,7 +436,7 @@ export const HomeScreen: React.FC = () => {
               </Pressable>
             </View>
             <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 16 }}>
-              {formatCurrency(currentWallet?.tokens?.reduce((sum: any, t: any) => sum + (t.usdValue || 0), 0) || 0)} total · {currentWallet?.tokens?.length || 0} tokens
+              {formatCurrency(portfolioTotalUsd)} total · {tokenCount} tokens
             </Text>
             <ScrollView
               showsVerticalScrollIndicator={false}
