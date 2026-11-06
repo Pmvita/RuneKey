@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { logger } from '../../utils/logger';
 import { useThemeColors } from '../../utils/theme';
 
@@ -9,6 +9,8 @@ interface CardProps {
   variant?: 'default' | 'outlined' | 'elevated' | 'glass' | 'frost' | 'ice';
   disabled?: boolean;
   className?: string;
+  style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -16,12 +18,13 @@ export const Card: React.FC<CardProps> = ({
   onPress,
   variant = 'default',
   disabled = false,
-  className = '',
+  style,
+  accessibilityLabel,
 }) => {
   const colors = useThemeColors();
 
-  const getCardStyle = () => {
-    const baseStyle = {
+  const getCardStyle = (): ViewStyle => {
+    const baseStyle: ViewStyle = {
       borderRadius: 16,
       padding: 16,
     };
@@ -87,26 +90,36 @@ export const Card: React.FC<CardProps> = ({
     }
   };
 
+  const cardStyle = [getCardStyle(), { opacity: disabled ? 0.6 : 1 }, style];
+
   if (onPress) {
     const handlePress = () => {
+      if (disabled) return;
       logger.logButtonPress('Card', 'pressed', { variant, disabled });
       onPress();
     };
 
     return (
-      <TouchableOpacity
-        style={[getCardStyle(), { opacity: disabled ? 0.6 : 1 }]}
+      <Pressable
         onPress={handlePress}
         disabled={disabled}
-        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        android_ripple={disabled ? undefined : { color: 'rgba(15, 23, 42, 0.08)' }}
+        style={({ pressed }) => [
+          ...cardStyle,
+          // Web + iOS press feedback; Android uses ripple
+          pressed && !disabled ? { opacity: 0.85 } : null,
+        ]}
       >
-        {children}
-      </TouchableOpacity>
+        {/* box-none lets presses on empty space hit Pressable; children can opt out */}
+        <View pointerEvents="box-none">{children}</View>
+      </Pressable>
     );
   }
 
   return (
-    <View style={[getCardStyle(), { opacity: disabled ? 0.6 : 1 }]}>
+    <View style={cardStyle}>
       {children}
     </View>
   );

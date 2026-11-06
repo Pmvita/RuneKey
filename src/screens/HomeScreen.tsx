@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Alert, Dimensions, Modal, TextInput, StatusBar, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Image, TouchableOpacity, Pressable, Alert, Dimensions, Modal, TextInput, StatusBar, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -55,6 +55,7 @@ export const HomeScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<AssetFilter>('all');
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [selectedTokenForAlert, setSelectedTokenForAlert] = useState<any>(null);
   const [alertTargetPrice, setAlertTargetPrice] = useState('');
   const [alertDirection, setAlertDirection] = useState<'above' | 'below'>('above');
@@ -178,7 +179,12 @@ export const HomeScreen: React.FC = () => {
         />
         <ParticleEffect type="confetti" active={showParticles} onComplete={() => setShowParticles(false)} />
 
-        <ScrollView style={{ flex: 1 }} refreshControl={<RefreshControl refreshing={loadingMarketData} onRefresh={onRefresh} />} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={<RefreshControl refreshing={loadingMarketData} onRefresh={onRefresh} />}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <RuneKeyLogo size="sm" color="primary" showText={false} showDot={false} />
             <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.3 }}>
@@ -228,14 +234,42 @@ export const HomeScreen: React.FC = () => {
 
           {isConnected && currentWallet?.tokens.length > 0 && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-              <Card style={{ borderRadius: 16, padding: 16 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Card
+                accessibilityLabel="Open portfolio token list"
+                onPress={() => {
+                  logger.logButtonPress('HomeScreen', 'open portfolio tokens');
+                  setShowPortfolioModal(true);
+                }}
+              >
+                {/* Header: pointerEvents none so Android elevated/Image children don't swallow Pressable taps */}
+                <View pointerEvents="none" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>Portfolio</Text>
-                  <Text style={{ fontSize: 14, color: '#6B7280' }}>{formatCurrency(currentWallet.tokens.reduce((sum: any, t: any) => sum + (t.usdValue || 0), 0) || 0)} total</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Text style={{ fontSize: 14, color: '#6B7280' }}>{formatCurrency(currentWallet.tokens.reduce((sum: any, t: any) => sum + (t.usdValue || 0), 0) || 0)} total</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+                  </View>
                 </View>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  {currentWallet.tokens.slice(0, 3).map((token: any) => (
-                    <View key={token.address} style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 12, padding: 12, elevation: 2 }}>
+                {/* Horizontal pans → ScrollView; chip content non-interactive so single tap still opens modal */}
+                <ScrollView
+                  horizontal
+                  nestedScrollEnabled
+                  showsHorizontalScrollIndicator
+                  persistentScrollbar
+                  bounces={false}
+                  nativeID={PORTFOLIO_CHIPS_SCROLL_CLASS}
+                  className={Platform.OS === 'web' ? PORTFOLIO_CHIPS_SCROLL_CLASS : undefined}
+                  style={[
+                    styles.portfolioChipsScroll,
+                    Platform.OS === 'web' ? webPortfolioChipsScrollbarStyle : null,
+                  ]}
+                  contentContainerStyle={styles.portfolioChipsContent}
+                >
+                  {currentWallet.tokens.map((token: any) => (
+                    <View
+                      key={token.address}
+                      pointerEvents="none"
+                      style={styles.portfolioChip}
+                    >
                       <View style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
                         <Image source={{ uri: token.logoURI || `https://via.placeholder.com/40?text=${token.symbol}` }} style={{ width: '100%', height: '100%', borderRadius: 10 }} defaultSource={require('../../assets/icon.png')} />
                       </View>
@@ -246,7 +280,7 @@ export const HomeScreen: React.FC = () => {
                       </View>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               </Card>
             </View>
           )}
@@ -347,10 +381,141 @@ export const HomeScreen: React.FC = () => {
 
           {loadingMarketData && <View style={{ paddingVertical: 24, alignItems: 'center' }}><CustomLoadingAnimation /></View>}
         </ScrollView>
+
       </SafeAreaView>
+
+      {/* Modal at screen root (outside SafeAreaView) so Android/iOS present above tab chrome */}
+      <Modal
+        transparent
+        animationType="slide"
+        visible={showPortfolioModal}
+        onRequestClose={() => setShowPortfolioModal(false)}
+        statusBarTranslucent
+        presentationStyle="overFullScreen"
+        hardwareAccelerated
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' }}>
+          <Pressable
+            style={{ flex: 1 }}
+            onPress={() => setShowPortfolioModal(false)}
+            accessibilityLabel="Dismiss portfolio list"
+            accessibilityRole="button"
+          />
+          <View
+            style={{
+              maxHeight: '80%',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+              backgroundColor: '#FFFFFF',
+              elevation: 16,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#0F172A' }}>Portfolio Tokens</Text>
+              <Pressable
+                onPress={() => setShowPortfolioModal(false)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityLabel="Close portfolio list"
+                accessibilityRole="button"
+                style={{ padding: 4 }}
+              >
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </Pressable>
+            </View>
+            <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 16 }}>
+              {formatCurrency(currentWallet?.tokens?.reduce((sum: any, t: any) => sum + (t.usdValue || 0), 0) || 0)} total · {currentWallet?.tokens?.length || 0} tokens
+            </Text>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: Dimensions.get('window').height * 0.55 }}
+              bounces={false}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={{ gap: 8, paddingBottom: 8 }}>
+                {(currentWallet?.tokens || []).map((token: any) => (
+                  <View
+                    key={token.address}
+                    style={{ flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#F8FAFC', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' }}
+                  >
+                    <View style={{ width: 44, height: 44, borderRadius: 12, overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                      <Image
+                        source={{ uri: token.logoURI || `https://via.placeholder.com/44?text=${token.symbol}` }}
+                        style={{ width: '100%', height: '100%', borderRadius: 12 }}
+                        defaultSource={require('../../assets/icon.png')}
+                      />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={{ fontSize: 15, fontWeight: '600', color: '#0F172A' }}>{token.symbol}</Text>
+                      <Text style={{ fontSize: 12, color: '#6B7280' }}>{token.name || token.symbol}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#0F172A' }}>{formatBalance(token.balance, token.decimals)}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '500', color: getPriceChangeColor(token.priceChange24h || 0), marginTop: 2 }}>
+                        {token.priceChange24h !== undefined && token.priceChange24h !== null ? (token.priceChange24h >= 0 ? '▲' : '▼') : ''}
+                        {token.priceChange24h !== undefined && token.priceChange24h !== null ? ` ${Math.abs(token.priceChange24h).toFixed(2)}%` : ''}
+                      </Text>
+                      {typeof token.usdValue === 'number' && (
+                        <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>{formatCurrency(token.usdValue)}</Text>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </UniversalBackground>
   );
 };
+
+/** Web-only: force a persistent thin horizontal scrollbar under portfolio chips (RN-web/CSS). */
+const webPortfolioChipsScrollbarStyle = {
+  scrollbarWidth: 'thin',
+  scrollbarColor: '#94A3B8 #E2E8F0',
+  overflowX: 'scroll',
+} as Record<string, string>;
+
+const PORTFOLIO_CHIPS_SCROLL_CLASS = 'runekey-portfolio-chips-scroll';
+
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const styleId = 'runekey-portfolio-chips-scrollbar';
+  if (!document.getElementById(styleId)) {
+    const styleEl = document.createElement('style');
+    styleEl.id = styleId;
+    styleEl.textContent = `
+      #${PORTFOLIO_CHIPS_SCROLL_CLASS},
+      .${PORTFOLIO_CHIPS_SCROLL_CLASS} {
+        scrollbar-width: thin;
+        scrollbar-color: #94A3B8 #E2E8F0;
+        overflow-x: scroll !important;
+      }
+      #${PORTFOLIO_CHIPS_SCROLL_CLASS}::-webkit-scrollbar,
+      .${PORTFOLIO_CHIPS_SCROLL_CLASS}::-webkit-scrollbar {
+        height: 8px;
+        display: block;
+      }
+      #${PORTFOLIO_CHIPS_SCROLL_CLASS}::-webkit-scrollbar-track,
+      .${PORTFOLIO_CHIPS_SCROLL_CLASS}::-webkit-scrollbar-track {
+        background: #E2E8F0;
+        border-radius: 4px;
+      }
+      #${PORTFOLIO_CHIPS_SCROLL_CLASS}::-webkit-scrollbar-thumb,
+      .${PORTFOLIO_CHIPS_SCROLL_CLASS}::-webkit-scrollbar-thumb {
+        background: #94A3B8;
+        border-radius: 4px;
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+}
 
 const styles = StyleSheet.create({
   directionButton: { flex: 1, padding: 12, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, alignItems: 'center' },
@@ -358,6 +523,25 @@ const styles = StyleSheet.create({
   input: { fontSize: 14, color: '#0F172A', padding: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderRadius: 8, borderColor: '#E2E8F0' },
   confirmButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
   confirmButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  portfolioChipsScroll: {
+    marginHorizontal: -2,
+    // Room under chips for the horizontal scrollbar track
+    paddingBottom: 6,
+  },
+  portfolioChipsContent: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingRight: 4,
+    paddingBottom: 4,
+  },
+  portfolioChip: {
+    width: 128,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
 });
 
 export default HomeScreen;
